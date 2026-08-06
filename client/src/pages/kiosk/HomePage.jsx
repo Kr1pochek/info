@@ -35,7 +35,7 @@ export default function HomePage() {
     {searching ? <section className="content-section"><div className="section-heading"><div><span>{t.searchResults}</span><h2>{t.servicesFound}: {search.results.length}</h2></div></div>
       {search.loading ? <LoadingState text={t.loading} /> : search.error ? <ErrorState title={t.unavailableTitle} text={search.error} /> : search.results.length ? <div className="service-grid">{search.results.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noResults} />}
     </section> : <>
-      <section className="content-section"><div className="section-heading"><div><span>01</span><h2>{t.categories}</h2></div><small>{categories.length}</small></div><div className="category-grid">{categories.map((category) => <CategoryCard key={category.id} category={category} />)}</div></section>
+      <section className="content-section content-section--home"><div className="section-heading"><div><span>01</span><h2>{t.categories}</h2></div><small>{categories.length}</small></div><div className="category-grid">{categories.map((category) => <CategoryCard key={category.id} category={category} />)}</div></section>
       <section className="content-section content-section--tinted"><div className="section-heading"><div><span>02</span><h2>{t.popular}</h2></div></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
     </>}
     <section className="contact-strip">
