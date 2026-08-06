@@ -5,7 +5,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().min(1).default('postgresql://postgres:password@localhost:5432/dgd_infokiosk'),
-  CLIENT_URL: z.string().url().default('http://localhost:5173'),
+  CLIENT_URL: z.string().url().default('http://localhost:5174'),
   JWT_ACCESS_SECRET: z.string().min(32).default('development_access_secret_change_123456'),
   JWT_REFRESH_SECRET: z.string().min(32).default('development_refresh_secret_change_12345'),
   ACCESS_TOKEN_EXPIRES_IN: z.string().default('15m'),

@@ -106,7 +106,7 @@ Copy-Item client/.env.example client/.env
 NODE_ENV=development
 PORT=4000
 DATABASE_URL=postgresql://postgres:dgd_dev_password@127.0.0.1:5433/dgd_infokiosk
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=http://localhost:5174
 JWT_ACCESS_SECRET=случайная_строка_не_короче_32_символов
 JWT_REFRESH_SECRET=другая_случайная_строка_не_короче_32_символов
 ACCESS_TOKEN_EXPIRES_IN=15m
@@ -153,9 +153,9 @@ npm run dev:client
 npm run dev:server
 ```
 
-- инфокиоск: `http://localhost:5173/`;
-- вход администратора: `http://localhost:5173/admin/login`;
-- админ-панель: `http://localhost:5173/admin`;
+- инфокиоск: `http://localhost:5174/`;
+- вход администратора: `http://localhost:5174/admin/login`;
+- админ-панель: `http://localhost:5174/admin`;
 - проверка API: `http://localhost:4000/api/health`.
 
 ## Prisma Studio

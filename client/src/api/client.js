@@ -1,7 +1,27 @@
 import axios from 'axios';
 
+function resolveApiUrl() {
+  const configuredUrl = import.meta.env.VITE_API_URL;
+  const networkUrl = `${window.location.protocol}//${window.location.hostname}:4000/api`;
+  if (!configuredUrl) return networkUrl;
+
+  try {
+    const url = new URL(configuredUrl);
+    const pageIsNetworkHost = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const apiIsLocalhost = ['localhost', '127.0.0.1'].includes(url.hostname);
+    if (pageIsNetworkHost && apiIsLocalhost) {
+      url.hostname = window.location.hostname;
+      return url.toString().replace(/\/$/, '');
+    }
+  } catch {
+    return networkUrl;
+  }
+
+  return configuredUrl;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL: resolveApiUrl(),
   withCredentials: true,
   timeout: 10000,
 });
