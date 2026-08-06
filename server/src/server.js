@@ -2,8 +2,8 @@ import { app } from './app.js';
 import { env } from './config/env.js';
 import { prisma } from './config/prisma.js';
 
-const server = app.listen(env.PORT, () => {
-  console.log(`DGD API запущен: http://localhost:${env.PORT}/api`);
+const server = app.listen(env.PORT, '0.0.0.0', () => {
+  console.log(`DGD API запущен на всех сетевых интерфейсах: порт ${env.PORT}`);
 });
 
 async function shutdown(signal) {
