@@ -9,16 +9,19 @@ import { track } from '../../api/analytics.js';
 const activityEvents = ['touchstart', 'pointerdown', 'mousedown', 'mousemove', 'keydown', 'scroll', 'wheel'];
 export default function InactivityGuard({ children }) {
   const { settings } = useSettings(); const { t, resetLanguage } = useLanguage(); const { resetFontSize } = useFontSize(); const navigate = useNavigate();
-  const lastActivity = useRef(Date.now()); const [remaining, setRemaining] = useState(null);
-  const continueSession = useCallback(() => { lastActivity.current = Date.now(); setRemaining(null); }, []);
+  const sessionStarted = useRef(false); const lastActivity = useRef(null); const [remaining, setRemaining] = useState(null);
+  const continueSession = useCallback(() => { sessionStarted.current = true; lastActivity.current = Date.now(); setRemaining(null); }, []);
   const resetSession = useCallback((eventType = 'SESSION_TIMEOUT') => {
-    setRemaining(null); resetLanguage(); resetFontSize(); track(eventType); navigate('/', { replace: true }); window.scrollTo({ top: 0, behavior: 'auto' }); lastActivity.current = Date.now();
+    sessionStarted.current = false; lastActivity.current = null; setRemaining(null); resetLanguage(); resetFontSize(); track(eventType); navigate('/', { replace: true }); window.scrollTo({ top: 0, behavior: 'auto' });
   }, [navigate, resetFontSize, resetLanguage]);
   useEffect(() => {
     if (!settings) return undefined;
-    const activity = () => { if (remaining == null) lastActivity.current = Date.now(); };
+    const activity = () => {
+      if (remaining == null) { sessionStarted.current = true; lastActivity.current = Date.now(); }
+    };
     activityEvents.forEach((event) => window.addEventListener(event, activity, { passive: true }));
     const timer = setInterval(() => {
+      if (!sessionStarted.current || lastActivity.current == null) return;
       const left = settings.inactivitySeconds - Math.floor((Date.now() - lastActivity.current) / 1000);
       if (left <= 0) resetSession('SESSION_TIMEOUT'); else if (left <= settings.warningSeconds) setRemaining(left); else setRemaining(null);
     }, 500);
