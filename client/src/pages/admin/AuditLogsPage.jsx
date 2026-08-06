@@ -1,0 +1,13 @@
+import { useCallback, useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
+import api, { apiMessage } from '../../api/client.js';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
+import { ErrorState, LoadingState } from '../../components/common/States.jsx';
+
+const actions = ['LOGIN', 'LOGOUT', 'CREATE_SERVICE', 'UPDATE_SERVICE', 'DELETE_SERVICE', 'CREATE_CATEGORY', 'UPDATE_CATEGORY', 'DELETE_CATEGORY', 'CREATE_ADMIN', 'UPDATE_ADMIN', 'DELETE_ADMIN', 'UPDATE_SETTINGS'];
+export default function AuditLogsPage() {
+  const [rows, setRows] = useState(null); const [meta, setMeta] = useState({ page: 1, pages: 1 }); const [filters, setFilters] = useState({ page: 1, action: '' }); const [error, setError] = useState('');
+  const load = useCallback(async () => { setError(''); try { const response = await api.get('/admin/audit-logs', { params: { ...filters, limit: 30 } }); setRows(response.data.data); setMeta(response.data.meta); } catch (err) { setError(apiMessage(err)); } }, [filters]);
+  useEffect(() => { load(); }, [load]);
+  return <><AdminPageHeader eyebrow="Безопасность" title="Журнал действий" description="Неизменяемая история административных операций" actions={<label className="action-filter"><ShieldCheck /><select value={filters.action} onChange={(e) => setFilters({ action: e.target.value, page: 1 })}><option value="">Все действия</option>{actions.map((action) => <option key={action}>{action}</option>)}</select></label>} />{error ? <ErrorState title="Не удалось загрузить журнал" text={error} onRetry={load} /> : !rows ? <LoadingState /> : <div className="admin-card admin-table-wrap"><table className="admin-table"><thead><tr><th>Дата</th><th>Сотрудник</th><th>Действие</th><th>Объект</th><th>IP</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString('ru-RU')}</td><td><strong>{item.adminUser.fullName}</strong><small className="table-subline">{item.adminUser.login}</small></td><td><span className="status-pill status-pill--neutral">{item.action}</span></td><td>{item.entityType || '—'} {item.entityId ? `#${item.entityId}` : ''}</td><td>{item.ipAddress || '—'}</td></tr>)}</tbody></table></div>}{meta.pages > 1 && <div className="pagination"><button disabled={meta.page <= 1} onClick={() => setFilters({ ...filters, page: meta.page - 1 })}><ChevronLeft />Назад</button><span>Страница {meta.page} из {meta.pages}</span><button disabled={meta.page >= meta.pages} onClick={() => setFilters({ ...filters, page: meta.page + 1 })}>Далее<ChevronRight /></button></div>}</>;
+}

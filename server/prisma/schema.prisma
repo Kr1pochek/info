@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+enum AnalyticsEventType {
+  SERVICE_OPEN
+  CATEGORY_OPEN
+  SEARCH
+  SESSION_TIMEOUT
+  SESSION_RESET
+  LANGUAGE_CHANGE
+  FONT_SIZE_CHANGE
+  HOME_RETURN
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  CREATE_SERVICE
+  UPDATE_SERVICE
+  DELETE_SERVICE
+  CREATE_CATEGORY
+  UPDATE_CATEGORY
+  DELETE_CATEGORY
+  CREATE_ADMIN
+  UPDATE_ADMIN
+  DELETE_ADMIN
+  UPDATE_SETTINGS
+}
+
+model AdminUser {
+  id            Int            @id @default(autoincrement())
+  login         String         @unique @db.VarChar(80)
+  passwordHash  String
+  fullName      String         @db.VarChar(160)
+  role          AdminRole      @default(EDITOR)
+  isActive      Boolean        @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([login])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id            Int              @id @default(autoincrement())
+  slug          String           @unique @db.VarChar(120)
+  titleRu       String           @db.VarChar(160)
+  titleKz       String           @db.VarChar(160)
+  descriptionRu String           @db.VarChar(600)
+  descriptionKz String           @db.VarChar(600)
+  icon          String           @default("Folder") @db.VarChar(60)
+  isPublished   Boolean          @default(false)
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  services      Service[]
+  events        AnalyticsEvent[]
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@index([createdAt])
+}
+
+model Service {
+  id                  Int              @id @default(autoincrement())
+  slug                String           @unique @db.VarChar(140)
+  titleRu             String           @db.VarChar(220)
+  titleKz             String           @db.VarChar(220)
+  shortDescriptionRu  String           @db.VarChar(800)
+  shortDescriptionKz  String           @db.VarChar(800)
+  fullDescriptionRu   String           @db.Text
+  fullDescriptionKz   String           @db.Text
+  targetAudienceRu    String           @db.Text
+  targetAudienceKz    String           @db.Text
+  requiredDocumentsRu Json
+  requiredDocumentsKz Json
+  requiredDataRu      Json
+  requiredDataKz      Json
+  conditionsRu        String           @db.Text
+  conditionsKz        String           @db.Text
+  stepsRu             Json
+  stepsKz             Json
+  processingTimeRu    String           @db.VarChar(300)
+  processingTimeKz    String           @db.VarChar(300)
+  costRu              String           @db.VarChar(300)
+  costKz              String           @db.VarChar(300)
+  resultRu            String           @db.Text
+  resultKz            String           @db.Text
+  rejectionReasonsRu  Json
+  rejectionReasonsKz  Json
+  contactsRu          String           @db.VarChar(500)
+  contactsKz          String           @db.VarChar(500)
+  officeAddressRu     String           @db.VarChar(500)
+  officeAddressKz     String           @db.VarChar(500)
+  workingHoursRu      String           @db.VarChar(500)
+  workingHoursKz      String           @db.VarChar(500)
+  keywordsRu          String           @db.VarChar(1000)
+  keywordsKz          String           @db.VarChar(1000)
+  icon                String           @default("FileText") @db.VarChar(60)
+  categoryId          Int
+  isPopular           Boolean          @default(false)
+  isPublished         Boolean          @default(false)
+  sortOrder           Int              @default(0)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  category            Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  events              AnalyticsEvent[]
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([categoryId])
+  @@index([isPopular])
+  @@index([createdAt])
+}
+
+model Setting {
+  id                     Int      @id @default(1)
+  organizationNameRu     String   @db.VarChar(240)
+  organizationNameKz     String   @db.VarChar(240)
+  contactPhone            String   @db.VarChar(80)
+  addressRu               String   @db.VarChar(500)
+  addressKz               String   @db.VarChar(500)
+  workingHoursRu          String   @db.VarChar(300)
+  workingHoursKz          String   @db.VarChar(300)
+  inactivitySeconds       Int      @default(60)
+  warningSeconds          Int      @default(10)
+  defaultLanguage         String   @default("ru") @db.VarChar(2)
+  showCurrentTime         Boolean  @default(true)
+  maintenanceMode        Boolean  @default(false)
+  maintenanceMessageRu   String   @db.VarChar(500)
+  maintenanceMessageKz   String   @db.VarChar(500)
+  popularServicesCount   Int      @default(6)
+  updatedAt               DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id          Int                @id @default(autoincrement())
+  eventType   AnalyticsEventType
+  serviceId   Int?
+  categoryId  Int?
+  searchQuery String?            @db.VarChar(120)
+  sessionId   String             @db.VarChar(80)
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  service     Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  category    Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([serviceId])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          Int         @id @default(autoincrement())
+  adminUserId Int
+  action      AuditAction
+  entityType  String?     @db.VarChar(80)
+  entityId    String?     @db.VarChar(80)
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?     @db.VarChar(80)
+  userAgent   String?     @db.VarChar(500)
+  createdAt   DateTime    @default(now())
+  adminUser   AdminUser   @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([adminUserId])
+  @@index([action])
+  @@index([createdAt])
+}

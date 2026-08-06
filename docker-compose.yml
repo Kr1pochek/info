@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dgd-infokiosk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dgd_infokiosk
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dgd_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - dgd_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dgd_infokiosk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dgd_postgres_data:

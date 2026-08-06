@@ -1,0 +1,36 @@
+export const messages = {
+  ru: {
+    language: 'Русский', alternateLanguage: 'Қазақша', home: 'Главная', back: 'Назад', fontSize: 'Размер текста',
+    normal: 'Обычный', large: 'Крупный', xlarge: 'Очень крупный', question: 'Чем мы можем вам помочь?',
+    subtitle: 'Выберите категорию или найдите нужную услугу', searchPlaceholder: 'Введите название услуги или ключевое слово',
+    clearSearch: 'Очистить поиск', categories: 'Категории услуг', popular: 'Популярные услуги', details: 'Подробнее',
+    allServices: 'Все услуги', noResults: 'По вашему запросу ничего не найдено', noServices: 'В этой категории пока нет опубликованных услуг',
+    unavailableTitle: 'Сервис временно недоступен.', unavailableText: 'Обратитесь к сотруднику ДГД.', retry: 'Повторить',
+    loading: 'Загрузка информации…', reset: 'Сбросить интерфейс', help: 'Нужна помощь?', contactCenter: 'Единый контакт-центр',
+    office: 'Адрес подразделения', schedule: 'График работы', sessionTitle: 'Сеанс скоро завершится',
+    sessionText: 'Из-за отсутствия активности вы будете возвращены на главную страницу.', continue: 'Продолжить работу',
+    seconds: 'сек.', about: 'Описание услуги', audience: 'Кому предназначена', documents: 'Необходимые документы',
+    requiredData: 'Необходимые данные', conditions: 'Условия получения', steps: 'Порядок получения', time: 'Срок оказания',
+    cost: 'Стоимость', result: 'Результат', rejection: 'Возможные причины отказа', contacts: 'Контакты',
+    category: 'Категория', notFound: 'Страница не найдена', notFoundText: 'Проверьте адрес или вернитесь на главный экран.',
+    servicesFound: 'Найдено услуг', searchResults: 'Результаты поиска', maintenance: 'Техническое обслуживание',
+  },
+  kz: {
+    language: 'Қазақша', alternateLanguage: 'Русский', home: 'Басты бет', back: 'Артқа', fontSize: 'Мәтін өлшемі',
+    normal: 'Қалыпты', large: 'Үлкен', xlarge: 'Өте үлкен', question: 'Сізге қалай көмектесе аламыз?',
+    subtitle: 'Санатты таңдаңыз немесе қажетті қызметті табыңыз', searchPlaceholder: 'Қызмет атауын немесе кілт сөзді енгізіңіз',
+    clearSearch: 'Іздеуді тазарту', categories: 'Қызмет санаттары', popular: 'Танымал қызметтер', details: 'Толығырақ',
+    allServices: 'Барлық қызметтер', noResults: 'Сұрауыңыз бойынша ештеңе табылмады', noServices: 'Бұл санатта жарияланған қызметтер жоқ',
+    unavailableTitle: 'Қызмет уақытша қолжетімсіз.', unavailableText: 'МКД қызметкеріне хабарласыңыз.', retry: 'Қайталау',
+    loading: 'Ақпарат жүктелуде…', reset: 'Интерфейсті қалпына келтіру', help: 'Көмек керек пе?', contactCenter: 'Бірыңғай байланыс орталығы',
+    office: 'Бөлімше мекенжайы', schedule: 'Жұмыс кестесі', sessionTitle: 'Сеанс жақында аяқталады',
+    sessionText: 'Белсенділік болмағандықтан, сіз басты бетке қайтарыласыз.', continue: 'Жұмысты жалғастыру',
+    seconds: 'сек.', about: 'Қызмет сипаттамасы', audience: 'Кімге арналған', documents: 'Қажетті құжаттар',
+    requiredData: 'Қажетті мәліметтер', conditions: 'Алу шарттары', steps: 'Алу тәртібі', time: 'Көрсету мерзімі',
+    cost: 'Құны', result: 'Нәтижесі', rejection: 'Бас тартудың ықтимал себептері', contacts: 'Байланыстар',
+    category: 'Санат', notFound: 'Бет табылмады', notFoundText: 'Мекенжайды тексеріңіз немесе басты экранға оралыңыз.',
+    servicesFound: 'Табылған қызметтер', searchResults: 'Іздеу нәтижелері', maintenance: 'Техникалық қызмет көрсету',
+  },
+};
+
+export const localized = (entity, base, language) => entity?.[`${base}${language === 'kz' ? 'Kz' : 'Ru'}`] || '';

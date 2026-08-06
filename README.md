@@ -1,0 +1,186 @@
+# Информационный киоск ДГД Алматы
+
+Полноценная информационная система для сенсорного киоска Департамента государственных доходов по городу Алматы. Публичная часть показывает двуязычный каталог услуг без внешних переходов и ввода персональных данных. Защищённая административная панель управляет контентом, сотрудниками, настройками, обезличенной аналитикой и журналом действий.
+
+## Возможности
+
+- крупный сенсорный интерфейс для 1920×1080 и 1080×1920;
+- русский и казахский языки, три масштаба текста;
+- категории, популярные услуги и поиск в реальном времени с debounce 300 мс;
+- подробная информация об услуге полностью внутри киоска;
+- глобальный таймер бездействия с предупреждением и полным сбросом сессии;
+- понятные состояния загрузки, отсутствия данных, ошибки API и обслуживания;
+- JWT access-token в памяти, ротация refresh-token в HttpOnly cookie;
+- роли `SUPER_ADMIN`, `ADMIN`, `EDITOR`;
+- CRUD услуг, категорий и администраторов с валидацией и подтверждением удаления;
+- системные настройки в PostgreSQL;
+- обезличенная аналитика и административный audit log;
+- Helmet, ограниченный CORS, rate limit, bcrypt, Zod и единый формат ошибок.
+
+## Стек
+
+Frontend: React 19, Vite, JavaScript, React Router, Axios, Lucide React, обычный CSS.
+
+Backend: Node.js 20+, Express, PostgreSQL 16, Prisma ORM, Zod, bcrypt, JWT, cookie-parser, CORS, Helmet, express-rate-limit.
+
+## Структура
+
+```text
+.
+├── client/                 React/Vite приложение
+│   └── src/
+│       ├── api/
+│       ├── components/
+│       ├── context/
+│       ├── hooks/
+│       ├── layouts/
+│       ├── pages/
+│       ├── routes/
+│       └── utils/
+├── server/                 Express API
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   ├── schema.prisma
+│   │   └── seed.js
+│   └── src/
+│       ├── config/
+│       ├── controllers/
+│       ├── middleware/
+│       ├── routes/
+│       ├── schemas/
+│       ├── services/
+│       └── utils/
+├── docker-compose.yml
+└── package.json
+```
+
+## Требования
+
+- Node.js 20 или новее;
+- npm 10 или новее;
+- PostgreSQL 14+ либо Docker Desktop с Compose.
+
+## Быстрый запуск PostgreSQL через Docker
+
+```bash
+docker compose up -d postgres
+```
+
+Контейнер создаёт БД `dgd_infokiosk`, пользователя `postgres` и публикует порт `5433`. Для разработки строка подключения:
+
+```env
+DATABASE_URL=postgresql://postgres:dgd_dev_password@127.0.0.1:5433/dgd_infokiosk
+```
+
+Для остановки используйте `docker compose stop postgres`. Данные сохраняются в именованном томе `dgd_postgres_data`.
+
+## Запуск с установленным PostgreSQL
+
+Создайте базу данных от имени пользователя с правами на создание таблиц:
+
+```sql
+CREATE DATABASE dgd_infokiosk;
+```
+
+Укажите реальный логин, пароль, адрес и порт в `DATABASE_URL`.
+
+## Переменные окружения
+
+Скопируйте примеры:
+
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+```
+
+В PowerShell:
+
+```powershell
+Copy-Item server/.env.example server/.env
+Copy-Item client/.env.example client/.env
+```
+
+Обязательные значения backend:
+
+```env
+NODE_ENV=development
+PORT=4000
+DATABASE_URL=postgresql://postgres:dgd_dev_password@127.0.0.1:5433/dgd_infokiosk
+CLIENT_URL=http://localhost:5173
+JWT_ACCESS_SECRET=случайная_строка_не_короче_32_символов
+JWT_REFRESH_SECRET=другая_случайная_строка_не_короче_32_символов
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=7d
+SEED_ADMIN_LOGIN=admin
+SEED_ADMIN_PASSWORD=надежный_пароль_не_короче_10_символов
+SEED_ADMIN_NAME=Главный администратор
+```
+
+Frontend:
+
+```env
+VITE_API_URL=http://localhost:4000/api
+```
+
+Для production задайте уникальные длинные JWT-секреты, точный HTTPS-адрес frontend и защищённую строку подключения к БД.
+
+## Установка, миграция и seed
+
+Из корня проекта:
+
+```bash
+npm run install:all
+npm run db:migrate
+npm run db:seed
+```
+
+Миграция создаёт таблицы, enum, связи и индексы. Seed идемпотентно создаёт первого `SUPER_ADMIN` из `server/.env`, 12 категорий, 24 услуги и системные настройки.
+
+После первого входа обязательно смените seed-пароль через раздел «Администраторы».
+
+## Разработка
+
+Запуск frontend и backend одновременно:
+
+```bash
+npm run dev
+```
+
+Отдельные процессы:
+
+```bash
+npm run dev:client
+npm run dev:server
+```
+
+- инфокиоск: `http://localhost:5173/`;
+- вход администратора: `http://localhost:5173/admin/login`;
+- админ-панель: `http://localhost:5173/admin`;
+- проверка API: `http://localhost:4000/api/health`.
+
+## Prisma Studio
+
+```bash
+npm run db:studio
+```
+
+## Проверки и production-сборка
+
+```bash
+npm run lint
+npm run build
+```
+
+Для запуска backend в production:
+
+```bash
+NODE_ENV=production npm run start --prefix server
+```
+
+Собранный frontend находится в `client/dist`. Раздавайте его через HTTPS reverse proxy, проксируя `/api` на Express. Для SPA сервер должен возвращать `index.html` на неизвестные frontend-маршруты.
+
+## Безопасность и приватность
+
+Публичный интерфейс не содержит внешних ссылок, QR-кодов, переходов в новые вкладки и форм ввода ИИН, БИН, банковских или иных персональных данных. Публичная аналитика не сохраняет IP посетителя. IP и user-agent фиксируются только в защищённом журнале административных действий.
+
+Никогда не публикуйте `server/.env`, реальные JWT-секреты и production-пароли. Перед эксплуатацией ограничьте сетевой доступ к PostgreSQL и настройте резервное копирование.
