@@ -154,7 +154,7 @@ model Setting {
   workingHoursKz          String   @db.VarChar(300)
   inactivitySeconds       Int      @default(60)
   warningSeconds          Int      @default(10)
-  defaultLanguage         String   @default("ru") @db.VarChar(2)
+  defaultLanguage         String   @default("kz") @db.VarChar(2)
   showCurrentTime         Boolean  @default(true)
   maintenanceMode        Boolean  @default(false)
   maintenanceMessageRu   String   @db.VarChar(500)

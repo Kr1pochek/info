@@ -30,7 +30,6 @@ export default function HomePage() {
   const searching = query.trim().length >= 2;
   return <>
     <section className="hero-section">
-      <div className="hero-section__eyebrow">{language === 'ru' ? 'Информационный киоск ДГД' : 'МКД ақпараттық киоскі'}</div>
       <h1>{t.question}</h1><p>{t.subtitle}</p><SearchBar value={query} onChange={setQuery} />
     </section>
     {searching ? <section className="content-section"><div className="section-heading"><div><span>{t.searchResults}</span><h2>{t.servicesFound}: {search.results.length}</h2></div></div>

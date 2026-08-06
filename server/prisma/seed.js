@@ -110,14 +110,14 @@ async function main() {
   }
 
   await prisma.setting.upsert({
-    where: { id: 1 }, update: {},
+    where: { id: 1 }, update: { defaultLanguage: 'kz' },
     create: {
       id: 1,
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
       organizationNameKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті',
       contactPhone: '1414', addressRu: 'г. Алматы, проспект Абылай хана, 93/95', addressKz: 'Алматы қ., Абылай хан даңғылы, 93/95',
       workingHoursRu: 'Пн–Пт, 09:00–18:30; перерыв 13:00–14:30', workingHoursKz: 'Дс–Жм, 09:00–18:30; үзіліс 13:00–14:30',
-      inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'ru', showCurrentTime: true, maintenanceMode: false,
+      inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'kz', showCurrentTime: true, maintenanceMode: false,
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
     },
