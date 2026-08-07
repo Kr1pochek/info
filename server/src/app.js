@@ -8,6 +8,7 @@ import { publicRoutes } from './routes/publicRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { errorHandler, notFound } from './middleware/error.js';
+import { uploadsRoot } from './middleware/upload.js';
 
 export const app = express();
 
@@ -41,6 +42,7 @@ app.use(cors({ origin: allowFrontendOrigin, credentials: true, methods: ['GET', 
 app.use(express.json({ limit: '100kb', strict: true }));
 app.use(cookieParser());
 app.use(rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false }));
+app.use('/uploads', express.static(uploadsRoot, { fallthrough: false, maxAge: env.NODE_ENV === 'production' ? '7d' : 0 }));
 
 app.get('/api/health', (_req, res) => res.json({ success: true, data: { status: 'ok' } }));
 app.use('/api/auth', authRoutes);

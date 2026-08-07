@@ -26,6 +26,14 @@ const api = axios.create({
   timeout: 10000,
 });
 
+export function assetUrl(value) {
+  if (!value || /^(?:https?:|data:|blob:)/i.test(value)) return value || '';
+  if (value.startsWith('/uploads/')) {
+    return `${new URL(api.defaults.baseURL, window.location.origin).origin}${value}`;
+  }
+  return value;
+}
+
 let accessToken = null;
 let refreshPromise = null;
 export const setAccessToken = (token) => { accessToken = token; };

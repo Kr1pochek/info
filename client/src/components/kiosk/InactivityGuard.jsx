@@ -12,7 +12,7 @@ export default function InactivityGuard({ children }) {
   const sessionStarted = useRef(false); const lastActivity = useRef(null); const [remaining, setRemaining] = useState(null);
   const continueSession = useCallback(() => { sessionStarted.current = true; lastActivity.current = Date.now(); setRemaining(null); }, []);
   const resetSession = useCallback((eventType = 'SESSION_TIMEOUT') => {
-    sessionStarted.current = false; lastActivity.current = null; setRemaining(null); resetLanguage(); resetFontSize(); track(eventType); navigate('/', { replace: true }); window.scrollTo({ top: 0, behavior: 'auto' });
+    sessionStarted.current = false; lastActivity.current = null; setRemaining(null); resetLanguage(); resetFontSize(); track(eventType); navigate('/kiosk', { replace: true }); window.scrollTo({ top: 0, behavior: 'auto' });
   }, [navigate, resetFontSize, resetLanguage]);
   useEffect(() => {
     if (!settings) return undefined;

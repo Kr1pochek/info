@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { authenticate, requireRoles } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { categoryPatchSchema, categorySchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
+import { categoryPatchSchema, categorySchema, newsPatchSchema, newsPublicationSchema, newsSchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
+import { uploadNewsImage } from '../middleware/upload.js';
 import * as content from '../controllers/adminContentController.js';
 import * as admin from '../controllers/adminController.js';
 
@@ -21,6 +22,14 @@ adminRoutes.post('/categories', requireRoles('SUPER_ADMIN', 'ADMIN'), validate(c
 adminRoutes.get('/categories/:id', content.getAdminCategory);
 adminRoutes.patch('/categories/:id', validate(categoryPatchSchema), content.updateCategory);
 adminRoutes.delete('/categories/:id', requireRoles('SUPER_ADMIN', 'ADMIN'), content.deleteCategory);
+
+adminRoutes.get('/news', content.listAdminNews);
+adminRoutes.post('/news/images', uploadNewsImage, content.saveNewsImage);
+adminRoutes.post('/news', validate(newsSchema), content.createNews);
+adminRoutes.get('/news/:id', content.getAdminNews);
+adminRoutes.patch('/news/:id', validate(newsPatchSchema), content.updateNews);
+adminRoutes.patch('/news/:id/publication', validate(newsPublicationSchema), content.updateNewsPublication);
+adminRoutes.delete('/news/:id', requireRoles('SUPER_ADMIN', 'ADMIN'), content.deleteNews);
 
 adminRoutes.get('/users', requireRoles('SUPER_ADMIN'), admin.listUsers);
 adminRoutes.post('/users', requireRoles('SUPER_ADMIN'), validate(userSchema), admin.createUser);

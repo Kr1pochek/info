@@ -91,3 +91,95 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   await writeAudit(req, 'DELETE_CATEGORY', 'Category', id, oldData);
   sendData(res, { deleted: true });
 });
+
+const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'title', 'published']);
+
+export const listAdminNews = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = pagination(req.query);
+  const search = String(req.query.search || '').trim().slice(0, 100);
+  const sort = newsOrderFields.has(req.query.sort) ? req.query.sort : 'updatedAt';
+  const direction = req.query.direction === 'asc' ? 'asc' : 'desc';
+  const now = new Date();
+  const where = {
+    ...(req.query.publication === 'scheduled' ? { published: true, publishedAt: { gt: now } }
+      : req.query.publication === 'live' ? { published: true, publishedAt: { lte: now } }
+        : req.query.publication === 'draft' ? { published: false }
+          : req.query.published === 'true' ? { published: true }
+            : req.query.published === 'false' ? { published: false } : {}),
+    ...(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
+    ...(search ? { OR: ['title', 'description', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
+  };
+  const [data, total] = await prisma.$transaction([
+    prisma.news.findMany({
+      where,
+      include: { author: { select: { id: true, fullName: true, login: true } } },
+      orderBy: { [sort]: direction },
+      skip,
+      take: limit,
+    }),
+    prisma.news.count({ where }),
+  ]);
+  sendData(res, data, { page, limit, total, pages: Math.ceil(total / limit) });
+});
+
+export const getAdminNews = asyncHandler(async (req, res) => {
+  const data = await prisma.news.findUnique({
+    where: { id: Number(req.params.id) },
+    include: { author: { select: { id: true, fullName: true, login: true } } },
+  });
+  if (!data) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  sendData(res, data);
+});
+
+export const saveNewsImage = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError(400, 'IMAGE_REQUIRED', 'Выберите изображение для загрузки');
+  sendData(res, { path: `/uploads/news/${req.file.filename}` }, null, 201);
+});
+
+export const createNews = asyncHandler(async (req, res) => {
+  const { publishedAt, ...input } = req.body;
+  const data = await prisma.news.create({
+    data: {
+      ...input,
+      authorId: req.user.id,
+      publishedAt: req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null,
+    },
+  });
+  await writeAudit(req, 'CREATE_NEWS', 'News', data.id, null, data);
+  sendData(res, data, null, 201);
+});
+
+export const updateNews = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.news.findUnique({ where: { id } });
+  if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  const changes = { ...req.body };
+  const hasPublishedAt = Object.hasOwn(changes, 'publishedAt');
+  if (changes.published === true) changes.publishedAt = hasPublishedAt ? changes.publishedAt ? new Date(changes.publishedAt) : new Date() : oldData.published ? oldData.publishedAt || new Date() : new Date();
+  if (changes.published === false) changes.publishedAt = null;
+  if (changes.published === undefined && changes.publishedAt) changes.publishedAt = new Date(changes.publishedAt);
+  const data = await prisma.news.update({ where: { id }, data: changes });
+  await writeAudit(req, 'UPDATE_NEWS', 'News', data.id, oldData, data);
+  sendData(res, data);
+});
+
+export const updateNewsPublication = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.news.findUnique({ where: { id } });
+  if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  const data = await prisma.news.update({
+    where: { id },
+    data: { published: req.body.published, publishedAt: req.body.published ? req.body.publishedAt ? new Date(req.body.publishedAt) : new Date() : null },
+  });
+  await writeAudit(req, req.body.published ? 'PUBLISH_NEWS' : 'UNPUBLISH_NEWS', 'News', data.id, oldData, data);
+  sendData(res, data);
+});
+
+export const deleteNews = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.news.findUnique({ where: { id } });
+  if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  await prisma.news.delete({ where: { id } });
+  await writeAudit(req, 'DELETE_NEWS', 'News', id, oldData);
+  sendData(res, { deleted: true });
+});

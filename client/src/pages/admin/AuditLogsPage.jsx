@@ -4,7 +4,7 @@ import api, { apiMessage } from '../../api/client.js';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
 
-const actions = ['LOGIN', 'LOGOUT', 'CREATE_SERVICE', 'UPDATE_SERVICE', 'DELETE_SERVICE', 'CREATE_CATEGORY', 'UPDATE_CATEGORY', 'DELETE_CATEGORY', 'CREATE_ADMIN', 'UPDATE_ADMIN', 'DELETE_ADMIN', 'UPDATE_SETTINGS'];
+const actions = ['LOGIN', 'LOGOUT', 'CREATE_SERVICE', 'UPDATE_SERVICE', 'DELETE_SERVICE', 'CREATE_CATEGORY', 'UPDATE_CATEGORY', 'DELETE_CATEGORY', 'CREATE_NEWS', 'UPDATE_NEWS', 'DELETE_NEWS', 'PUBLISH_NEWS', 'UNPUBLISH_NEWS', 'CREATE_ADMIN', 'UPDATE_ADMIN', 'DELETE_ADMIN', 'UPDATE_SETTINGS'];
 export default function AuditLogsPage() {
   const [rows, setRows] = useState(null); const [meta, setMeta] = useState({ page: 1, pages: 1 }); const [filters, setFilters] = useState({ page: 1, action: '' }); const [error, setError] = useState('');
   const load = useCallback(async () => { setError(''); try { const response = await api.get('/admin/audit-logs', { params: { ...filters, limit: 30 } }); setRows(response.data.data); setMeta(response.data.meta); } catch (err) { setError(apiMessage(err)); } }, [filters]);
