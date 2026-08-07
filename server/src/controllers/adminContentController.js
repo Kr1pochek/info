@@ -92,7 +92,7 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   sendData(res, { deleted: true });
 });
 
-const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'title', 'published']);
+const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'titleRu', 'titleKz', 'published']);
 
 export const listAdminNews = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
@@ -107,7 +107,7 @@ export const listAdminNews = asyncHandler(async (req, res) => {
           : req.query.published === 'true' ? { published: true }
             : req.query.published === 'false' ? { published: false } : {}),
     ...(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
-    ...(search ? { OR: ['title', 'description', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
+    ...(search ? { OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
   };
   const [data, total] = await prisma.$transaction([
     prisma.news.findMany({

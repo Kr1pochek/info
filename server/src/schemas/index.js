@@ -28,7 +28,8 @@ export const serviceSchema = z.object({
 export const servicePatchSchema = serviceSchema.partial().refine((value) => Object.keys(value).length > 0);
 
 export const newsSchema = z.object({
-  slug: slug.max(180), title: text(240), description: text(800), content: text(30000),
+  slug: slug.max(180), titleRu: text(240), titleKz: text(240),
+  descriptionRu: text(800), descriptionKz: text(800), contentRu: text(30000), contentKz: text(30000),
   image: text(500), category: z.enum(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']).default('GENERAL'),
   published: z.boolean().default(false), publishedAt: z.string().datetime().optional().nullable(),
 });

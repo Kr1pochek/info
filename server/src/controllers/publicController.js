@@ -56,12 +56,12 @@ export const listNews = asyncHandler(async (req, res) => {
     published: true,
     publishedAt: { lte: new Date() },
     ...(newsCategories.has(category) ? { category } : {}),
-    ...(search ? { OR: [{ title: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }, { content: { contains: search, mode: 'insensitive' } }] } : {}),
+    ...(search ? { OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'contentRu', 'contentKz'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
   };
   const [data, total] = await prisma.$transaction([
     prisma.news.findMany({
       where,
-      select: { id: true, slug: true, title: true, description: true, image: true, category: true, publishedAt: true, createdAt: true },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, publishedAt: true, createdAt: true },
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: limit,
@@ -74,7 +74,7 @@ export const listNews = asyncHandler(async (req, res) => {
 export const getNews = asyncHandler(async (req, res) => {
   const data = await prisma.news.findFirst({
     where: { slug: req.params.slug, published: true, publishedAt: { lte: new Date() } },
-    select: { id: true, slug: true, title: true, description: true, content: true, image: true, category: true, publishedAt: true, createdAt: true, updatedAt: true },
+    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, createdAt: true, updatedAt: true },
   });
   if (!data) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
   sendData(res, data);

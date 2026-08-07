@@ -73,9 +73,12 @@ model AdminUser {
 model News {
   id          Int        @id @default(autoincrement())
   slug        String     @unique @db.VarChar(180)
-  title       String     @db.VarChar(240)
-  description String     @db.VarChar(800)
-  content     String     @db.Text
+  titleRu       String     @db.VarChar(240)
+  titleKz       String     @db.VarChar(240)
+  descriptionRu String     @db.VarChar(800)
+  descriptionKz String     @db.VarChar(800)
+  contentRu     String     @db.Text
+  contentKz     String     @db.Text
   image       String     @db.VarChar(500)
   category    NewsCategory @default(GENERAL)
   published   Boolean    @default(false)
