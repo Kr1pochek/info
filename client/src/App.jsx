@@ -25,6 +25,7 @@ import NewsLayout from './layouts/NewsLayout.jsx';
 import NewsListPage from './pages/news/NewsListPage.jsx';
 import NewsDetailPage from './pages/news/NewsDetailPage.jsx';
 import AdminNewsPage from './pages/admin/NewsPage.jsx';
+import BroadcastPage from './pages/admin/BroadcastPage.jsx';
 
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><Routes>
@@ -35,6 +36,7 @@ export default function App() {
     <Route path="admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
       <Route index element={<DashboardPage />} /><Route path="services" element={<AdminServicesPage />} /><Route path="categories" element={<CategoriesPage />} />
       <Route path="news" element={<AdminNewsPage />} />
+      <Route path="broadcast" element={<BroadcastPage />} />
       <Route path="analytics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AnalyticsPage /></RoleRoute>} />
       <Route path="users" element={<RoleRoute roles={['SUPER_ADMIN']}><UsersPage /></RoleRoute>} />
       <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SettingsPage /></RoleRoute>} />

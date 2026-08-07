@@ -1,4 +1,4 @@
-import { BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Newspaper, Settings, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Newspaper, Settings, ShieldCheck, Tv, Users } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -7,6 +7,7 @@ const links = [
   { to: '/admin/services', label: 'Услуги', icon: BookOpenCheck },
   { to: '/admin/categories', label: 'Категории', icon: Boxes },
   { to: '/admin/news', label: 'Новости', icon: Newspaper },
+  { to: '/admin/broadcast', label: 'Эфир', icon: Tv },
   { to: '/admin/analytics', label: 'Аналитика', icon: BarChart3, roles: ['SUPER_ADMIN', 'ADMIN'] },
   { to: '/admin/users', label: 'Администраторы', icon: Users, roles: ['SUPER_ADMIN'] },
   { to: '/admin/settings', label: 'Настройки', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN'] },

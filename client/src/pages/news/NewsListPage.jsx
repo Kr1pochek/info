@@ -1,43 +1,49 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, BadgeDollarSign, CalendarDays, Landmark, RefreshCw, Search, TrendingDown, TrendingUp, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Cake, CalendarDays, CircleDollarSign, Megaphone, MousePointerClick, Newspaper, PartyPopper, RefreshCw } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 import api, { apiMessage, assetUrl } from '../../api/client.js';
-import NewsCard, { newsDate } from '../../components/news/NewsCard.jsx';
-import { EmptyState, ErrorState, LoadingState } from '../../components/common/States.jsx';
+import { ErrorState, LoadingState } from '../../components/common/States.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
-import { localizedNews, newsCategories, newsCategoryClass, newsCategoryLabel, newsCopy } from '../../utils/news.js';
+import { localizedNews, newsCategoryLabel } from '../../utils/news.js';
+import InteractiveNewsFeed from './InteractiveNewsFeed.jsx';
+
+const birthdayCopy = {
+  ru: { eyebrow: 'Сегодня день рождения', prefix: 'Поздравляем', wishes: 'Желаем крепкого здоровья, благополучия, вдохновения и новых профессиональных успехов!' },
+  kz: { eyebrow: 'Бүгін туған күн', prefix: 'Құттықтаймыз', wishes: 'Зор денсаулық, амандық, шабыт және жаңа кәсіби жетістіктер тілейміз!' },
+};
+
+function BroadcastScreen() {
+  const { language, setLanguage } = useLanguage();
+  const [broadcast, setBroadcast] = useState(null); const [rate, setRate] = useState(null); const [error, setError] = useState(''); const [index, setIndex] = useState(0);
+  const load = useCallback(async () => { setError(''); try { const response = await api.get('/broadcast'); setBroadcast(response.data.data); setIndex((current) => Math.min(current, Math.max(0, response.data.data.slides.length - 1))); } catch (err) { setError(apiMessage(err)); } }, []);
+  useEffect(() => { load(); const timer = setInterval(load, 5 * 60 * 1000); return () => clearInterval(timer); }, [load]);
+  useEffect(() => { api.get('/exchange-rates/usd-kzt').then((response) => setRate(response.data.data)).catch(() => setRate(null)); }, []);
+  useEffect(() => { setLanguage('kz', true); }, [setLanguage]);
+  const slides = broadcast?.slides || []; const current = slides[index];
+  const currentId = current?.id;
+  const advance = useCallback(() => setIndex((currentIndex) => slides.length ? (currentIndex + 1) % slides.length : 0), [slides.length]);
+  useEffect(() => { if (currentId) setLanguage('kz', true); }, [currentId, setLanguage]);
+  useEffect(() => { if (!current || current.kind === 'VIDEO') return undefined; const seconds = language === 'kz' ? broadcast.settings.broadcastLanguageSeconds : Math.max(5, broadcast.settings.broadcastSlideSeconds - broadcast.settings.broadcastLanguageSeconds); const timer = setTimeout(() => { if (language === 'kz') setLanguage('ru', true); else { setLanguage('kz', true); advance(); } }, seconds * 1000); return () => clearTimeout(timer); }, [advance, broadcast, current, language, setLanguage]);
+  const item = useMemo(() => current?.kind === 'NEWS' ? localizedNews(current, language) : current ? { ...current, title: current[language === 'kz' ? 'titleKz' : 'titleRu'], description: current[language === 'kz' ? 'descriptionKz' : 'descriptionRu'] } : null, [current, language]);
+  if (!broadcast && !error) return <div className="broadcast-screen"><LoadingState text="Эфир жүктелуде…" /></div>;
+  if (error || !item) return <div className="broadcast-screen"><ErrorState title="Эфир недоступен" text={error || 'Нет активных материалов'} onRetry={load} /></div>;
+  const ticker = broadcast.settings[language === 'kz' ? 'tickerTextKz' : 'tickerTextRu'];
+  const locale = language === 'kz' ? 'kk-KZ' : 'ru-RU';
+  const phaseSeconds = language === 'kz' ? broadcast.settings.broadcastLanguageSeconds : Math.max(5, broadcast.settings.broadcastSlideSeconds - broadcast.settings.broadcastLanguageSeconds);
+  const finishVideo = () => { if (language === 'kz') setLanguage('ru', true); else { setLanguage('kz', true); advance(); } };
+  return <main className={`broadcast-screen broadcast-screen--${item.kind.toLowerCase()}`}>
+    <div className="broadcast-progress" key={`${item.id}-${language}`} style={{ '--duration': `${item.kind === 'VIDEO' ? 120 : phaseSeconds}s` }} />
+    <div className="broadcast-corner"><span>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</span><strong>{String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</strong></div>
+    {rate && <div className="broadcast-rate"><CircleDollarSign /><span>USD / KZT</span><strong>{rate.rate.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</strong></div>}
+    {item.kind === 'VIDEO' ? <section className="broadcast-video-slide"><video key={`${item.mediaUrl}-${language}`} src={assetUrl(item.mediaUrl)} autoPlay muted playsInline onEnded={finishVideo} onError={finishVideo} /><div className="broadcast-video-caption"><span><RefreshCw size={18} />{language === 'kz' ? 'Бейнематериал' : 'Видеоматериал'}</span><h1>{item.title}</h1><p>{item.description}</p></div></section>
+      : item.kind === 'BIRTHDAY' ? <section className="birthday-slide"><div className="birthday-slide__decor"><PartyPopper /><Cake /></div><div className="birthday-slide__content"><span>{birthdayCopy[language].eyebrow}</span><p>{birthdayCopy[language].prefix}</p><h1>{item.title}</h1><div>{item.description}</div><strong>{birthdayCopy[language].wishes}</strong></div></section>
+        : <section className="broadcast-news-slide"><div className="broadcast-news-slide__copy"><div className="broadcast-news-slide__meta"><span><Newspaper size={18} />{newsCategoryLabel(item.category, language)}</span><time><CalendarDays size={17} />{new Date(item.publishedAt || item.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</time></div><h1>{item.title}</h1><p className="broadcast-news-slide__lead">{item.description}</p><div className="broadcast-news-slide__body">{item.content.split(/\n{2,}/).slice(0, 4).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}</div></div><div className="broadcast-news-slide__visual"><img src={assetUrl(item.image)} alt="" /></div></section>}
+    <div className="broadcast-touch-hint"><MousePointerClick size={19} />{language === 'kz' ? 'Жаңалықтарды ашу үшін экранды түртіңіз' : 'Коснитесь экрана, чтобы открыть новости'}</div>
+    <div className="broadcast-ticker"><span className="broadcast-ticker__label"><Megaphone size={19} />{language === 'kz' ? 'АҚПАРАТ' : 'ВАЖНО'}</span><div><p>{ticker}<i>•</i>{ticker}<i>•</i>{ticker}</p></div></div>
+  </main>;
+}
 
 export default function NewsListPage() {
-  const { language } = useLanguage(); const copy = newsCopy[language]; const locale = language === 'kz' ? 'kk-KZ' : 'ru-RU';
-  const [news, setNews] = useState(null); const [rate, setRate] = useState(null); const [rateLoading, setRateLoading] = useState(true); const [error, setError] = useState('');
-  const [filters, setFilters] = useState({ category: '', search: '' });
-  const load = useCallback(async () => { setError(''); try { const response = await api.get('/news', { params: { limit: 50, category: filters.category || undefined, search: filters.search.trim() || undefined } }); setNews(response.data.data); } catch (err) { setError(apiMessage(err)); } }, [filters]);
-  const loadRate = useCallback(async () => { setRateLoading(true); try { const response = await api.get('/exchange-rates/usd-kzt'); setRate(response.data.data); } catch { setRate(null); } finally { setRateLoading(false); } }, []);
-  useEffect(() => { const timer = setTimeout(load, 250); return () => clearTimeout(timer); }, [load]);
-  useEffect(() => { loadRate(); const timer = setInterval(loadRate, 60 * 60 * 1000); return () => clearInterval(timer); }, [loadRate]);
-  const RateTrend = rate?.change > 0 ? TrendingUp : TrendingDown;
-  const featured = localizedNews(news?.[0], language); const feed = news?.slice(1) || [];
-
-  return <>
-    <section className="news-masthead">
-      <div><span>{copy.portal}</span><h1>{copy.title}</h1><p>{new Date().toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p></div>
-      <aside className="exchange-card exchange-card--inline" aria-label="Официальный курс доллара к тенге">
-        <div className="exchange-card__heading"><span><BadgeDollarSign size={21} /></span><div><small>{copy.officialRate}</small><strong>USD / KZT</strong></div><Landmark size={19} /></div>
-        {rateLoading ? <div className="exchange-card__loading"><RefreshCw className="spin" size={20} />{copy.updating}</div> : rate ? <div className="exchange-card__inline-value"><strong>{rate.rate.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</strong><span className={rate.change > 0 ? 'is-up' : 'is-down'}><RateTrend size={15} />{rate.change > 0 ? '+' : ''}{rate.change.toLocaleString(locale, { minimumFractionDigits: 2 })}</span><small>{new Date(`${rate.date}T00:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })}</small></div> : <div className="exchange-card__unavailable">{copy.rateUnavailable}</div>}
-      </aside>
-    </section>
-
-    <section className="news-discovery">
-      <label className="news-search"><Search size={20} /><input type="search" value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} placeholder={copy.search} aria-label={copy.search} />{filters.search && <button onClick={() => setFilters({ ...filters, search: '' })} aria-label={copy.clearSearch}><X size={18} /></button>}</label>
-      <div className="news-category-tabs" aria-label={copy.news}>{newsCategories.map((item) => <button className={filters.category === item.value ? 'active' : ''} onClick={() => setFilters({ ...filters, category: item.value })} key={item.value || 'all'}>{language === 'kz' ? item.labelKz : item.label}</button>)}</div>
-    </section>
-
-    {!news && !error ? <LoadingState text={copy.loading} /> : error ? <ErrorState title={copy.loadError} text={error} onRetry={load} /> : !featured ? <EmptyState text={copy.empty} /> : <>
-      <section className="featured-news">
-        <Link to={`/news/${featured.slug}`} className="featured-news__image"><img src={assetUrl(featured.image)} alt="" /></Link>
-        <div className="featured-news__content"><div className="featured-news__meta"><span className={newsCategoryClass(featured.category)}>{newsCategoryLabel(featured.category, language)}</span><time dateTime={featured.publishedAt || featured.createdAt}><CalendarDays size={16} />{newsDate(featured, language)}</time></div><h2><Link to={`/news/${featured.slug}`}>{featured.title}</Link></h2><p>{featured.description}</p><Link to={`/news/${featured.slug}`} className="featured-news__link">{copy.readFeatured} <ArrowRight size={20} /></Link></div>
-      </section>
-      <section className="news-feed"><div className="news-feed__heading"><div><span>{filters.search || filters.category ? copy.results : copy.fresh}</span><h2>{filters.search ? `${copy.searchResult}: «${filters.search}»` : filters.category ? newsCategoryLabel(filters.category, language) : copy.latest}</h2></div><strong>{news.length.toLocaleString(locale)}</strong></div>{feed.length ? <div className="news-grid">{feed.map((item) => <NewsCard news={item} key={item.id} />)}</div> : <p className="news-feed__single">{copy.onlyOne}</p>}</section>
-    </>}
-  </>;
+  const { interactive } = useOutletContext();
+  return interactive ? <InteractiveNewsFeed /> : <BroadcastScreen />;
 }

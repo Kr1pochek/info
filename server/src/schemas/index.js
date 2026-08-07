@@ -36,6 +36,23 @@ export const newsSchema = z.object({
 export const newsPatchSchema = newsSchema.partial().refine((value) => Object.keys(value).length > 0);
 export const newsPublicationSchema = z.object({ published: z.boolean(), publishedAt: z.string().datetime().optional().nullable() });
 
+export const broadcastItemSchema = z.object({
+  type: z.enum(['BIRTHDAY', 'VIDEO']), titleRu: text(240), titleKz: text(240),
+  descriptionRu: text(1200), descriptionKz: text(1200), mediaUrl: z.string().trim().max(500).optional().nullable(),
+  eventDate: z.string().date().optional().nullable(), isActive: z.boolean().default(true),
+  sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
+}).superRefine((value, context) => {
+  if (value.type === 'BIRTHDAY' && !value.eventDate) context.addIssue({ code: 'custom', path: ['eventDate'], message: 'Укажите дату рождения' });
+  if (value.type === 'VIDEO' && !value.mediaUrl) context.addIssue({ code: 'custom', path: ['mediaUrl'], message: 'Загрузите видео' });
+});
+
+export const broadcastSettingsSchema = z.object({
+  tickerTextRu: text(1000), tickerTextKz: text(1000),
+  broadcastSlideSeconds: z.coerce.number().int().min(12).max(240),
+  broadcastLanguageSeconds: z.coerce.number().int().min(5).max(120),
+  broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
+}).refine((value) => value.broadcastLanguageSeconds < value.broadcastSlideSeconds, { path: ['broadcastLanguageSeconds'], message: 'Смена языка должна происходить до завершения слайда' });
+
 export const userSchema = z.object({
   login: text(80), password: z.string().min(10).max(128), fullName: text(160),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), isActive: z.boolean().default(true),
@@ -51,6 +68,8 @@ export const settingsSchema = z.object({
   inactivitySeconds: z.coerce.number().int().min(30).max(3600), warningSeconds: z.coerce.number().int().min(5).max(120),
   defaultLanguage: z.enum(['ru', 'kz']), showCurrentTime: z.boolean(), maintenanceMode: z.boolean(),
   maintenanceMessageRu: text(500), maintenanceMessageKz: text(500), popularServicesCount: z.coerce.number().int().min(1).max(20),
+  tickerTextRu: text(1000), tickerTextKz: text(1000), broadcastSlideSeconds: z.coerce.number().int().min(12).max(240),
+  broadcastLanguageSeconds: z.coerce.number().int().min(5).max(120), broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });
 
 export const analyticsSchema = z.object({

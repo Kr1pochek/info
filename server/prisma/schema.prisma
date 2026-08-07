@@ -42,6 +42,10 @@ enum AuditAction {
   DELETE_NEWS
   PUBLISH_NEWS
   UNPUBLISH_NEWS
+  CREATE_BROADCAST_ITEM
+  UPDATE_BROADCAST_ITEM
+  DELETE_BROADCAST_ITEM
+  UPDATE_BROADCAST_SETTINGS
 }
 
 enum NewsCategory {
@@ -51,19 +55,25 @@ enum NewsCategory {
   EVENT
 }
 
+enum BroadcastItemType {
+  BIRTHDAY
+  VIDEO
+}
+
 model AdminUser {
-  id            Int            @id @default(autoincrement())
-  login         String         @unique @db.VarChar(80)
-  passwordHash  String
-  fullName      String         @db.VarChar(160)
-  role          AdminRole      @default(EDITOR)
-  isActive      Boolean        @default(true)
-  lastLoginAt   DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
-  news          News[]
+  id             Int             @id @default(autoincrement())
+  login          String          @unique @db.VarChar(80)
+  passwordHash   String
+  fullName       String          @db.VarChar(160)
+  role           AdminRole       @default(EDITOR)
+  isActive       Boolean         @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]
+  news           News[]
+  broadcastItems BroadcastItem[]
 
   @@index([login])
   @@index([role])
@@ -71,26 +81,47 @@ model AdminUser {
 }
 
 model News {
-  id          Int        @id @default(autoincrement())
-  slug        String     @unique @db.VarChar(180)
-  titleRu       String     @db.VarChar(240)
-  titleKz       String     @db.VarChar(240)
-  descriptionRu String     @db.VarChar(800)
-  descriptionKz String     @db.VarChar(800)
-  contentRu     String     @db.Text
-  contentKz     String     @db.Text
-  image       String     @db.VarChar(500)
-  category    NewsCategory @default(GENERAL)
-  published   Boolean    @default(false)
-  publishedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  authorId    Int?
-  author      AdminUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  id            Int          @id @default(autoincrement())
+  slug          String       @unique @db.VarChar(180)
+  titleRu       String       @db.VarChar(240)
+  titleKz       String       @db.VarChar(240)
+  descriptionRu String       @db.VarChar(800)
+  descriptionKz String       @db.VarChar(800)
+  contentRu     String       @db.Text
+  contentKz     String       @db.Text
+  image         String       @db.VarChar(500)
+  category      NewsCategory @default(GENERAL)
+  published     Boolean      @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  authorId      Int?
+  author        AdminUser?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([published, publishedAt])
   @@index([category])
   @@index([createdAt])
+  @@index([authorId])
+}
+
+model BroadcastItem {
+  id            Int               @id @default(autoincrement())
+  type          BroadcastItemType
+  titleRu       String            @db.VarChar(240)
+  titleKz       String            @db.VarChar(240)
+  descriptionRu String            @db.VarChar(1200)
+  descriptionKz String            @db.VarChar(1200)
+  mediaUrl      String?           @db.VarChar(500)
+  eventDate     DateTime?         @db.Date
+  isActive      Boolean           @default(true)
+  sortOrder     Int               @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  authorId      Int?
+  author        AdminUser?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([type, isActive])
+  @@index([sortOrder])
   @@index([authorId])
 }
 
@@ -181,23 +212,28 @@ model Service {
 }
 
 model Setting {
-  id                     Int      @id @default(1)
-  organizationNameRu     String   @db.VarChar(240)
-  organizationNameKz     String   @db.VarChar(240)
-  contactPhone            String   @db.VarChar(80)
-  addressRu               String   @db.VarChar(500)
-  addressKz               String   @db.VarChar(500)
-  workingHoursRu          String   @db.VarChar(300)
-  workingHoursKz          String   @db.VarChar(300)
-  inactivitySeconds       Int      @default(60)
-  warningSeconds          Int      @default(10)
-  defaultLanguage         String   @default("kz") @db.VarChar(2)
-  showCurrentTime         Boolean  @default(true)
-  maintenanceMode        Boolean  @default(false)
-  maintenanceMessageRu   String   @db.VarChar(500)
-  maintenanceMessageKz   String   @db.VarChar(500)
-  popularServicesCount   Int      @default(6)
-  updatedAt               DateTime @updatedAt
+  id                       Int      @id @default(1)
+  organizationNameRu       String   @db.VarChar(240)
+  organizationNameKz       String   @db.VarChar(240)
+  contactPhone             String   @db.VarChar(80)
+  addressRu                String   @db.VarChar(500)
+  addressKz                String   @db.VarChar(500)
+  workingHoursRu           String   @db.VarChar(300)
+  workingHoursKz           String   @db.VarChar(300)
+  inactivitySeconds        Int      @default(60)
+  warningSeconds           Int      @default(10)
+  defaultLanguage          String   @default("kz") @db.VarChar(2)
+  showCurrentTime          Boolean  @default(true)
+  maintenanceMode          Boolean  @default(false)
+  maintenanceMessageRu     String   @db.VarChar(500)
+  maintenanceMessageKz     String   @db.VarChar(500)
+  popularServicesCount     Int      @default(6)
+  tickerTextRu             String   @default("Важная информация и актуальные объявления доступны на корпоративном портале") @db.VarChar(1000)
+  tickerTextKz             String   @default("Маңызды ақпарат пен өзекті хабарландырулар корпоративтік порталда қолжетімді") @db.VarChar(1000)
+  broadcastSlideSeconds    Int      @default(24)
+  broadcastLanguageSeconds Int      @default(12)
+  broadcastIdleSeconds     Int      @default(60)
+  updatedAt                DateTime @updatedAt
 }
 
 model AnalyticsEvent {

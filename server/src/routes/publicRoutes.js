@@ -13,6 +13,7 @@ publicRoutes.get('/services/search', publicController.searchServices);
 publicRoutes.get('/services/:slug', publicController.getService);
 publicRoutes.get('/news', publicController.listNews);
 publicRoutes.get('/news/:slug', publicController.getNews);
+publicRoutes.get('/broadcast', publicController.getBroadcast);
 publicRoutes.get('/exchange-rates/usd-kzt', publicController.usdKztRate);
 publicRoutes.get('/settings/public', publicController.publicSettings);
 publicRoutes.post('/analytics/events', validate(analyticsSchema), publicController.createAnalyticsEvent);

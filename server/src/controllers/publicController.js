@@ -80,6 +80,27 @@ export const getNews = asyncHandler(async (req, res) => {
   sendData(res, data);
 });
 
+export const getBroadcast = asyncHandler(async (_req, res) => {
+  const now = new Date();
+  const today = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const [settings, news, items] = await Promise.all([
+    prisma.setting.findUnique({ where: { id: 1 }, select: { tickerTextRu: true, tickerTextKz: true, broadcastSlideSeconds: true, broadcastLanguageSeconds: true, broadcastIdleSeconds: true } }),
+    prisma.news.findMany({
+      where: { published: true, publishedAt: { lte: now } },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, createdAt: true },
+      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+      take: 20,
+    }),
+    prisma.broadcastItem.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
+  ]);
+  const birthdays = items.filter((item) => item.type === 'BIRTHDAY' && item.eventDate && `${String(item.eventDate.getUTCMonth() + 1).padStart(2, '0')}-${String(item.eventDate.getUTCDate()).padStart(2, '0')}` === today)
+    .map((item) => ({ ...item, id: `birthday-${item.id}`, kind: 'BIRTHDAY', eventDate: undefined, authorId: undefined }));
+  const videos = items.filter((item) => item.type === 'VIDEO' && item.mediaUrl)
+    .map((item) => ({ ...item, id: `video-${item.id}`, kind: 'VIDEO', eventDate: undefined, authorId: undefined }));
+  const newsSlides = news.map((item) => ({ ...item, id: `news-${item.id}`, kind: 'NEWS' }));
+  sendData(res, { settings, slides: [...birthdays, ...videos, ...newsSlides] });
+});
+
 export const usdKztRate = asyncHandler(async (_req, res) => {
   const now = Date.now();
   if (exchangeRateCache.data && exchangeRateCache.expiresAt > now) return sendData(res, exchangeRateCache.data);

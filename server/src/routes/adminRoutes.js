@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { authenticate, requireRoles } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { categoryPatchSchema, categorySchema, newsPatchSchema, newsPublicationSchema, newsSchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
-import { uploadNewsImage } from '../middleware/upload.js';
+import { broadcastItemSchema, broadcastSettingsSchema, categoryPatchSchema, categorySchema, newsPatchSchema, newsPublicationSchema, newsSchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
+import { uploadBroadcastVideo, uploadNewsImage } from '../middleware/upload.js';
 import * as content from '../controllers/adminContentController.js';
 import * as admin from '../controllers/adminController.js';
 
@@ -30,6 +30,14 @@ adminRoutes.get('/news/:id', content.getAdminNews);
 adminRoutes.patch('/news/:id', validate(newsPatchSchema), content.updateNews);
 adminRoutes.patch('/news/:id/publication', validate(newsPublicationSchema), content.updateNewsPublication);
 adminRoutes.delete('/news/:id', requireRoles('SUPER_ADMIN', 'ADMIN'), content.deleteNews);
+
+adminRoutes.get('/broadcast/items', content.listBroadcastItems);
+adminRoutes.post('/broadcast/videos', uploadBroadcastVideo, content.saveBroadcastVideo);
+adminRoutes.post('/broadcast/items', validate(broadcastItemSchema), content.createBroadcastItem);
+adminRoutes.patch('/broadcast/items/:id', validate(broadcastItemSchema), content.updateBroadcastItem);
+adminRoutes.delete('/broadcast/items/:id', requireRoles('SUPER_ADMIN', 'ADMIN'), content.deleteBroadcastItem);
+adminRoutes.get('/broadcast/settings', content.getBroadcastSettings);
+adminRoutes.patch('/broadcast/settings', validate(broadcastSettingsSchema), content.updateBroadcastSettings);
 
 adminRoutes.get('/users', requireRoles('SUPER_ADMIN'), admin.listUsers);
 adminRoutes.post('/users', requireRoles('SUPER_ADMIN'), validate(userSchema), admin.createUser);

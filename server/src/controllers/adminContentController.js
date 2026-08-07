@@ -183,3 +183,61 @@ export const deleteNews = asyncHandler(async (req, res) => {
   await writeAudit(req, 'DELETE_NEWS', 'News', id, oldData);
   sendData(res, { deleted: true });
 });
+
+export const listBroadcastItems = asyncHandler(async (_req, res) => {
+  const data = await prisma.broadcastItem.findMany({
+    include: { author: { select: { id: true, fullName: true, login: true } } },
+    orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
+  });
+  sendData(res, data);
+});
+
+export const saveBroadcastVideo = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError(400, 'VIDEO_REQUIRED', 'Выберите видео для загрузки');
+  sendData(res, { path: `/uploads/broadcast/${req.file.filename}` }, null, 201);
+});
+
+function broadcastData(body, authorId) {
+  return {
+    ...body,
+    authorId,
+    eventDate: body.type === 'BIRTHDAY' && body.eventDate ? new Date(`${body.eventDate}T00:00:00.000Z`) : null,
+    mediaUrl: body.type === 'VIDEO' ? body.mediaUrl : null,
+  };
+}
+
+export const createBroadcastItem = asyncHandler(async (req, res) => {
+  const data = await prisma.broadcastItem.create({ data: broadcastData(req.body, req.user.id) });
+  await writeAudit(req, 'CREATE_BROADCAST_ITEM', 'BroadcastItem', data.id, null, data);
+  sendData(res, data, null, 201);
+});
+
+export const updateBroadcastItem = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.broadcastItem.findUnique({ where: { id } });
+  if (!oldData) throw new AppError(404, 'BROADCAST_ITEM_NOT_FOUND', 'Элемент эфира не найден');
+  const data = await prisma.broadcastItem.update({ where: { id }, data: broadcastData(req.body, oldData.authorId) });
+  await writeAudit(req, 'UPDATE_BROADCAST_ITEM', 'BroadcastItem', id, oldData, data);
+  sendData(res, data);
+});
+
+export const deleteBroadcastItem = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.broadcastItem.findUnique({ where: { id } });
+  if (!oldData) throw new AppError(404, 'BROADCAST_ITEM_NOT_FOUND', 'Элемент эфира не найден');
+  await prisma.broadcastItem.delete({ where: { id } });
+  await writeAudit(req, 'DELETE_BROADCAST_ITEM', 'BroadcastItem', id, oldData);
+  sendData(res, { deleted: true });
+});
+
+export const getBroadcastSettings = asyncHandler(async (_req, res) => {
+  const data = await prisma.setting.findUnique({ where: { id: 1 }, select: { tickerTextRu: true, tickerTextKz: true, broadcastSlideSeconds: true, broadcastLanguageSeconds: true, broadcastIdleSeconds: true } });
+  sendData(res, data);
+});
+
+export const updateBroadcastSettings = asyncHandler(async (req, res) => {
+  const oldData = await prisma.setting.findUnique({ where: { id: 1 } });
+  const data = await prisma.setting.update({ where: { id: 1 }, data: req.body });
+  await writeAudit(req, 'UPDATE_BROADCAST_SETTINGS', 'Setting', 1, oldData, data);
+  sendData(res, data);
+});
