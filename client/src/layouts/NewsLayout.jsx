@@ -15,11 +15,11 @@ export default function NewsLayout() {
   const activateInteractive = useCallback(() => { setInteractive(true); resetIdleTimer(); }, [resetIdleTimer]);
   useEffect(() => { if (interactive) resetIdleTimer(); return () => clearTimeout(timerRef.current); }, [interactive, resetIdleTimer]);
   useEffect(() => { if (location.pathname !== '/news' && !interactive) activateInteractive(); }, [activateInteractive, interactive, location.pathname]);
-  const activityProps = { onPointerDownCapture: activateInteractive, onKeyDownCapture: activateInteractive, onWheelCapture: activateInteractive };
-  if (!interactive) return <div className="news-broadcast-entry" tabIndex="0" {...activityProps}><Outlet context={{ interactive }} /></div>;
+  const activityProps = { onPointerDownCapture: resetIdleTimer, onKeyDownCapture: resetIdleTimer, onWheelCapture: resetIdleTimer };
+  if (!interactive) return <div className="news-broadcast-entry"><Outlet context={{ interactive, activateInteractive }} /></div>;
   return <div className="news-shell" {...activityProps}>
     <header className="news-header"><Link to="/news" className="news-brand"><span><Newspaper size={25} /></span><div><strong>{copy.brand}</strong><small>{copy.brandSubtitle}</small></div></Link><nav aria-label="Навигация новостей">{location.pathname !== '/news' && <Link to="/news" className="news-nav-link news-nav-back"><ArrowLeft size={19} />{copy.backToFeed}</Link>}<button type="button" className="news-nav-link news-language-switch" onClick={() => setLanguage(language === 'kz' ? 'ru' : 'kz')}><Languages size={19} />{language === 'kz' ? 'Рус' : 'Қаз'}</button><Link to="/" className="news-nav-link"><Grid2X2 size={19} />{copy.allServices}</Link></nav></header>
-    <main className="news-main"><Outlet context={{ interactive }} /></main>
+    <main className="news-main"><Outlet context={{ interactive, activateInteractive }} /></main>
     <footer className="news-footer"><span>{copy.organization}</span><Link to="/admin/login">{copy.administration}</Link></footer>
   </div>;
 }

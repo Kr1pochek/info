@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Cake, CalendarDays, CircleDollarSign, Megaphone, MousePointerClick, Newspaper, PartyPopper, RefreshCw } from 'lucide-react';
+import { Cake, CalendarDays, CircleDollarSign, Megaphone, Newspaper, PartyPopper, RefreshCw } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import api, { apiMessage, assetUrl } from '../../api/client.js';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
@@ -12,7 +12,7 @@ const birthdayCopy = {
   kz: { eyebrow: 'Бүгін туған күн', prefix: 'Құттықтаймыз', wishes: 'Зор денсаулық, амандық, шабыт және жаңа кәсіби жетістіктер тілейміз!' },
 };
 
-function BroadcastScreen() {
+function BroadcastScreen({ onOpenNews }) {
   const { language, setLanguage } = useLanguage();
   const [broadcast, setBroadcast] = useState(null); const [rate, setRate] = useState(null); const [error, setError] = useState(''); const [index, setIndex] = useState(0);
   const load = useCallback(async () => { setError(''); try { const response = await api.get('/broadcast'); setBroadcast(response.data.data); setIndex((current) => Math.min(current, Math.max(0, response.data.data.slides.length - 1))); } catch (err) { setError(apiMessage(err)); } }, []);
@@ -35,15 +35,15 @@ function BroadcastScreen() {
     <div className="broadcast-progress" key={`${item.id}-${language}`} style={{ '--duration': `${item.kind === 'VIDEO' ? 120 : phaseSeconds}s` }} />
     <div className="broadcast-corner"><span>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</span><strong>{String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</strong></div>
     {rate && <div className="broadcast-rate"><CircleDollarSign /><span>USD / KZT</span><strong>{rate.rate.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</strong></div>}
+    <button type="button" className={`broadcast-open-button ${rate ? 'broadcast-open-button--with-rate' : ''}`} onClick={onOpenNews}><Newspaper size={18} />{language === 'kz' ? 'Жаңалықтарды ашу' : 'Открыть новости'}</button>
     {item.kind === 'VIDEO' ? <section className="broadcast-video-slide"><video key={`${item.mediaUrl}-${language}`} src={assetUrl(item.mediaUrl)} autoPlay muted playsInline onEnded={finishVideo} onError={finishVideo} /><div className="broadcast-video-caption"><span><RefreshCw size={18} />{language === 'kz' ? 'Бейнематериал' : 'Видеоматериал'}</span><h1>{item.title}</h1><p>{item.description}</p></div></section>
       : item.kind === 'BIRTHDAY' ? <section className="birthday-slide"><div className="birthday-slide__decor"><PartyPopper /><Cake /></div><div className="birthday-slide__content"><span>{birthdayCopy[language].eyebrow}</span><p>{birthdayCopy[language].prefix}</p><h1>{item.title}</h1><div>{item.description}</div><strong>{birthdayCopy[language].wishes}</strong></div></section>
         : <section className="broadcast-news-slide"><div className="broadcast-news-slide__copy"><div className="broadcast-news-slide__meta"><span><Newspaper size={18} />{newsCategoryLabel(item.category, language)}</span><time><CalendarDays size={17} />{new Date(item.publishedAt || item.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</time></div><h1>{item.title}</h1><p className="broadcast-news-slide__lead">{item.description}</p><div className="broadcast-news-slide__body">{item.content.split(/\n{2,}/).slice(0, 4).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}</div></div><div className="broadcast-news-slide__visual"><img src={assetUrl(item.image)} alt="" /></div></section>}
-    <div className="broadcast-touch-hint"><MousePointerClick size={19} />{language === 'kz' ? 'Жаңалықтарды ашу үшін экранды түртіңіз' : 'Коснитесь экрана, чтобы открыть новости'}</div>
     <div className="broadcast-ticker"><span className="broadcast-ticker__label"><Megaphone size={19} />{language === 'kz' ? 'АҚПАРАТ' : 'ВАЖНО'}</span><div><p>{ticker}<i>•</i>{ticker}<i>•</i>{ticker}</p></div></div>
   </main>;
 }
 
 export default function NewsListPage() {
-  const { interactive } = useOutletContext();
-  return interactive ? <InteractiveNewsFeed /> : <BroadcastScreen />;
+  const { interactive, activateInteractive } = useOutletContext();
+  return interactive ? <InteractiveNewsFeed /> : <BroadcastScreen onOpenNews={activateInteractive} />;
 }
