@@ -26,6 +26,24 @@ export const getCategory = asyncHandler(async (req, res) => {
   sendData(res, data);
 });
 
+export const listServicePackages = asyncHandler(async (_req, res) => {
+  const data = await prisma.servicePackage.findMany({
+    where: { isPublished: true },
+    select: { id: true, slug: true, titleRu: true, titleKz: true, targetAudienceRu: true, targetAudienceKz: true, descriptionRu: true, descriptionKz: true, serviceZoneRu: true, serviceZoneKz: true, noteRu: true, noteKz: true, icon: true, sortOrder: true, _count: { select: { services: { where: { isPublished: true } } } } },
+    orderBy: [{ sortOrder: 'asc' }, { titleRu: 'asc' }],
+  });
+  sendData(res, data);
+});
+
+export const getServicePackage = asyncHandler(async (req, res) => {
+  const data = await prisma.servicePackage.findFirst({
+    where: { slug: req.params.slug, isPublished: true },
+    include: { services: { where: { isPublished: true, category: { isPublished: true } }, include: serviceInclude, orderBy: [{ sortOrder: 'asc' }, { titleRu: 'asc' }] } },
+  });
+  if (!data) throw new AppError(404, 'SERVICE_PACKAGE_NOT_FOUND', 'Пакет обслуживания не найден');
+  sendData(res, data);
+});
+
 export const listServices = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
   const where = { isPublished: true, ...(req.query.category ? { category: { slug: req.query.category, isPublished: true } } : {}) };
@@ -52,16 +70,18 @@ export const listNews = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
   const category = String(req.query.category || '').toUpperCase();
   const search = String(req.query.search || '').trim().slice(0, 100);
+  const now = new Date();
   const where = {
     published: true,
-    publishedAt: { lte: new Date() },
+    publishedAt: { lte: now },
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
     ...(newsCategories.has(category) ? { category } : {}),
-    ...(search ? { OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'contentRu', 'contentKz'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
+    ...(search ? { AND: [{ OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'contentRu', 'contentKz'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) }] } : {}),
   };
   const [data, total] = await prisma.$transaction([
     prisma.news.findMany({
       where,
-      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, publishedAt: true, createdAt: true },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: limit,
@@ -72,9 +92,10 @@ export const listNews = asyncHandler(async (req, res) => {
 });
 
 export const getNews = asyncHandler(async (req, res) => {
+  const now = new Date();
   const data = await prisma.news.findFirst({
-    where: { slug: req.params.slug, published: true, publishedAt: { lte: new Date() } },
-    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, createdAt: true, updatedAt: true },
+    where: { slug: req.params.slug, published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true, updatedAt: true },
   });
   if (!data) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
   sendData(res, data);
@@ -86,19 +107,20 @@ export const getBroadcast = asyncHandler(async (_req, res) => {
   const [settings, news, items] = await Promise.all([
     prisma.setting.findUnique({ where: { id: 1 }, select: { tickerTextRu: true, tickerTextKz: true, broadcastSlideSeconds: true, broadcastLanguageSeconds: true, broadcastIdleSeconds: true } }),
     prisma.news.findMany({
-      where: { published: true, publishedAt: { lte: now } },
-      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, createdAt: true },
-      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+      where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },
+      orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
       take: 20,
     }),
     prisma.broadcastItem.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
   ]);
   const birthdays = items.filter((item) => item.type === 'BIRTHDAY' && item.eventDate && `${String(item.eventDate.getUTCMonth() + 1).padStart(2, '0')}-${String(item.eventDate.getUTCDate()).padStart(2, '0')}` === today)
     .map((item) => ({ ...item, id: `birthday-${item.id}`, kind: 'BIRTHDAY', eventDate: undefined, authorId: undefined }));
-  const videos = items.filter((item) => item.type === 'VIDEO' && item.mediaUrl)
-    .map((item) => ({ ...item, id: `video-${item.id}`, kind: 'VIDEO', eventDate: undefined, authorId: undefined }));
+  const media = items.filter((item) => item.type === 'VIDEO' && item.mediaUrl)
+    .map((item) => ({ ...item, id: `media-${item.id}`, kind: item.mediaKind === 'IMAGE' ? 'IMAGE' : 'VIDEO', eventDate: undefined, authorId: undefined }));
   const newsSlides = news.map((item) => ({ ...item, id: `news-${item.id}`, kind: 'NEWS' }));
-  sendData(res, { settings, slides: [...birthdays, ...videos, ...newsSlides] });
+  const slides = [...birthdays, ...media, ...newsSlides].sort((left, right) => left.sortOrder - right.sortOrder);
+  sendData(res, { settings, slides });
 });
 
 export const usdKztRate = asyncHandler(async (_req, res) => {

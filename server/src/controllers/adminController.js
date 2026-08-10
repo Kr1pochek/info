@@ -1,8 +1,36 @@
 import bcrypt from 'bcrypt';
+import { access } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 import { AppError, asyncHandler, pagination, publicUser, sendData } from '../utils/api.js';
 import { writeAudit } from '../services/audit.js';
+import { uploadsRoot } from '../middleware/upload.js';
+
+export const systemStatus = asyncHandler(async (_req, res) => {
+  const checkedAt = new Date();
+  let database = { key: 'database', label: 'База данных PostgreSQL', status: 'ONLINE', detail: 'Соединение установлено' };
+  let storage = { key: 'storage', label: 'Хранилище медиафайлов', status: 'ONLINE', detail: uploadsRoot };
+  try { await prisma.$queryRaw`SELECT 1`; } catch (error) { database = { ...database, status: 'ERROR', detail: error.message }; }
+  try { await access(uploadsRoot, constants.R_OK | constants.W_OK); } catch (error) { storage = { ...storage, status: 'ERROR', detail: error.message }; }
+  const components = [
+    { key: 'backend', label: 'Сервер приложения', status: 'ONLINE', detail: `Node.js ${process.version}` },
+    database,
+    storage,
+    { key: 'nomad', label: 'NOMAD / электронная очередь', status: 'NOT_CONFIGURED', detail: 'Подключается после передачи API и тестового стенда' },
+    { key: 'printer', label: 'Принтер и сканер', status: 'NOT_CONFIGURED', detail: 'Требуется оборудование и драйверы' },
+    { key: 'tv1', label: 'Экран зала №1', status: 'NOT_CONFIGURED', detail: 'Канал связи не настроен' },
+    { key: 'tv2', label: 'Экран зала №2', status: 'NOT_CONFIGURED', detail: 'Канал связи не настроен' },
+  ];
+  const healthy = components.filter((item) => item.status === 'ONLINE').length;
+  sendData(res, {
+    checkedAt,
+    overall: components.some((item) => item.status === 'ERROR') ? 'DEGRADED' : 'ONLINE',
+    process: { uptimeSeconds: Math.round(process.uptime()), memoryMb: Math.round(process.memoryUsage().rss / 1024 / 1024), environment: process.env.NODE_ENV || 'development' },
+    summary: { healthy, total: components.length, pending: components.filter((item) => item.status === 'NOT_CONFIGURED').length },
+    components,
+  });
+});
 
 export const dashboard = asyncHandler(async (_req, res) => {
   const since = new Date(); since.setDate(since.getDate() - 6); since.setHours(0, 0, 0, 0);

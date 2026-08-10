@@ -10,16 +10,17 @@ import { useServiceSearch } from '../../hooks/useServiceSearch.js';
 import SearchBar from '../../components/kiosk/SearchBar.jsx';
 import CategoryCard from '../../components/kiosk/CategoryCard.jsx';
 import ServiceCard from '../../components/kiosk/ServiceCard.jsx';
+import PackageCard from '../../components/kiosk/PackageCard.jsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/common/States.jsx';
 
 export default function HomePage() {
   const { language, t, resetLanguage } = useLanguage(); const { resetFontSize } = useFontSize(); const { settings } = useSettings();
-  const [categories, setCategories] = useState([]); const [popular, setPopular] = useState([]); const [query, setQuery] = useState('');
+  const [categories, setCategories] = useState([]); const [packages, setPackages] = useState([]); const [popular, setPopular] = useState([]); const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [helpOpen, setHelpOpen] = useState(false);
   const search = useServiceSearch(query, language);
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { const [categoriesResponse, popularResponse] = await Promise.all([api.get('/categories'), api.get('/services/popular')]); setCategories(categoriesResponse.data.data); setPopular(popularResponse.data.data); }
+    try { const [categoriesResponse, packagesResponse, popularResponse] = await Promise.all([api.get('/categories'), api.get('/service-packages'), api.get('/services/popular')]); setCategories(categoriesResponse.data.data); setPackages(packagesResponse.data.data); setPopular(popularResponse.data.data); }
     catch (err) { setError(apiMessage(err)); }
     finally { setLoading(false); }
   }, []);
@@ -36,7 +37,8 @@ export default function HomePage() {
       {search.loading ? <LoadingState text={t.loading} /> : search.error ? <ErrorState title={t.unavailableTitle} text={search.error} /> : search.results.length ? <div className="service-grid">{search.results.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noResults} />}
     </section> : <>
       <section className="content-section content-section--home"><div className="section-heading"><div><span>01</span><h2>{t.categories}</h2></div><small>{categories.length}</small></div><div className="category-grid">{categories.map((category) => <CategoryCard key={category.id} category={category} />)}</div></section>
-      <section className="content-section content-section--tinted"><div className="section-heading"><div><span>02</span><h2>{t.popular}</h2></div></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
+      <section className="content-section content-section--packages"><div className="section-heading"><div><span>02</span><h2>{t.servicePackages}</h2></div><small>{packages.length}</small></div><div className="package-grid">{packages.map((item) => <PackageCard item={item} key={item.id} />)}</div></section>
+      <section className="content-section content-section--tinted"><div className="section-heading"><div><span>03</span><h2>{t.popular}</h2></div></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
     </>}
     <section className="contact-strip">
       <div><Phone size={30} /><span>{t.contactCenter}<strong>{settings.contactPhone}</strong></span></div>

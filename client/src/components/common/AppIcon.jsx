@@ -2,14 +2,16 @@ import {
   BadgeCheck, BadgePercent, BriefcaseBusiness, Building2, Calculator, CalendarCheck, CalendarClock,
   CalendarDays, CalendarX, Car, CircleDollarSign, ClipboardList, Clock3, Container, FileBadge,
   FileSpreadsheet, FileText, Files, Folder, Headphones, Home, Landmark, ListChecks, Luggage,
-  MapPinned, MessagesSquare, MonitorCog, ReceiptText, Scale, Undo2, Users, WalletCards,
+  Accessibility, Award, Baby, MapPinned, MessagesSquare, MonitorCog, Package, ReceiptText, Rocket,
+  Scale, TrendingUp, Undo2, Users, WalletCards,
 } from 'lucide-react';
 
 const icons = {
   BadgeCheck, BadgePercent, BriefcaseBusiness, Building2, Calculator, CalendarCheck, CalendarClock,
   CalendarDays, CalendarX, Car, CircleDollarSign, ClipboardList, Clock3, Container, FileBadge,
   FileSpreadsheet, FileText, Files, Folder, Headphones, Home, Landmark, ListChecks, Luggage,
-  MapPinned, MessagesSquare, MonitorCog, ReceiptCheck: ReceiptText, ReceiptText, Scale, Undo2, Users, WalletCards,
+  Accessibility, Award, Baby, MapPinned, MessagesSquare, MonitorCog, Package, ReceiptCheck: ReceiptText,
+  ReceiptText, Rocket, Scale, TrendingUp, Undo2, Users, WalletCards,
 };
 
 export default function AppIcon({ name, size = 28, ...props }) {

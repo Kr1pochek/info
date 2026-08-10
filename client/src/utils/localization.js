@@ -14,6 +14,7 @@ export const messages = {
     cost: 'Стоимость', result: 'Результат', rejection: 'Возможные причины отказа', contacts: 'Контакты',
     category: 'Категория', notFound: 'Страница не найдена', notFoundText: 'Проверьте адрес или вернитесь на главный экран.',
     servicesFound: 'Найдено услуг', searchResults: 'Результаты поиска', maintenance: 'Техническое обслуживание',
+    servicePackages: 'Пакеты обслуживания', packageAudience: 'Для кого', serviceZone: 'Зона обслуживания', packageServices: 'Услуги пакета',
   },
   kz: {
     language: 'Қазақша', alternateLanguage: 'Русский', home: 'Басты бет', back: 'Артқа', fontSize: 'Мәтін өлшемі',
@@ -30,6 +31,7 @@ export const messages = {
     cost: 'Құны', result: 'Нәтижесі', rejection: 'Бас тартудың ықтимал себептері', contacts: 'Байланыстар',
     category: 'Санат', notFound: 'Бет табылмады', notFoundText: 'Мекенжайды тексеріңіз немесе басты экранға оралыңыз.',
     servicesFound: 'Табылған қызметтер', searchResults: 'Іздеу нәтижелері', maintenance: 'Техникалық қызмет көрсету',
+    servicePackages: 'Қызмет көрсету пакеттері', packageAudience: 'Кімге арналған', serviceZone: 'Қызмет көрсету аймағы', packageServices: 'Пакет қызметтері',
   },
 };
 

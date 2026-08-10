@@ -7,6 +7,8 @@ export const publicRoutes = Router();
 
 publicRoutes.get('/categories', publicController.listCategories);
 publicRoutes.get('/categories/:slug', publicController.getCategory);
+publicRoutes.get('/service-packages', publicController.listServicePackages);
+publicRoutes.get('/service-packages/:slug', publicController.getServicePackage);
 publicRoutes.get('/services', publicController.listServices);
 publicRoutes.get('/services/popular', publicController.popularServices);
 publicRoutes.get('/services/search', publicController.searchServices);

@@ -32,15 +32,19 @@ const uploader = multer({
   },
 });
 
-const videoExtensions = new Map([['video/mp4', '.mp4'], ['video/webm', '.webm']]);
-const videoUploader = multer({
+const broadcastExtensions = new Map([
+  ...extensions,
+  ['video/mp4', '.mp4'],
+  ['video/webm', '.webm'],
+]);
+const broadcastUploader = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, callback) => callback(null, broadcastUploads),
-    filename: (_req, file, callback) => callback(null, `${crypto.randomUUID()}${videoExtensions.get(file.mimetype) || ''}`),
+    filename: (_req, file, callback) => callback(null, `${crypto.randomUUID()}${broadcastExtensions.get(file.mimetype) || ''}`),
   }),
   limits: { fileSize: 150 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, callback) => {
-    if (!videoExtensions.has(file.mimetype)) return callback(new AppError(400, 'INVALID_VIDEO', 'Разрешены видео MP4 и WebM'));
+    if (!broadcastExtensions.has(file.mimetype)) return callback(new AppError(400, 'INVALID_MEDIA', 'Разрешены JPG, PNG, WebP, GIF, MP4 и WebM'));
     callback(null, true);
   },
 });
@@ -55,11 +59,14 @@ export function uploadNewsImage(req, res, next) {
   });
 }
 
-export function uploadBroadcastVideo(req, res, next) {
-  videoUploader.single('video')(req, res, (error) => {
-    if (!error) return next();
+export function uploadBroadcastMedia(req, res, next) {
+  broadcastUploader.fields([{ name: 'media', maxCount: 1 }, { name: 'video', maxCount: 1 }])(req, res, (error) => {
+    if (!error) {
+      req.file = req.files?.media?.[0] || req.files?.video?.[0];
+      return next();
+    }
     if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
-      return next(new AppError(400, 'VIDEO_TOO_LARGE', 'Размер видео не должен превышать 150 МБ'));
+      return next(new AppError(400, 'MEDIA_TOO_LARGE', 'Размер файла не должен превышать 150 МБ'));
     }
     return next(error);
   });

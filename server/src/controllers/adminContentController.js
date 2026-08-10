@@ -92,7 +92,57 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   sendData(res, { deleted: true });
 });
 
-const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'titleRu', 'titleKz', 'published']);
+const packageInclude = {
+  services: { select: { id: true, slug: true, titleRu: true, titleKz: true, isPublished: true }, orderBy: [{ sortOrder: 'asc' }, { titleRu: 'asc' }] },
+  _count: { select: { services: true } },
+};
+
+export const listAdminServicePackages = asyncHandler(async (req, res) => {
+  const options = listOptions(req.query, ['titleRu', 'titleKz', 'slug', 'targetAudienceRu', 'targetAudienceKz']);
+  const [data, total] = await prisma.$transaction([
+    prisma.servicePackage.findMany({ where: options.where, include: packageInclude, orderBy: options.orderBy, skip: options.skip, take: options.limit }),
+    prisma.servicePackage.count({ where: options.where }),
+  ]);
+  sendData(res, data, { page: options.page, limit: options.limit, total, pages: Math.ceil(total / options.limit) });
+});
+
+export const getAdminServicePackage = asyncHandler(async (req, res) => {
+  const data = await prisma.servicePackage.findUnique({ where: { id: Number(req.params.id) }, include: packageInclude });
+  if (!data) throw new AppError(404, 'SERVICE_PACKAGE_NOT_FOUND', 'Пакет обслуживания не найден');
+  sendData(res, data);
+});
+
+function packageData(body, relationOperation = 'set') {
+  const { serviceIds, ...data } = body;
+  if (serviceIds !== undefined) data.services = { [relationOperation]: serviceIds.map((id) => ({ id })) };
+  return data;
+}
+
+export const createServicePackage = asyncHandler(async (req, res) => {
+  const data = await prisma.servicePackage.create({ data: packageData(req.body, 'connect'), include: packageInclude });
+  await writeAudit(req, 'CREATE_SERVICE_PACKAGE', 'ServicePackage', data.id, null, data);
+  sendData(res, data, null, 201);
+});
+
+export const updateServicePackage = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.servicePackage.findUnique({ where: { id }, include: packageInclude });
+  if (!oldData) throw new AppError(404, 'SERVICE_PACKAGE_NOT_FOUND', 'Пакет обслуживания не найден');
+  const data = await prisma.servicePackage.update({ where: { id }, data: packageData(req.body), include: packageInclude });
+  await writeAudit(req, 'UPDATE_SERVICE_PACKAGE', 'ServicePackage', data.id, oldData, data);
+  sendData(res, data);
+});
+
+export const deleteServicePackage = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const oldData = await prisma.servicePackage.findUnique({ where: { id }, include: packageInclude });
+  if (!oldData) throw new AppError(404, 'SERVICE_PACKAGE_NOT_FOUND', 'Пакет обслуживания не найден');
+  await prisma.servicePackage.delete({ where: { id } });
+  await writeAudit(req, 'DELETE_SERVICE_PACKAGE', 'ServicePackage', id, oldData);
+  sendData(res, { deleted: true });
+});
+
+const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'expiresAt', 'sortOrder', 'titleRu', 'titleKz', 'published']);
 
 export const listAdminNews = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
@@ -102,12 +152,13 @@ export const listAdminNews = asyncHandler(async (req, res) => {
   const now = new Date();
   const where = {
     ...(req.query.publication === 'scheduled' ? { published: true, publishedAt: { gt: now } }
-      : req.query.publication === 'live' ? { published: true, publishedAt: { lte: now } }
+      : req.query.publication === 'live' ? { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }
+        : req.query.publication === 'expired' ? { published: true, expiresAt: { lte: now } }
         : req.query.publication === 'draft' ? { published: false }
           : req.query.published === 'true' ? { published: true }
             : req.query.published === 'false' ? { published: false } : {}),
     ...(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
-    ...(search ? { OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } : {}),
+    ...(search ? { AND: [{ OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) }] } : {}),
   };
   const [data, total] = await prisma.$transaction([
     prisma.news.findMany({
@@ -137,12 +188,18 @@ export const saveNewsImage = asyncHandler(async (req, res) => {
 });
 
 export const createNews = asyncHandler(async (req, res) => {
-  const { publishedAt, ...input } = req.body;
+  const { publishedAt, expiresAt, ...input } = req.body;
+  const publicationDate = req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null;
+  const expirationDate = expiresAt ? new Date(expiresAt) : null;
+  if (publicationDate && expirationDate && expirationDate <= publicationDate) {
+    throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
+  }
   const data = await prisma.news.create({
     data: {
       ...input,
       authorId: req.user.id,
-      publishedAt: req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null,
+      publishedAt: publicationDate,
+      expiresAt: expirationDate,
     },
   });
   await writeAudit(req, 'CREATE_NEWS', 'News', data.id, null, data);
@@ -158,6 +215,12 @@ export const updateNews = asyncHandler(async (req, res) => {
   if (changes.published === true) changes.publishedAt = hasPublishedAt ? changes.publishedAt ? new Date(changes.publishedAt) : new Date() : oldData.published ? oldData.publishedAt || new Date() : new Date();
   if (changes.published === false) changes.publishedAt = null;
   if (changes.published === undefined && changes.publishedAt) changes.publishedAt = new Date(changes.publishedAt);
+  if (Object.hasOwn(changes, 'expiresAt')) changes.expiresAt = changes.expiresAt ? new Date(changes.expiresAt) : null;
+  const resultingPublishedAt = changes.publishedAt === undefined ? oldData.publishedAt : changes.publishedAt;
+  const resultingExpiresAt = changes.expiresAt === undefined ? oldData.expiresAt : changes.expiresAt;
+  if (resultingPublishedAt && resultingExpiresAt && resultingExpiresAt <= resultingPublishedAt) {
+    throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
+  }
   const data = await prisma.news.update({ where: { id }, data: changes });
   await writeAudit(req, 'UPDATE_NEWS', 'News', data.id, oldData, data);
   sendData(res, data);
@@ -169,7 +232,11 @@ export const updateNewsPublication = asyncHandler(async (req, res) => {
   if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
   const data = await prisma.news.update({
     where: { id },
-    data: { published: req.body.published, publishedAt: req.body.published ? req.body.publishedAt ? new Date(req.body.publishedAt) : new Date() : null },
+    data: {
+      published: req.body.published,
+      publishedAt: req.body.published ? req.body.publishedAt ? new Date(req.body.publishedAt) : new Date() : null,
+      ...(req.body.published && oldData.expiresAt && oldData.expiresAt <= new Date() ? { expiresAt: null } : {}),
+    },
   });
   await writeAudit(req, req.body.published ? 'PUBLISH_NEWS' : 'UNPUBLISH_NEWS', 'News', data.id, oldData, data);
   sendData(res, data);
@@ -192,9 +259,9 @@ export const listBroadcastItems = asyncHandler(async (_req, res) => {
   sendData(res, data);
 });
 
-export const saveBroadcastVideo = asyncHandler(async (req, res) => {
-  if (!req.file) throw new AppError(400, 'VIDEO_REQUIRED', 'Выберите видео для загрузки');
-  sendData(res, { path: `/uploads/broadcast/${req.file.filename}` }, null, 201);
+export const saveBroadcastMedia = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError(400, 'MEDIA_REQUIRED', 'Выберите фото или видео для загрузки');
+  sendData(res, { path: `/uploads/broadcast/${req.file.filename}`, mediaKind: req.file.mimetype.startsWith('image/') ? 'IMAGE' : 'VIDEO' }, null, 201);
 });
 
 function broadcastData(body, authorId) {
@@ -203,6 +270,7 @@ function broadcastData(body, authorId) {
     authorId,
     eventDate: body.type === 'BIRTHDAY' && body.eventDate ? new Date(`${body.eventDate}T00:00:00.000Z`) : null,
     mediaUrl: body.type === 'VIDEO' ? body.mediaUrl : null,
+    mediaKind: body.type === 'VIDEO' ? body.mediaKind || 'VIDEO' : null,
   };
 }
 

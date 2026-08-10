@@ -4,13 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "prisma generate",
     "dev": "node --watch src/server.js",
+    "prestart": "prisma generate",
     "start": "node src/server.js",
-    "lint": "eslint src prisma/seed.js",
+    "lint": "eslint src prisma/seed.js prisma/serviceDetails.js",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

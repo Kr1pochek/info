@@ -20,6 +20,7 @@ client/.env
 .idea
 .vscode
 coverage
+backups/
 dist
 dist-ssr
 *.local

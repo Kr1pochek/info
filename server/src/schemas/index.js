@@ -13,6 +13,15 @@ export const categorySchema = z.object({
 });
 export const categoryPatchSchema = categorySchema.partial().refine((value) => Object.keys(value).length > 0);
 
+export const servicePackageSchema = z.object({
+  slug, titleRu: text(160), titleKz: text(160), targetAudienceRu: text(800), targetAudienceKz: text(800),
+  descriptionRu: text(5000), descriptionKz: text(5000), serviceZoneRu: text(500), serviceZoneKz: text(500),
+  noteRu: optionalText(1000).nullable(), noteKz: optionalText(1000).nullable(), icon: text(60),
+  isPublished: z.boolean(), sortOrder: z.coerce.number().int().min(0).max(10000),
+  serviceIds: z.array(z.coerce.number().int().positive()).max(100).default([]),
+});
+export const servicePackagePatchSchema = servicePackageSchema.partial().refine((value) => Object.keys(value).length > 0);
+
 export const serviceSchema = z.object({
   slug, titleRu: text(220), titleKz: text(220), shortDescriptionRu: text(800), shortDescriptionKz: text(800),
   fullDescriptionRu: text(10000), fullDescriptionKz: text(10000), targetAudienceRu: text(3000), targetAudienceKz: text(3000),
@@ -32,6 +41,7 @@ export const newsSchema = z.object({
   descriptionRu: text(800), descriptionKz: text(800), contentRu: text(30000), contentKz: text(30000),
   image: text(500), category: z.enum(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']).default('GENERAL'),
   published: z.boolean().default(false), publishedAt: z.string().datetime().optional().nullable(),
+  expiresAt: z.string().datetime().optional().nullable(), sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
 });
 export const newsPatchSchema = newsSchema.partial().refine((value) => Object.keys(value).length > 0);
 export const newsPublicationSchema = z.object({ published: z.boolean(), publishedAt: z.string().datetime().optional().nullable() });
@@ -39,11 +49,12 @@ export const newsPublicationSchema = z.object({ published: z.boolean(), publishe
 export const broadcastItemSchema = z.object({
   type: z.enum(['BIRTHDAY', 'VIDEO']), titleRu: text(240), titleKz: text(240),
   descriptionRu: text(1200), descriptionKz: text(1200), mediaUrl: z.string().trim().max(500).optional().nullable(),
+  mediaKind: z.enum(['IMAGE', 'VIDEO']).optional().nullable(),
   eventDate: z.string().date().optional().nullable(), isActive: z.boolean().default(true),
   sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
 }).superRefine((value, context) => {
   if (value.type === 'BIRTHDAY' && !value.eventDate) context.addIssue({ code: 'custom', path: ['eventDate'], message: 'Укажите дату рождения' });
-  if (value.type === 'VIDEO' && !value.mediaUrl) context.addIssue({ code: 'custom', path: ['mediaUrl'], message: 'Загрузите видео' });
+  if (value.type === 'VIDEO' && !value.mediaUrl) context.addIssue({ code: 'custom', path: ['mediaUrl'], message: 'Загрузите фото или видео' });
 });
 
 export const broadcastSettingsSchema = z.object({

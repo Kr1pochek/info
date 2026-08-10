@@ -24,15 +24,15 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import Toast from '../../components/admin/Toast.jsx';
 import { ConfirmDialog, Modal } from '../../components/admin/Modal.jsx';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
-import { useAuth } from '../../context/AuthContext.jsx';
 
 const blank = {
-  type: 'BIRTHDAY',
+  type: 'VIDEO',
   titleRu: '',
   titleKz: '',
   descriptionRu: '',
   descriptionKz: '',
   mediaUrl: '',
+  mediaKind: 'IMAGE',
   eventDate: '',
   isActive: true,
   sortOrder: 0,
@@ -41,6 +41,7 @@ const blank = {
 const toForm = (item) => ({
   ...item,
   mediaUrl: item.mediaUrl || '',
+  mediaKind: item.mediaKind || (/\.(?:jpe?g|png|webp|gif)$/i.test(item.mediaUrl || '') ? 'IMAGE' : 'VIDEO'),
   eventDate: item.eventDate ? new Date(item.eventDate).toISOString().slice(0, 10) : '',
 });
 
@@ -52,7 +53,8 @@ const eventDateLabel = (eventDate) => (
 
 function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy, error }) {
   const birthday = form.type === 'BIRTHDAY';
-  const setType = (type) => setForm({ ...form, type, mediaUrl: '', eventDate: '' });
+  const image = !birthday && form.mediaKind === 'IMAGE';
+  const setType = (type) => setForm({ ...form, type, mediaUrl: '', mediaKind: type === 'VIDEO' ? 'IMAGE' : null, eventDate: '' });
 
   return (
     <form className="admin-form broadcast-item-form" onSubmit={onSubmit}>
@@ -74,16 +76,16 @@ function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy
           <small>Чем меньше число, тем раньше материал появится в эфире.</small>
         </label>
         {birthday && <label><span>Дата рождения</span><input required type="date" value={form.eventDate} onChange={(event) => setForm({ ...form, eventDate: event.target.value })} /><small>Год на публичном экране не показывается.</small></label>}
-        <label><span>{birthday ? 'Имя сотрудника (русский)' : 'Название видео (русский)'}</span><input required maxLength="240" value={form.titleRu} onChange={(event) => setForm({ ...form, titleRu: event.target.value })} /></label>
-        <label><span>{birthday ? 'Қызметкердің аты-жөні (қазақша)' : 'Видео атауы (қазақша)'}</span><input required maxLength="240" value={form.titleKz} onChange={(event) => setForm({ ...form, titleKz: event.target.value })} /></label>
+        <label><span>{birthday ? 'Имя сотрудника (русский)' : 'Название материала (русский)'}</span><input required maxLength="240" value={form.titleRu} onChange={(event) => setForm({ ...form, titleRu: event.target.value })} /></label>
+        <label><span>{birthday ? 'Қызметкердің аты-жөні (қазақша)' : 'Материал атауы (қазақша)'}</span><input required maxLength="240" value={form.titleKz} onChange={(event) => setForm({ ...form, titleKz: event.target.value })} /></label>
         <label><span>{birthday ? 'Должность и поздравление (русский)' : 'Описание (русский)'}</span><textarea required maxLength="1200" value={form.descriptionRu} onChange={(event) => setForm({ ...form, descriptionRu: event.target.value })} /></label>
         <label><span>{birthday ? 'Лауазымы және құттықтау (қазақша)' : 'Сипаттама (қазақша)'}</span><textarea required maxLength="1200" value={form.descriptionKz} onChange={(event) => setForm({ ...form, descriptionKz: event.target.value })} /></label>
         {!birthday && (
           <label className="form-grid__wide">
-            <span>Видеофайл</span>
-            <span className="image-upload-control"><Upload size={20} />{uploading ? 'Загрузка…' : form.mediaUrl ? 'Заменить видео' : 'Загрузить видео'}<input type="file" accept="video/mp4,video/webm" onChange={onUpload} disabled={uploading} /></span>
-            <small>MP4 или WebM, до 150 МБ. Видео воспроизводится автоматически без звука.</small>
-            {form.mediaUrl && <video className="broadcast-video-preview" src={assetUrl(form.mediaUrl)} controls muted />}
+            <span>Фото или видео</span>
+            <span className="image-upload-control"><Upload size={20} />{uploading ? 'Загрузка…' : form.mediaUrl ? 'Заменить файл' : 'Загрузить файл'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={onUpload} disabled={uploading} /></span>
+            <small>JPG, PNG, WebP, GIF, MP4 или WebM. Видео воспроизводится автоматически без звука.</small>
+            {form.mediaUrl && (image ? <img className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} alt="Предпросмотр материала" /> : <video className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} controls muted />)}
           </label>
         )}
         <label className="toggle-label broadcast-active-toggle form-grid__wide"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} /><span>Показывать материал в эфире</span></label>
@@ -99,8 +101,6 @@ function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy
 }
 
 export default function BroadcastPage() {
-  const { user } = useAuth();
-  const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(user.role);
   const [settings, setSettings] = useState(null);
   const [items, setItems] = useState(null);
   const [slides, setSlides] = useState(null);
@@ -150,9 +150,9 @@ export default function BroadcastPage() {
     setError('');
     try {
       const data = new FormData();
-      data.append('video', file);
-      const response = await api.post('/admin/broadcast/videos', data);
-      setEditing((current) => ({ ...current, mediaUrl: response.data.data.path }));
+      data.append('media', file);
+      const response = await api.post('/admin/broadcast/media', data);
+      setEditing((current) => ({ ...current, mediaUrl: response.data.data.path, mediaKind: response.data.data.mediaKind }));
     } catch (err) {
       setError(apiMessage(err));
     } finally {
@@ -173,6 +173,7 @@ export default function BroadcastPage() {
       descriptionRu: editing.descriptionRu,
       descriptionKz: editing.descriptionKz,
       mediaUrl: editing.type === 'VIDEO' ? editing.mediaUrl : null,
+      mediaKind: editing.type === 'VIDEO' ? editing.mediaKind : null,
       eventDate: editing.type === 'BIRTHDAY' ? editing.eventDate : null,
       isActive: editing.isActive,
       sortOrder: editing.sortOrder,
@@ -209,8 +210,8 @@ export default function BroadcastPage() {
   }
 
   const activeCount = slides.length;
-  const photoCount = slides.filter((item) => item.kind === 'NEWS').length;
-  const videoCount = items.filter((item) => item.type === 'VIDEO').length;
+  const photoCount = slides.filter((item) => item.kind === 'NEWS' || item.kind === 'IMAGE').length;
+  const videoCount = items.filter((item) => item.type === 'VIDEO' && item.mediaKind !== 'IMAGE').length;
   const birthdayCount = items.filter((item) => item.type === 'BIRTHDAY').length;
 
   return (
@@ -229,7 +230,7 @@ export default function BroadcastPage() {
           <p>Опубликованные новости с фотографиями автоматически собираются в эфир, чередуются на казахском и русском языках, а важная информация остаётся в бегущей строке.</p>
           <div className="broadcast-hero-stats">
             <div><ListVideo size={19} /><span><strong>{activeCount}</strong> слайдов в ротации</span></div>
-            <div><ImageIcon size={19} /><span><strong>{photoCount}</strong> новостных фотослайдов</span></div>
+            <div><ImageIcon size={19} /><span><strong>{photoCount}</strong> фотослайдов</span></div>
             <div><Languages size={19} /><span><strong>{settings.broadcastLanguageSeconds} сек.</strong> до смены языка</span></div>
           </div>
         </div>
@@ -274,19 +275,20 @@ export default function BroadcastPage() {
           <div className="broadcast-material-grid">
             {items.map((item, index) => {
               const birthday = item.type === 'BIRTHDAY';
+              const image = !birthday && item.mediaKind === 'IMAGE';
               return (
                 <article className={`broadcast-material-card ${item.isActive ? '' : 'is-inactive'}`} key={item.id}>
                   <div className={`broadcast-material-card__visual broadcast-material-card__visual--${birthday ? 'birthday' : 'video'}`}>
                     <span className="broadcast-material-card__order">{String(index + 1).padStart(2, '0')}</span>
-                    {birthday ? <Cake size={34} /> : <MonitorPlay size={38} />}
-                    <small>{birthday ? eventDateLabel(item.eventDate) : 'Видеоматериал'}</small>
+                    {birthday ? <Cake size={34} /> : image ? <ImageIcon size={38} /> : <MonitorPlay size={38} />}
+                    <small>{birthday ? eventDateLabel(item.eventDate) : image ? 'Фотоматериал' : 'Видеоматериал'}</small>
                   </div>
                   <div className="broadcast-material-card__body">
-                    <div className="broadcast-material-card__meta"><span>{birthday ? <Cake size={14} /> : <Video size={14} />}{birthday ? 'Поздравление' : 'Видео'}</span><span className={`status-pill ${item.isActive ? 'status-pill--success' : 'status-pill--muted'}`}>{item.isActive ? 'В эфире' : 'Отключён'}</span></div>
+                    <div className="broadcast-material-card__meta"><span>{birthday ? <Cake size={14} /> : image ? <ImageIcon size={14} /> : <Video size={14} />}{birthday ? 'Поздравление' : image ? 'Фото' : 'Видео'}</span><span className={`status-pill ${item.isActive ? 'status-pill--success' : 'status-pill--muted'}`}>{item.isActive ? 'В эфире' : 'Отключён'}</span></div>
                     <h3>{item.titleRu}</h3>
                     <p>{item.titleKz}</p>
-                    <div className="broadcast-material-card__condition">{birthday ? <><CalendarDays size={15} /><span>Показ {eventDateLabel(item.eventDate)}</span></> : <><Film size={15} /><span>Показывается постоянно</span></>}</div>
-                    <footer><span>Порядок: {item.sortOrder}</span><div className="row-actions"><button type="button" onClick={() => setEditing(toForm(item))} aria-label="Редактировать"><Edit3 /></button>{canDelete && <button type="button" onClick={() => setDeleting(item)} aria-label="Удалить"><Trash2 /></button>}</div></footer>
+                    <div className="broadcast-material-card__condition">{birthday ? <><CalendarDays size={15} /><span>Показ {eventDateLabel(item.eventDate)}</span></> : <>{image ? <ImageIcon size={15} /> : <Film size={15} />}<span>Показывается постоянно</span></>}</div>
+                    <footer><span>Порядок: {item.sortOrder}</span><div className="row-actions"><button type="button" onClick={() => setEditing(toForm(item))} aria-label="Редактировать"><Edit3 /></button><button type="button" onClick={() => setDeleting(item)} aria-label="Удалить"><Trash2 /></button></div></footer>
                   </div>
                 </article>
               );
