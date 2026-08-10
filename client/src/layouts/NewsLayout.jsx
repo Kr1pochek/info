@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Grid2X2, Languages, Newspaper } from 'lucide-react';
+import { ArrowLeft, Languages, Newspaper } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
@@ -18,7 +18,7 @@ export default function NewsLayout() {
   const activityProps = { onPointerDownCapture: resetIdleTimer, onKeyDownCapture: resetIdleTimer, onWheelCapture: resetIdleTimer };
   if (!interactive) return <div className="news-broadcast-entry"><Outlet context={{ interactive, activateInteractive }} /></div>;
   return <div className="news-shell" {...activityProps}>
-    <header className="news-header"><Link to="/news" className="news-brand"><span><Newspaper size={25} /></span><div><strong>{copy.brand}</strong><small>{copy.brandSubtitle}</small></div></Link><nav aria-label="Навигация новостей">{location.pathname !== '/news' && <Link to="/news" className="news-nav-link news-nav-back"><ArrowLeft size={19} />{copy.backToFeed}</Link>}<button type="button" className="news-nav-link news-language-switch" onClick={() => setLanguage(language === 'kz' ? 'ru' : 'kz')}><Languages size={19} />{language === 'kz' ? 'Рус' : 'Қаз'}</button><Link to="/" className="news-nav-link"><Grid2X2 size={19} />{copy.allServices}</Link></nav></header>
+    <header className="news-header"><Link to="/news" className="news-brand"><span><Newspaper size={25} /></span><div><strong>{copy.brand}</strong><small>{copy.brandSubtitle}</small></div></Link><nav aria-label="Навигация новостей">{location.pathname !== '/news' && <Link to="/news" className="news-nav-link news-nav-back"><ArrowLeft size={19} />{copy.backToFeed}</Link>}<button type="button" className="news-nav-link news-language-switch" onClick={() => setLanguage(language === 'kz' ? 'ru' : 'kz')}><Languages size={19} />{language === 'kz' ? 'Рус' : 'Қаз'}</button></nav></header>
     <main className="news-main"><Outlet context={{ interactive, activateInteractive }} /></main>
     <footer className="news-footer"><span>{copy.organization}</span><Link to="/admin/login">{copy.administration}</Link></footer>
   </div>;
