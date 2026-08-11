@@ -192,6 +192,7 @@ npm run verify
 - [правила ведения контента](docs/CONTENT_GUIDE.md);
 - [приёмочные проверки](docs/ACCEPTANCE_TESTS.md);
 - [контур будущей интеграции NOMAD](docs/NOMAD_INTEGRATION.md);
+- [генерация озвучки СЭО](docs/TTS_GUIDE.md);
 - [текущий статус зоны ответственности Романа](docs/PROJECT_STATUS.md).
 
 Карточки Choose формируются из массива `services` в `client/src/pages/portal/ChoosePage.jsx`. Для подключения следующего сервиса достаточно добавить объект с названием, описанием, иконкой и маршрутом; разметка и адаптивная сетка создадутся автоматически.

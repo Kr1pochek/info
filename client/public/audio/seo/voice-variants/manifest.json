@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "provider": "Microsoft Edge TTS",
+  "generator": "edge-tts 7.2.8",
+  "purpose": "Female voice selection",
+  "gender": "female",
+  "sampleTicket": "D-428",
+  "audio": {
+    "format": "mp3",
+    "sampleRateHz": 24000,
+    "channels": 1,
+    "loudnessLufs": -18,
+    "truePeakDb": -2
+  },
+  "languages": {
+    "ru": {
+      "label": "Русский",
+      "text": "Услугополучатель номер ди четыреста двадцать восемь, вас скоро пригласят, подойдите к зоне ожидания.",
+      "variants": [
+        { "id": "01", "voice": "de-DE-SeraphinaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "02", "voice": "de-DE-SeraphinaMultilingualNeural", "profile": "measured", "rate": "-6%", "pitch": "+3Hz" },
+        { "id": "03", "voice": "en-US-AvaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "04", "voice": "en-US-AvaMultilingualNeural", "profile": "measured", "rate": "-6%", "pitch": "+3Hz" },
+        { "id": "05", "voice": "en-US-EmmaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "06", "voice": "en-US-EmmaMultilingualNeural", "profile": "measured", "rate": "-6%", "pitch": "+3Hz" },
+        { "id": "07", "voice": "fr-FR-VivienneMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "08", "voice": "fr-FR-VivienneMultilingualNeural", "profile": "measured", "rate": "-6%", "pitch": "+3Hz" },
+        { "id": "09", "voice": "pt-BR-ThalitaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "10", "voice": "pt-BR-ThalitaMultilingualNeural", "profile": "measured", "rate": "-6%", "pitch": "+3Hz" }
+      ]
+    },
+    "kk": {
+      "label": "Қазақша",
+      "text": "Ди төрт жүз жиырма сегіз нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз.",
+      "variants": [
+        { "id": "01", "voice": "kk-KZ-AigulNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "02", "voice": "kk-KZ-AigulNeural", "profile": "measured", "rate": "-4%", "pitch": "+0Hz" },
+        { "id": "03", "voice": "kk-KZ-AigulNeural", "profile": "slow", "rate": "-8%", "pitch": "+0Hz" },
+        { "id": "04", "voice": "kk-KZ-AigulNeural", "profile": "brisk", "rate": "+4%", "pitch": "+0Hz" },
+        { "id": "05", "voice": "kk-KZ-AigulNeural", "profile": "soft", "rate": "-4%", "pitch": "+2Hz" },
+        { "id": "06", "voice": "kk-KZ-AigulNeural", "profile": "clear", "rate": "+2%", "pitch": "+2Hz" },
+        { "id": "07", "voice": "kk-KZ-AigulNeural", "profile": "lower", "rate": "-4%", "pitch": "-2Hz" },
+        { "id": "08", "voice": "kk-KZ-AigulNeural", "profile": "bright", "rate": "+0%", "pitch": "+4Hz" },
+        { "id": "09", "voice": "kk-KZ-AigulNeural", "profile": "calm", "rate": "-10%", "pitch": "-2Hz" },
+        { "id": "10", "voice": "kk-KZ-AigulNeural", "profile": "concise", "rate": "+6%", "pitch": "+0Hz" }
+      ]
+    },
+    "en": {
+      "label": "English",
+      "text": "Customer number D four hundred twenty-eight, you will be invited shortly, please proceed to the waiting area.",
+      "variants": [
+        { "id": "01", "voice": "en-US-AnaNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "02", "voice": "en-US-AriaNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "03", "voice": "en-US-AvaNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "04", "voice": "en-US-AvaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "05", "voice": "en-US-EmmaNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "06", "voice": "en-US-EmmaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "07", "voice": "en-US-MichelleNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "08", "voice": "de-DE-SeraphinaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "09", "voice": "fr-FR-VivienneMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
+        { "id": "10", "voice": "pt-BR-ThalitaMultilingualNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" }
+      ]
+    }
+  }
+}

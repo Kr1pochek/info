@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "provider": "microsoft-edge-tts",
+  "model": "edge-neural-voices",
+  "providerVersion": "edge-tts 7.2.8",
+  "templateCode": "ANNOUNCE_SOON",
+  "numberRange": {
+    "min": 1,
+    "max": 1000,
+    "form": "cardinal",
+    "leadingZeroPolicy": "omit"
+  },
+  "ticketPrefixes": ["A", "B", "C", "D"],
+  "assetPolicy": {
+    "prefixesAreSeparateFiles": true,
+    "numbersAreSeparateFromPhrases": true,
+    "singleVoiceWithinLanguage": true
+  },
+  "audio": {
+    "format": "wav",
+    "sampleRateHz": 24000,
+    "channels": 1,
+    "loudnessLufs": -18,
+    "truePeakDb": -2,
+    "crossfadeMs": 12
+  },
+  "languages": {
+    "ru": {
+      "locale": "ru-RU",
+      "voice": "en-US-AvaMultilingualNeural",
+      "voiceApprovalStatus": "selected_for_final_package",
+      "templateApprovalStatus": "approved",
+      "template": "Услугополучатель номер {TICKET}, вас скоро пригласят, подойдите к зоне ожидания",
+      "instructions": "Говорите спокойным, доброжелательным голосом диктора электронной очереди. Средний темп, ровная громкость, без эмоциональных скачков. Не добавляйте слова.",
+      "parts": [
+        {
+          "kind": "static",
+          "id": "before-number",
+          "text": "Услугополучатель номер"
+        },
+        {
+          "kind": "ticket"
+        },
+        {
+          "kind": "static",
+          "id": "after-number",
+          "text": "вас скоро пригласят, подойдите к зоне ожидания"
+        }
+      ],
+      "prefixes": {
+        "A": "эй",
+        "B": "би",
+        "C": "си",
+        "D": "ди"
+      }
+    },
+    "kk": {
+      "locale": "kk-KZ",
+      "voice": "kk-KZ-AigulNeural",
+      "voiceApprovalStatus": "selected_for_final_package",
+      "templateApprovalStatus": "ready_for_acceptance",
+      "template": "{TICKET} нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз",
+      "instructions": "Электрондық кезек дикторының сабырлы, сыпайы даусымен сөйлеңіз. Орташа қарқын, біркелкі дыбыс деңгейі, артық эмоциясыз. Қосымша сөз қоспаңыз.",
+      "parts": [
+        {
+          "kind": "ticket"
+        },
+        {
+          "kind": "static",
+          "id": "after-number",
+          "text": "нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз"
+        }
+      ],
+      "prefixes": {
+        "A": "эй",
+        "B": "би",
+        "C": "си",
+        "D": "ди"
+      }
+    },
+    "en": {
+      "locale": "en-US",
+      "voice": "en-US-EmmaNeural",
+      "voiceApprovalStatus": "selected_for_final_package",
+      "templateApprovalStatus": "ready_for_acceptance",
+      "template": "Customer number {TICKET}, you will be invited shortly, please proceed to the waiting area",
+      "instructions": "Speak in a calm, friendly electronic queue announcer voice. Medium pace, even volume, neutral intonation. Do not add any words.",
+      "parts": [
+        {
+          "kind": "static",
+          "id": "before-number",
+          "text": "Customer number"
+        },
+        {
+          "kind": "ticket"
+        },
+        {
+          "kind": "static",
+          "id": "after-number",
+          "text": "you will be invited shortly, please proceed to the waiting area"
+        }
+      ],
+      "prefixes": {
+        "A": "A",
+        "B": "B",
+        "C": "C",
+        "D": "D"
+      }
+    }
+  }
+}

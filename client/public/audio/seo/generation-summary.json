@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-08-11T07:23:39.233Z",
+  "provider": "microsoft-edge-tts",
+  "model": "edge-neural-voices",
+  "languages": {
+    "ru": {
+      "voice": "en-US-AvaMultilingualNeural",
+      "segmentCount": 43
+    },
+    "kk": {
+      "voice": "kk-KZ-AigulNeural",
+      "segmentCount": 33
+    },
+    "en": {
+      "voice": "en-US-EmmaNeural",
+      "segmentCount": 43
+    }
+  },
+  "audio": {
+    "format": "wav",
+    "sampleRateHz": 24000,
+    "channels": 1,
+    "loudnessLufs": -18,
+    "truePeakDb": -2,
+    "crossfadeMs": 12
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "purpose": "ANNOUNCE_SOON voice comparison previews",
+  "provider": "Microsoft Edge TTS",
+  "providerStatus": "preview_only",
+  "approvalStatus": "superseded_voice_comparison",
+  "note": "Эти цельные реплики оставлены только для сравнения голосов. Финальный пакет использует отдельные файлы префиксов, чисел и частей реплики.",
+  "generator": "edge-tts 7.2.8",
+  "leadingZeroPolicy": "omit",
+  "audio": {
+    "format": "mp3",
+    "sampleRateHz": 24000,
+    "channels": 1,
+    "loudnessLufs": -18,
+    "truePeakDb": -2
+  },
+  "files": {
+    "ru": {
+      "locale": "ru-RU",
+      "voice": "ru-RU-SvetlanaNeural",
+      "ticket": "A-015",
+      "file": "announce-soon-ru-A-015.mp3",
+      "text": "Услугополучатель номер а пятнадцать, вас скоро пригласят, подойдите к зоне ожидания."
+    },
+    "kk": {
+      "locale": "kk-KZ",
+      "voice": "kk-KZ-AigulNeural",
+      "ticket": "A-015",
+      "file": "announce-soon-kk-A-015.mp3",
+      "text": "А он бес нөмірлі қызмет алушы, сізді жақын арада шақырады, күту аймағына жақындаңыз."
+    },
+    "en": {
+      "locale": "en-US",
+      "voice": "en-US-JennyNeural",
+      "ticket": "A-015",
+      "file": "announce-soon-en-A-015.mp3",
+      "text": "Customer number A fifteen, you will be invited shortly, please proceed to the waiting area."
+    }
+  },
+  "alternateFiles": {
+    "ru": {
+      "locale": "ru-RU",
+      "voice": "ru-RU-DmitryNeural",
+      "ticket": "B-016",
+      "file": "announce-soon-ru-B-016.mp3",
+      "text": "Услугополучатель номер бэ шестнадцать, вас скоро пригласят, подойдите к зоне ожидания."
+    },
+    "kk": {
+      "locale": "kk-KZ",
+      "voice": "kk-KZ-DauletNeural",
+      "ticket": "B-016",
+      "file": "announce-soon-kk-B-016.mp3",
+      "text": "Бэ он алты нөмірлі қызмет алушы, сізді жақын арада шақырады, күту аймағына жақындаңыз."
+    },
+    "en": {
+      "locale": "en-US",
+      "voice": "en-US-GuyNeural",
+      "ticket": "B-016",
+      "file": "announce-soon-en-B-016.mp3",
+      "text": "Customer number B sixteen, you will be invited shortly, please proceed to the waiting area."
+    }
+  }
+}

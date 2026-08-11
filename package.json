@@ -14,8 +14,15 @@
     "build": "npm run build --prefix client",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
     "test": "npm run test --prefix server",
+    "test:tts": "node --test tests/tts.test.mjs",
     "test:responsive": "node tests/responsive.mjs",
-    "verify": "npm run lint && npm run build && npm test && npm run test:responsive"
+    "tts:dry-run": "node scripts/tts/generate.mjs --dry-run",
+    "tts:generate": "node scripts/tts/generate.mjs",
+    "tts:variants": "node scripts/tts/generate-voice-variants.mjs",
+    "tts:kk:silero": "node scripts/tts/generate-silero-kazakh.mjs",
+    "tts:install": "py -m pip install -r scripts/tts/requirements.txt",
+    "tts:compose": "node scripts/tts/compose.mjs",
+    "verify": "npm run lint && npm run build && npm test && npm run test:tts && npm run test:responsive"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "provider": "Silero TTS",
+  "language": "kk-KZ",
+  "gender": "female",
+  "sampleTicket": "D-428",
+  "text": "Ди төрт жүз жиырма сегіз нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз.",
+  "voices": [
+    {
+      "id": "kaz_zhadyra",
+      "name": "Zhadyra",
+      "model": "v5_cis_base_nostress",
+      "license": "MIT",
+      "productionCandidate": true
+    },
+    {
+      "id": "kaz_zhazira",
+      "name": "Zhazira",
+      "model": "v5_cis_base_nostress",
+      "license": "MIT",
+      "productionCandidate": true
+    },
+    {
+      "id": "kaz_aidana",
+      "name": "Aidana",
+      "model": "v5_cis_ext",
+      "license": "CC-NC-BY",
+      "productionCandidate": false
+    },
+    {
+      "id": "kaz_aisha",
+      "name": "Aisha",
+      "model": "v5_cis_ext",
+      "license": "CC-NC-BY",
+      "productionCandidate": false
+    },
+    {
+      "id": "kaz_danara",
+      "name": "Danara",
+      "model": "v5_cis_ext",
+      "license": "CC-NC-BY",
+      "productionCandidate": false
+    }
+  ]
+}

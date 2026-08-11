@@ -21,6 +21,7 @@ client/.env
 .vscode
 coverage
 backups/
+artifacts/
 dist
 dist-ssr
 *.local
