@@ -83,7 +83,8 @@ test('voice comparison package contains ten female variants per language', async
     'de-DE-SeraphinaMultilingualNeural', 'en-US-AnaNeural', 'en-US-AriaNeural',
     'en-US-AvaNeural', 'en-US-AvaMultilingualNeural', 'en-US-EmmaNeural',
     'en-US-EmmaMultilingualNeural', 'en-US-MichelleNeural',
-    'fr-FR-VivienneMultilingualNeural', 'kk-KZ-AigulNeural',
+    'fr-FR-VivienneMultilingualNeural', 'kaz_zhadyra', 'kaz_zhazira',
+    'kaz_aidana', 'kaz_aisha', 'kaz_danara',
     'pt-BR-ThalitaMultilingualNeural',
   ]);
   assert.equal(variantsManifest.gender, 'female');
@@ -96,4 +97,12 @@ test('voice comparison package contains ten female variants per language', async
       assert.ok(details.size > 1000, `${language}/${variant.id}.mp3`);
     }
   }
+});
+
+test('Kazakh final package uses Silero instead of Aigul', () => {
+  assert.equal(manifest.languages.kk.provider, 'silero-local');
+  assert.equal(manifest.languages.kk.model, 'v5_cis_base_nostress');
+  assert.equal(manifest.languages.kk.voice, 'kaz_zhazira');
+  assert.ok(variantsManifest.languages.kk.variants.every((variant) => variant.provider === 'silero-local'));
+  assert.equal(new Set(variantsManifest.languages.kk.variants.map((variant) => variant.voice)).size, 5);
 });

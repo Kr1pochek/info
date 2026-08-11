@@ -10,12 +10,12 @@
 
 - русский текст зафиксирован как утверждённый;
 - казахский и английский переводы помечены как `ready_for_acceptance`;
-- выбранные женские голоса: `en-US-AvaMultilingualNeural` для русского, `kk-KZ-AigulNeural` для казахского и `en-US-EmmaNeural` для английского.
+- выбранные женские голоса: `en-US-AvaMultilingualNeural` для русского, `kaz_zhazira` (`Silero TTS`) для казахского и `en-US-EmmaNeural` для английского.
 - казахская формулировка: «{N} нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз»;
 
 ## Генерация
 
-Нужны Node.js 20+, Python 3, `ffmpeg` в `PATH` и пакет `edge-tts`. API-ключ не требуется.
+Нужны Node.js 20+, Python 3, `ffmpeg` в `PATH`, пакет `edge-tts` и Docker для локальной казахской модели Silero. API-ключ не требуется.
 
 ```powershell
 npm run tts:install
@@ -59,6 +59,6 @@ npm run tts:compose -- --language en --prefix C --number 999
 npm run tts:kk:silero
 ```
 
-Страница сравнения доступна по адресу `http://localhost:5174/audio/seo/silero-kazakh/index.html`. `kaz_zhadyra` и `kaz_zhazira` из модели `v5_cis_base_nostress` помечены как кандидаты для интеграции; остальные три голоса сохранены только для сравнения до отдельной проверки лицензии.
+Страница сравнения доступна по адресу `http://localhost:5174/audio/seo/silero-kazakh/index.html`. Для финального пакета выбран `kaz_zhazira` из модели `v5_cis_base_nostress`; `kaz_zhadyra` оставлен вторым кандидатом. Остальные три голоса сохранены только для сравнения до отдельной проверки лицензии.
 
 Перед вводом в эксплуатацию пользователю нужно сообщить, что озвучка сгенерирована ИИ.

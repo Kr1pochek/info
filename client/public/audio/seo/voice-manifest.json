@@ -56,7 +56,9 @@
     },
     "kk": {
       "locale": "kk-KZ",
-      "voice": "kk-KZ-AigulNeural",
+      "provider": "silero-local",
+      "model": "v5_cis_base_nostress",
+      "voice": "kaz_zhazira",
       "voiceApprovalStatus": "selected_for_final_package",
       "templateApprovalStatus": "ready_for_acceptance",
       "template": "{TICKET} нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз",

@@ -33,17 +33,23 @@ if (dryRun) {
   process.exit(0);
 }
 
-if (manifest.provider === 'openai' && !process.env.OPENAI_API_KEY) {
+if (jobs.some((job) => job.provider === 'openai') && !process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is required. Set it in the current shell and run the command again.');
 }
 
-await ensureGenerator();
-await runPool(jobs, concurrency, generateJob);
+await ensureGenerator(jobs);
+await runPool(jobs.filter((job) => job.provider !== 'silero-local'), concurrency, generateJob);
+for (const language of languages.filter((item) => manifest.languages[item].provider === 'silero-local')) {
+  if (language !== 'kk') throw new Error(`Silero generation is not configured for language: ${language}`);
+  await run(process.execPath, [path.join(scriptDir, 'generate-silero-kazakh.mjs'), '--final']);
+}
 await writeFile(path.join(packageRoot, 'generation-summary.json'), `${JSON.stringify({
   generatedAt: new Date().toISOString(),
-  provider: manifest.provider,
-  model: manifest.model,
+  provider: 'mixed',
+  model: 'per-language',
   languages: Object.fromEntries(supportedLanguages().map((language) => [language, {
+    provider: manifest.languages[language].provider || manifest.provider,
+    model: manifest.languages[language].model || manifest.model,
     voice: manifest.languages[language].voice,
     segmentCount: buildJobs(language, manifest.languages[language]).length,
   }])),
@@ -65,6 +71,8 @@ function buildJobs(language, config) {
 function createJob(language, config, relativePath, text, fragmentType) {
   return {
     language,
+    provider: config.provider || manifest.provider,
+    model: config.model || manifest.model,
     voice: config.voice,
     instructions: `${config.instructions} Read this as a ${fragmentType} that will be joined with adjacent audio. Avoid a terminal pause and avoid sentence-final intonation.`,
     relativePath,
@@ -79,14 +87,14 @@ async function generateJob(job) {
     return;
   }
   await mkdir(path.dirname(job.outputPath), { recursive: true });
-  const rawPath = `${job.outputPath}.source.${manifest.provider === 'microsoft-edge-tts' ? 'mp3' : 'wav'}`;
+  const rawPath = `${job.outputPath}.source.${job.provider === 'microsoft-edge-tts' ? 'mp3' : 'wav'}`;
   try {
-    if (manifest.provider === 'microsoft-edge-tts') {
+    if (job.provider === 'microsoft-edge-tts') {
       await generateWithEdgeTts(job, rawPath);
-    } else if (manifest.provider === 'openai') {
+    } else if (job.provider === 'openai') {
       await generateWithOpenAI(job, rawPath);
     } else {
-      throw new Error(`Unsupported TTS provider: ${manifest.provider}`);
+      throw new Error(`Unsupported TTS provider: ${job.provider}`);
     }
     await normalizeAudio(rawPath, job.outputPath);
     console.log(`write\t${path.relative(projectRoot, job.outputPath)}`);
@@ -115,7 +123,7 @@ async function generateWithOpenAI(job, rawPath) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: manifest.model,
+      model: job.model,
       voice: job.voice,
       input: job.text,
       instructions: job.instructions,
@@ -140,9 +148,9 @@ async function normalizeAudio(inputPath, outputPath) {
   await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', inputPath, '-af', filter, '-ar', String(audio.sampleRateHz), '-ac', String(audio.channels), outputPath]);
 }
 
-async function ensureGenerator() {
+async function ensureGenerator(selectedJobs) {
   await run('ffmpeg', ['-version']);
-  if (manifest.provider === 'microsoft-edge-tts') {
+  if (selectedJobs.some((job) => job.provider === 'microsoft-edge-tts')) {
     try {
       await run('py', ['-m', 'edge_tts', '--version']);
     } catch {

@@ -40,6 +40,18 @@ async function generate(job) {
     return;
   }
   await mkdir(path.dirname(job.outputPath), { recursive: true });
+  if (job.provider === 'silero-local') {
+    const sourcePath = path.join(variantsRoot, '..', 'silero-kazakh', `${job.voice}.mp3`);
+    await access(sourcePath);
+    await run('ffmpeg', [
+      '-hide_banner', '-loglevel', 'error', '-y', '-i', sourcePath,
+      '-af', `atempo=${job.tempo || 1},loudnorm=I=${manifest.audio.loudnessLufs}:TP=${manifest.audio.truePeakDb}:LRA=7`,
+      '-ar', String(manifest.audio.sampleRateHz), '-ac', String(manifest.audio.channels),
+      '-codec:a', 'libmp3lame', '-b:a', '128k', job.outputPath,
+    ]);
+    console.log(`write\t${job.language}/${job.id}.mp3\t${job.voice}`);
+    return;
+  }
   const sourcePath = `${job.outputPath}.source.mp3`;
   try {
     await run('py', ['-m', 'edge_tts', '--voice', job.voice, `--rate=${job.rate}`, '--volume=+0%', `--pitch=${job.pitch}`, '--text', job.text, '--write-media', sourcePath]);

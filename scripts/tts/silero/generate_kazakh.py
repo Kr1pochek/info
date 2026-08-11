@@ -1,5 +1,6 @@
 import argparse
 from array import array
+import json
 from pathlib import Path
 import urllib.request
 import wave
@@ -39,6 +40,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cache", default="/cache")
     parser.add_argument("--output", default="/work/client/public/audio/seo/silero-kazakh")
+    parser.add_argument("--jobs")
+    parser.add_argument("--model")
+    parser.add_argument("--voice")
     args = parser.parse_args()
 
     torch.set_num_threads(4)
@@ -46,6 +50,30 @@ def main() -> None:
     cache_dir.mkdir(parents=True, exist_ok=True)
     sample_rate = 48000
     output_dir = Path(args.output)
+    if args.jobs:
+        if not args.model or not args.voice:
+            parser.error("--jobs requires --model and --voice")
+        model_config = next((item for item in MODELS if item[0] == args.model), None)
+        if model_config is None:
+            parser.error(f"unsupported model: {args.model}")
+        model_name, model_url, speakers = model_config
+        if args.voice not in speakers:
+            parser.error(f"unsupported voice {args.voice} for {args.model}")
+        model_path = cache_dir / model_name
+        if not model_path.exists():
+            print(f"Downloading {model_url}", flush=True)
+            urllib.request.urlretrieve(model_url, model_path)
+        model = torch.package.PackageImporter(str(model_path)).load_pickle("tts_models", "model")
+        model.to(torch.device("cpu"))
+        with open(args.jobs, "r", encoding="utf-8") as jobs_file:
+            jobs = json.load(jobs_file)
+        for job in jobs:
+            audio = model.apply_tts(text=job["text"], speaker=args.voice, sample_rate=sample_rate)
+            output_path = Path(job["output"])
+            write_wav(output_path, audio, sample_rate)
+            print(f"Generated {output_path}", flush=True)
+        return
+
     for model_name, model_url, speakers in MODELS:
         model_path = cache_dir / model_name
         if not model_path.exists():

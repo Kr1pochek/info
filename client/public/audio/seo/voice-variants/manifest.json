@@ -33,16 +33,16 @@
       "label": "Қазақша",
       "text": "Ди төрт жүз жиырма сегіз нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз.",
       "variants": [
-        { "id": "01", "voice": "kk-KZ-AigulNeural", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz" },
-        { "id": "02", "voice": "kk-KZ-AigulNeural", "profile": "measured", "rate": "-4%", "pitch": "+0Hz" },
-        { "id": "03", "voice": "kk-KZ-AigulNeural", "profile": "slow", "rate": "-8%", "pitch": "+0Hz" },
-        { "id": "04", "voice": "kk-KZ-AigulNeural", "profile": "brisk", "rate": "+4%", "pitch": "+0Hz" },
-        { "id": "05", "voice": "kk-KZ-AigulNeural", "profile": "soft", "rate": "-4%", "pitch": "+2Hz" },
-        { "id": "06", "voice": "kk-KZ-AigulNeural", "profile": "clear", "rate": "+2%", "pitch": "+2Hz" },
-        { "id": "07", "voice": "kk-KZ-AigulNeural", "profile": "lower", "rate": "-4%", "pitch": "-2Hz" },
-        { "id": "08", "voice": "kk-KZ-AigulNeural", "profile": "bright", "rate": "+0%", "pitch": "+4Hz" },
-        { "id": "09", "voice": "kk-KZ-AigulNeural", "profile": "calm", "rate": "-10%", "pitch": "-2Hz" },
-        { "id": "10", "voice": "kk-KZ-AigulNeural", "profile": "concise", "rate": "+6%", "pitch": "+0Hz" }
+        { "id": "01", "provider": "silero-local", "voice": "kaz_zhadyra", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz", "tempo": 1.0 },
+        { "id": "02", "provider": "silero-local", "voice": "kaz_zhadyra", "profile": "brisk", "rate": "+6%", "pitch": "+0Hz", "tempo": 1.06 },
+        { "id": "03", "provider": "silero-local", "voice": "kaz_zhazira", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz", "tempo": 1.0 },
+        { "id": "04", "provider": "silero-local", "voice": "kaz_zhazira", "profile": "brisk", "rate": "+6%", "pitch": "+0Hz", "tempo": 1.06 },
+        { "id": "05", "provider": "silero-local", "voice": "kaz_aidana", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz", "tempo": 1.0 },
+        { "id": "06", "provider": "silero-local", "voice": "kaz_aidana", "profile": "brisk", "rate": "+6%", "pitch": "+0Hz", "tempo": 1.06 },
+        { "id": "07", "provider": "silero-local", "voice": "kaz_aisha", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz", "tempo": 1.0 },
+        { "id": "08", "provider": "silero-local", "voice": "kaz_aisha", "profile": "brisk", "rate": "+6%", "pitch": "+0Hz", "tempo": 1.06 },
+        { "id": "09", "provider": "silero-local", "voice": "kaz_danara", "profile": "neutral", "rate": "+0%", "pitch": "+0Hz", "tempo": 1.0 },
+        { "id": "10", "provider": "silero-local", "voice": "kaz_danara", "profile": "brisk", "rate": "+6%", "pitch": "+0Hz", "tempo": 1.06 }
       ]
     },
     "en": {

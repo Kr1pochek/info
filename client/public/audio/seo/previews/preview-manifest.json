@@ -24,10 +24,11 @@
     },
     "kk": {
       "locale": "kk-KZ",
-      "voice": "kk-KZ-AigulNeural",
+      "provider": "silero-local",
+      "voice": "kaz_zhazira",
       "ticket": "A-015",
       "file": "announce-soon-kk-A-015.mp3",
-      "text": "А он бес нөмірлі қызмет алушы, сізді жақын арада шақырады, күту аймағына жақындаңыз."
+      "text": "Эй он бес нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз."
     },
     "en": {
       "locale": "en-US",
@@ -47,10 +48,11 @@
     },
     "kk": {
       "locale": "kk-KZ",
-      "voice": "kk-KZ-DauletNeural",
+      "provider": "silero-local",
+      "voice": "kaz_zhazira",
       "ticket": "B-016",
       "file": "announce-soon-kk-B-016.mp3",
-      "text": "Бэ он алты нөмірлі қызмет алушы, сізді жақын арада шақырады, күту аймағына жақындаңыз."
+      "text": "Би он алты нөмірлі қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз."
     },
     "en": {
       "locale": "en-US",

@@ -1,17 +1,23 @@
 {
-  "generatedAt": "2026-08-11T07:23:39.233Z",
-  "provider": "microsoft-edge-tts",
-  "model": "edge-neural-voices",
+  "generatedAt": "2026-08-11T07:45:58.455Z",
+  "provider": "mixed",
+  "model": "per-language",
   "languages": {
     "ru": {
+      "provider": "microsoft-edge-tts",
+      "model": "edge-neural-voices",
       "voice": "en-US-AvaMultilingualNeural",
       "segmentCount": 43
     },
     "kk": {
-      "voice": "kk-KZ-AigulNeural",
+      "provider": "silero-local",
+      "model": "v5_cis_base_nostress",
+      "voice": "kaz_zhazira",
       "segmentCount": 33
     },
     "en": {
+      "provider": "microsoft-edge-tts",
+      "model": "edge-neural-voices",
       "voice": "en-US-EmmaNeural",
       "segmentCount": 43
     }
