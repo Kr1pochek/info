@@ -15,6 +15,9 @@ export const messages = {
     category: 'Категория', notFound: 'Страница не найдена', notFoundText: 'Проверьте адрес или вернитесь на главный экран.',
     servicesFound: 'Найдено услуг', searchResults: 'Результаты поиска', maintenance: 'Техническое обслуживание',
     servicePackages: 'Пакеты обслуживания', packageAudience: 'Для кого', serviceZone: 'Зона обслуживания', packageServices: 'Услуги пакета',
+    lowVision: 'Для слабовидящих', usefulInformation: 'Полезная информация', taxpayerRights: 'Права и обязанности налогоплательщика',
+    ethicsOfficer: 'Уполномоченный по этике', deadlines: 'Важные сроки', daysLeft: 'дн. осталось', deadlineToday: 'сегодня',
+    officialResources: 'Официальные электронные ресурсы', scanQrCode: 'Наведите камеру телефона на QR-код',
   },
   kz: {
     language: 'Қазақша', alternateLanguage: 'Русский', home: 'Басты бет', back: 'Артқа', fontSize: 'Мәтін өлшемі',
@@ -32,6 +35,9 @@ export const messages = {
     category: 'Санат', notFound: 'Бет табылмады', notFoundText: 'Мекенжайды тексеріңіз немесе басты экранға оралыңыз.',
     servicesFound: 'Табылған қызметтер', searchResults: 'Іздеу нәтижелері', maintenance: 'Техникалық қызмет көрсету',
     servicePackages: 'Қызмет көрсету пакеттері', packageAudience: 'Кімге арналған', serviceZone: 'Қызмет көрсету аймағы', packageServices: 'Пакет қызметтері',
+    lowVision: 'Нашар көретіндерге', usefulInformation: 'Пайдалы ақпарат', taxpayerRights: 'Салық төлеушінің құқықтары мен міндеттері',
+    ethicsOfficer: 'Әдеп жөніндегі уәкіл', deadlines: 'Маңызды мерзімдер', daysLeft: 'күн қалды', deadlineToday: 'бүгін',
+    officialResources: 'Ресми электрондық ресурстар', scanQrCode: 'Телефон камерасын QR-кодқа бағыттаңыз',
   },
 };
 

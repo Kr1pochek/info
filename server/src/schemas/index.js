@@ -64,6 +64,20 @@ export const broadcastSettingsSchema = z.object({
   broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
 }).refine((value) => value.broadcastLanguageSeconds < value.broadcastSlideSeconds, { path: ['broadcastLanguageSeconds'], message: 'Смена языка должна происходить до завершения слайда' });
 
+const deadlineSchema = z.object({
+  id: text(80), titleRu: text(240), titleKz: text(240), date: z.string().date(),
+  kind: z.enum(['MONTHLY', 'QUARTERLY', 'HALF_YEAR', 'TAX']), isActive: z.boolean(),
+});
+const qrCodeSchema = z.object({
+  id: text(80), labelRu: text(160), labelKz: text(160), image: z.string().trim().max(500),
+  url: z.string().trim().url().max(500).or(z.literal('')), isActive: z.boolean(),
+});
+const specialistSchema = z.object({
+  id: text(80), nameRu: text(240), nameKz: text(240), categoryRu: text(240), categoryKz: text(240),
+  servicesRu: text(1000), servicesKz: text(1000), photo: text(500),
+  workDate: z.string().date(), isActive: z.boolean(),
+});
+
 export const userSchema = z.object({
   login: text(80), password: z.string().min(10).max(128), fullName: text(160),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), isActive: z.boolean().default(true),
@@ -81,6 +95,11 @@ export const settingsSchema = z.object({
   maintenanceMessageRu: text(500), maintenanceMessageKz: text(500), popularServicesCount: z.coerce.number().int().min(1).max(20),
   tickerTextRu: text(1000), tickerTextKz: text(1000), broadcastSlideSeconds: z.coerce.number().int().min(12).max(240),
   broadcastLanguageSeconds: z.coerce.number().int().min(5).max(120), broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
+  taxpayerRightsRu: z.string().trim().max(30000), taxpayerRightsKz: z.string().trim().max(30000),
+  ethicsOfficerNameRu: z.string().trim().max(240), ethicsOfficerNameKz: z.string().trim().max(240),
+  ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
+  ethicsOfficerPhoto: z.string().trim().max(500), reportingDeadlines: z.array(deadlineSchema).max(30),
+  panelQrCodes: z.array(qrCodeSchema).max(6), onlineSpecialists: z.array(specialistSchema).max(30),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });
 
 export const analyticsSchema = z.object({

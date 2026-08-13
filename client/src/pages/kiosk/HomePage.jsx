@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Headphones, MapPin, Phone, RotateCcw, X } from 'lucide-react';
+import { CalendarClock, ChevronRight, Headphones, MapPin, Phone, RotateCcw, Scale, UserRoundCheck, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api, { apiMessage } from '../../api/client.js';
 import { track } from '../../api/analytics.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
@@ -29,6 +30,11 @@ export default function HomePage() {
   if (loading) return <LoadingState text={t.loading} />;
   if (error) return <ErrorState title={t.unavailableTitle} text={t.unavailableText} onRetry={load} retryText={t.retry} />;
   const searching = query.trim().length >= 2;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const deadlines = (settings.reportingDeadlines || []).filter((item) => item.isActive).map((item) => {
+    const date = new Date(`${item.date}T00:00:00`);
+    return { ...item, date, days: Math.ceil((date - today) / 86400000) };
+  }).filter((item) => item.days >= 0).sort((a, b) => a.date - b.date).slice(0, 6);
   return <>
     <section className="hero-section">
       <h1>{t.question}</h1><p>{t.subtitle}</p><SearchBar value={query} onChange={setQuery} />
@@ -39,6 +45,11 @@ export default function HomePage() {
       <section className="content-section content-section--home"><div className="section-heading"><div><span>01</span><h2>{t.categories}</h2></div><small>{categories.length}</small></div><div className="category-grid">{categories.map((category) => <CategoryCard key={category.id} category={category} />)}</div></section>
       <section className="content-section content-section--packages"><div className="section-heading"><div><span>02</span><h2>{t.servicePackages}</h2></div><small>{packages.length}</small></div><div className="package-grid">{packages.map((item) => <PackageCard item={item} key={item.id} />)}</div></section>
       <section className="content-section content-section--tinted"><div className="section-heading"><div><span>03</span><h2>{t.popular}</h2></div></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
+      <section className="content-section information-section"><div className="section-heading"><div><span>04</span><h2>{t.usefulInformation}</h2></div></div><div className="information-grid">
+        <Link className="information-card" to="/information/taxpayer-rights"><span><Scale size={34} /></span><h3>{t.taxpayerRights}</h3><ChevronRight /></Link>
+        <Link className="information-card" to="/information/ethics-officer"><span><UserRoundCheck size={34} /></span><h3>{t.ethicsOfficer}</h3><ChevronRight /></Link>
+      </div></section>
+      {deadlines.length > 0 && <section className="content-section content-section--tinted deadline-section"><div className="section-heading"><div><span>05</span><h2>{t.deadlines}</h2></div><CalendarClock size={36} /></div><div className="deadline-grid">{deadlines.map((item) => <article className="deadline-card" key={item.id}><time dateTime={item.date.toISOString()}>{item.date.toLocaleDateString(language === 'kz' ? 'kk-KZ' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</time><h3>{item[language === 'kz' ? 'titleKz' : 'titleRu']}</h3><strong>{item.days === 0 ? t.deadlineToday : `${item.days} ${t.daysLeft}`}</strong></article>)}</div></section>}
     </>}
     <section className="contact-strip">
       <div><Phone size={30} /><span>{t.contactCenter}<strong>{settings.contactPhone}</strong></span></div>

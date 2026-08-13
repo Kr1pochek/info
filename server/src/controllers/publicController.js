@@ -105,7 +105,10 @@ export const getBroadcast = asyncHandler(async (_req, res) => {
   const now = new Date();
   const today = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const [settings, news, items] = await Promise.all([
-    prisma.setting.findUnique({ where: { id: 1 }, select: { tickerTextRu: true, tickerTextKz: true, broadcastSlideSeconds: true, broadcastLanguageSeconds: true, broadcastIdleSeconds: true } }),
+    prisma.setting.findUnique({ where: { id: 1 }, select: {
+      tickerTextRu: true, tickerTextKz: true, broadcastSlideSeconds: true, broadcastLanguageSeconds: true, broadcastIdleSeconds: true,
+      panelQrCodes: true, onlineSpecialists: true,
+    } }),
     prisma.news.findMany({
       where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
       select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },

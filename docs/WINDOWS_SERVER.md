@@ -40,7 +40,7 @@ git pull origin main
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\install.ps1 -SkipSeed
 ```
 
-Без `-SkipSeed` seed безопасно обновляет 31 услугу и 6 пакетов, не создавая дубликаты.
+Без `-SkipSeed` seed безопасно обновляет 42 услуги и 6 пакетов, не создавая дубликаты.
 
 ## 4. Запуск
 

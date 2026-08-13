@@ -72,6 +72,12 @@ const icons = [
   "CalendarX",
   "Headphones",
   "MessagesSquare",
+  "GraduationCap",
+  "ListPlus",
+  "RefreshCcw",
+  "ScanLine",
+  "ShieldCheck",
+  "Tags",
 ];
 const blank = {
   slug: "",

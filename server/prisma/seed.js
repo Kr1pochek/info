@@ -5,6 +5,11 @@ import { serviceDetails } from './serviceDetails.js';
 
 const prisma = new PrismaClient();
 
+const officialPanelQrCodes = [
+  { id: 'kgd-official', labelRu: 'Портал государственных доходов', labelKz: 'Мемлекеттік кірістер порталы', image: '/qr/kgd-portal.png', url: 'https://kgd.gov.kz/', isActive: true },
+  { id: 'egov-official', labelRu: 'Электронное правительство', labelKz: 'Электрондық үкімет', image: '/qr/egov-portal.png', url: 'https://egov.kz/', isActive: true },
+];
+
 const categories = [
   ['registration-accounting', 'Регистрация и учёт налогоплательщиков', 'Салық төлеушілерді тіркеу және есепке алу', 'Регистрация налогоплательщиков, лиц частной практики и плательщиков НДС.', 'Салық төлеушілерді, жеке практикамен айналысатын адамдарды және ҚҚС төлеушілерді тіркеу.', 'Users'],
   ['licensing', 'Лицензирование', 'Лицензиялау', 'Лицензии в сфере производства и оборота табачной и алкогольной продукции.', 'Темекі және алкоголь өнімдерін өндіру мен олардың айналымы саласындағы лицензиялар.', 'BadgeCheck'],
@@ -22,14 +27,22 @@ const services = [
   ['licensing', 'alcohol-production-license', 'Выдача лицензии на производство алкогольной продукции', 'Алкоголь өнімдерін өндіруге лицензия беру', 'FileBadge'],
   ['licensing', 'alcohol-wholesale-license', 'Выдача лицензии на хранение и оптовую реализацию алкогольной продукции (кроме деятельности на территории её производства)', 'Алкоголь өнімдерін сақтауға және көтерме саудада өткізуге лицензия беру (оны өндіру аумағындағы қызметтен басқа)', 'FileBadge'],
   ['licensing', 'alcohol-retail-license', 'Выдача лицензии на хранение и розничную реализацию алкогольной продукции (кроме деятельности на территории её производства)', 'Алкоголь өнімдерін сақтауға және бөлшек саудада өткізуге лицензия беру (оны өндіру аумағындағы қызметтен басқа)', 'FileBadge'],
+  ['tax-administration', 'tax-debt-information', 'Представление сведений об отсутствии (наличии) задолженности, учёт по которой ведётся в органах государственных доходов', 'Мемлекеттік кірістер органдарында есепке алу жүргізілетін берешектің жоқ (бар) екендігі туралы мәліметтерді ұсыну', 'CircleDollarSign'],
   ['tax-administration', 'income-and-tax-certificate', 'Выдача справки о суммах полученных доходов из источников в Республике Казахстан и удержанных (уплаченных) налогов', 'Қазақстан Республикасындағы көздерден алынған кірістердің және ұсталған (төленген) салықтардың сомалары туралы анықтама беру', 'FileText'],
   ['tax-administration', 'confirm-kazakhstan-residency', 'Подтверждение резидентства Республики Казахстан', 'Қазақстан Республикасының резиденттігін растау', 'FileBadge'],
+  ['tax-administration', 'alcohol-control-marks', 'Выдача учётно-контрольных марок на алкогольную продукцию (кроме вина наливом и пивоваренной продукции)', 'Алкоголь өніміне (құйылатын шарап пен сыра қайнату өнімдерін қоспағанда) есепке алу-бақылау маркаларын беру', 'Tags'],
   ['tax-administration', 'suspend-tax-reporting', 'Приостановление (продление, возобновление) представления налоговой отчётности', 'Салық есептілігін ұсынуды тоқтата тұру (ұзарту, қайта бастау)', 'Clock3'],
+  ['tax-administration', 'cash-register-models-register', 'Включение новых моделей контрольно-кассовых машин в государственный реестр контрольно-кассовых машин', 'Бақылау-касса машиналарының жаңа модельдерін бақылау-касса машиналарының мемлекеттік тізіліміне енгізу', 'ListPlus'],
   ['tax-administration', 'accept-tax-reporting', 'Приём налоговой отчётности', 'Салық есептілігін қабылдау', 'Files'],
   ['tax-administration', 'withdraw-tax-reporting', 'Отзыв налоговой отчётности', 'Салық есептілігін кері қайтарып алу', 'Undo2'],
+  ['tax-administration', 'tax-offsets-refunds', 'Проведение зачётов и возвратов налогов, платежей в бюджет, пеней и штрафов', 'Салықтарды, бюджетке төленетін төлемдерді, өсімпұл мен айыппұлдарды есепке жатқызуды және қайтаруды жүргізу', 'RefreshCcw'],
+  ['tax-administration', 'vat-refund', 'Возврат налога на добавленную стоимость из бюджета', 'Қосылған құн салығын бюджеттен қайтару', 'BadgePercent'],
   ['tax-administration', 'withholding-income-tax-refund', 'Возврат подоходного налога, удержанного у источника выплаты', 'Төлем көзінен ұсталған табыс салығын қайтару', 'WalletCards'],
   ['tax-administration', 'change-tax-obligation-deadlines', 'Изменение сроков исполнения налогового обязательства по уплате налогов и (или) платежей', 'Салықтарды және (немесе) төлемдерді төлеу жөніндегі салық міндеттемесін орындау мерзімдерін өзгерту', 'CalendarClock'],
   ['tax-administration', 'import-indirect-tax-application', 'Приём заявления о ввозе товаров и уплате косвенных налогов', 'Тауарларды әкелу және жанама салықтарды төлеу туралы өтінішті қабылдау', 'ClipboardList'],
+  ['tax-administration', 'cash-register-registration', 'Постановка и снятие с учёта контрольно-кассовой машины, а также изменение регистрационных данных контрольно-кассовой машины', 'Бақылау-касса машинасын есепке қою және есептен шығару, сондай-ақ бақылау-касса машинасының тіркеу деректерін өзгерту', 'ReceiptText'],
+  ['tax-administration', 'insolvency-administrator-exam', 'Проведение квалификационного экзамена лиц, претендующих на право осуществлять деятельность администратора (временного администратора, реабилитационного, временного и банкротного управляющих)', 'Әкімші (уақытша әкімші, оңалтуды, уақытша және банкроттықты басқарушы) қызметін жүзеге асыру құқығына үміткер адамдардың біліктілік емтиханын өткізу', 'GraduationCap'],
+  ['tax-administration', 'extrajudicial-bankruptcy', 'Применение процедуры внесудебного банкротства', 'Соттан тыс банкроттық рәсімін қолдану', 'Scale'],
   ['customs-administration', 'customs-ip-register', 'Внесение объектов авторского права и смежных прав, товарных знаков, знаков обслуживания и наименований мест происхождения товаров в таможенный реестр объектов интеллектуальной собственности', 'Авторлық және сабақтас құқықтар объектілерін, тауар белгілерін, қызмет көрсету белгілерін және тауар шығарылған жерлердің атауларын зияткерлік меншік объектілерінің кедендік тізіліміне енгізу', 'FileSpreadsheet'],
   ['customs-administration', 'authorized-economic-operators-register', 'Включение в реестр уполномоченных экономических операторов', 'Уәкілетті экономикалық операторлардың тізіліміне енгізу', 'Building2'],
   ['customs-administration', 'customs-representatives-register', 'Включение в реестр таможенных представителей', 'Кеден өкілдерінің тізіліміне енгізу', 'Users'],
@@ -37,10 +50,13 @@ const services = [
   ['customs-administration', 'preliminary-origin-decision', 'Принятие предварительного решения о происхождении товара', 'Тауардың шығу тегі туралы алдын ала шешім қабылдау', 'FileText'],
   ['customs-administration', 'preliminary-classification-decision', 'Принятие предварительного решения о классификации товаров', 'Тауарларды сыныптау туралы алдын ала шешім қабылдау', 'FileText'],
   ['customs-administration', 'disassembled-goods-classification', 'Принятие решения о классификации товара, ввозимого несобранным или разобранным (в том числе незавершённым) отдельными партиями', 'Жекелеген партиялармен құрастырылмаған немесе бөлшектелген түрде (оның ішінде аяқталмаған түрде) әкелінетін тауарды сыныптау туралы шешім қабылдау', 'ListChecks'],
+  ['customs-administration', 'customs-clearance', 'Таможенная очистка товаров', 'Тауарларды кедендік тазарту', 'ScanLine'],
   ['customs-administration', 'vehicle-customs-seal-admission', 'Выдача свидетельства о допущении транспортного средства к перевозке товаров под таможенными пломбами и печатями', 'Көлік құралын тауарларды кедендік пломбалар мен мөрлер астында тасымалдауға жіберу туралы куәлік беру', 'Car'],
   ['customs-administration', 'temporary-storage-owners-register', 'Включение в реестр владельцев мест временного хранения', 'Уақытша сақтау орындары иелерінің тізіліміне енгізу', 'Building2'],
   ['customs-administration', 'duty-free-shop-owners-register', 'Включение в реестр владельцев магазинов беспошлинной торговли', 'Бажсыз сауда дүкендері иелерінің тізіліміне енгізу', 'Building2'],
   ['customs-administration', 'own-goods-warehouse-owners-register', 'Включение в реестр владельцев складов хранения собственных товаров', 'Өз тауарларын сақтау қоймалары иелерінің тізіліміне енгізу', 'Building2'],
+  ['customs-administration', 'customs-obligation-registration', 'Регистрация исполнения обязанности по уплате таможенных пошлин, налогов, специальных, антидемпинговых, компенсационных пошлин, а также обеспечения деятельности юридического лица в сфере таможенного дела и (или) деятельности уполномоченного экономического оператора', 'Кедендік баждарды, салықтарды, арнайы, демпингке қарсы, өтемақы баждарын төлеу жөніндегі міндеттің орындалуын, сондай-ақ кеден ісі саласындағы заңды тұлғаның және (немесе) уәкілетті экономикалық оператордың қызметін қамтамасыз етуді тіркеу', 'ShieldCheck'],
+  ['customs-administration', 'import-duty-deadline-change', 'Изменение сроков уплаты ввозных таможенных пошлин', 'Әкелу кедендік баждарын төлеу мерзімдерін өзгерту', 'CalendarClock'],
   ['customs-administration', 'vehicle-customs-declaration', 'Приём таможенной декларации на транспортное средство', 'Көлік құралына арналған кедендік декларацияны қабылдау', 'ClipboardList'],
   ['customs-administration', 'passenger-customs-declaration', 'Приём пассажирской таможенной декларации', 'Жолаушылар кедендік декларациясын қабылдау', 'Luggage'],
   ['customs-administration', 'transit-declaration', 'Приём транзитной декларации', 'Транзиттік декларацияны қабылдау', 'ClipboardList'],
@@ -105,7 +121,7 @@ const servicePackages = [
 ];
 
 const legacyCategorySlugs = ['individuals', 'entrepreneurs', 'legal-entities', 'taxes-payments', 'transport', 'tax-debt', 'certificates', 'tax-reporting', 'receipt-check', 'customs', 'appointments', 'help'];
-const legacyServiceSlugs = ['property-tax', 'land-tax', 'ip-registration-info', 'special-tax-regimes', 'corporate-income-tax', 'vat-registration', 'tax-calendar', 'budget-payment-codes', 'vehicle-tax', 'vehicle-tax-calculation', 'tax-debt-information', 'debt-repayment-order', 'tax-residency-certificate', 'personal-account-extract', 'reporting-deadlines', 'reporting-withdrawal', 'fiscal-receipt-requirements', 'cash-register-info', 'customs-declaration', 'personal-goods', 'appointment-procedure', 'appointment-cancellation', 'contact-center', 'office-consultation'];
+const legacyServiceSlugs = ['property-tax', 'land-tax', 'ip-registration-info', 'special-tax-regimes', 'corporate-income-tax', 'vat-registration', 'tax-calendar', 'budget-payment-codes', 'vehicle-tax', 'vehicle-tax-calculation', 'debt-repayment-order', 'tax-residency-certificate', 'personal-account-extract', 'reporting-deadlines', 'reporting-withdrawal', 'fiscal-receipt-requirements', 'cash-register-info', 'customs-declaration', 'personal-goods', 'appointment-procedure', 'appointment-cancellation', 'contact-center', 'office-consultation'];
 
 const popularServiceSlugs = new Set(['taxpayer-registration', 'vat-payer-registration', 'confirm-kazakhstan-residency', 'suspend-tax-reporting', 'accept-tax-reporting', 'withdraw-tax-reporting']);
 
@@ -324,8 +340,10 @@ async function main() {
     });
   }
 
+  const currentSettings = await prisma.setting.findUnique({ where: { id: 1 }, select: { panelQrCodes: true } });
+  const shouldAddOfficialQrCodes = !currentSettings || !Array.isArray(currentSettings.panelQrCodes) || currentSettings.panelQrCodes.length === 0;
   await prisma.setting.upsert({
-    where: { id: 1 }, update: { defaultLanguage: 'kz' },
+    where: { id: 1 }, update: { defaultLanguage: 'kz', ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}) },
     create: {
       id: 1,
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
@@ -335,6 +353,9 @@ async function main() {
       inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'kz', showCurrentTime: true, maintenanceMode: false,
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
+      taxpayerRightsRu: '', taxpayerRightsKz: '', ethicsOfficerNameRu: '', ethicsOfficerNameKz: '',
+      ethicsOfficerContactsRu: '', ethicsOfficerContactsKz: '', ethicsOfficerPhoto: '',
+      reportingDeadlines: [], panelQrCodes: officialPanelQrCodes, onlineSpecialists: [],
     },
   });
   console.log(`Seed завершён: ${categories.length} категорий, ${services.length} государственных услуг, ${servicePackages.length} пакетов, ${newsItems.length} новостей, администратор ${SEED_ADMIN_LOGIN}`);

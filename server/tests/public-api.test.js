@@ -31,11 +31,11 @@ test('health endpoint confirms database connection', async () => {
   assert.equal(body.data.database, 'connected');
 });
 
-test('catalog exposes all 31 complete DGD services', async () => {
+test('catalog exposes all 42 complete DGD services', async () => {
   const { response, body } = await request('/api/services?limit=100');
   assert.equal(response.status, 200);
-  assert.equal(body.meta.total, 31);
-  assert.equal(body.data.length, 31);
+  assert.equal(body.meta.total, 42);
+  assert.equal(body.data.length, 42);
   for (const item of body.data) {
     assert.ok(item.titleRu && item.titleKz && item.fullDescriptionRu && item.fullDescriptionKz);
     assert.ok(Array.isArray(item.requiredDocumentsRu) && Array.isArray(item.requiredDocumentsKz));
@@ -55,7 +55,7 @@ test('catalog exposes five categories and six service packages', async () => {
 
 test('progress package contains all services and honorary package keeps customer note', async () => {
   const [progress, honorary] = await Promise.all([request('/api/service-packages/progress'), request('/api/service-packages/honorary')]);
-  assert.equal(progress.body.data.services.length, 31);
+  assert.equal(progress.body.data.services.length, 42);
   assert.equal(honorary.body.data.services.length, 0);
   assert.match(honorary.body.data.noteRu, /утвержден|согласован|заказчик/i);
 });

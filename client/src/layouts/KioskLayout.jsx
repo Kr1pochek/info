@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import KioskHeader from '../components/kiosk/KioskHeader.jsx';
+import KioskFooter from '../components/kiosk/KioskFooter.jsx';
 import InactivityGuard from '../components/kiosk/InactivityGuard.jsx';
 import { ErrorState, LoadingState } from '../components/common/States.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
@@ -8,9 +9,9 @@ import { useFontSize } from '../context/FontSizeContext.jsx';
 import { localized } from '../utils/localization.js';
 
 export default function KioskLayout() {
-  const { settings, loading, error, reload } = useSettings(); const { language, t } = useLanguage(); const { fontSize } = useFontSize();
+  const { settings, loading, error, reload } = useSettings(); const { language, t } = useLanguage(); const { fontSize, visionMode } = useFontSize();
   if (loading) return <main className="full-state"><LoadingState text={t.loading} /></main>;
   if (error || !settings) return <main className="full-state"><ErrorState title={t.unavailableTitle} text={t.unavailableText} onRetry={reload} retryText={t.retry} /></main>;
   if (settings.maintenanceMode) return <main className="full-state"><ErrorState title={t.maintenance} text={localized(settings, 'maintenanceMessage', language)} /></main>;
-  return <InactivityGuard><div className={`kiosk-shell font-${fontSize}`}><KioskHeader /><main className="kiosk-main"><Outlet /></main></div></InactivityGuard>;
+  return <InactivityGuard><div className={`kiosk-shell font-${fontSize}${visionMode ? ' vision-mode' : ''}`}><KioskHeader /><main className="kiosk-main"><Outlet /></main><KioskFooter /></div></InactivityGuard>;
 }

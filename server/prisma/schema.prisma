@@ -272,6 +272,16 @@ model Setting {
   broadcastSlideSeconds    Int      @default(24)
   broadcastLanguageSeconds Int      @default(12)
   broadcastIdleSeconds     Int      @default(60)
+  taxpayerRightsRu         String   @default("") @db.Text
+  taxpayerRightsKz         String   @default("") @db.Text
+  ethicsOfficerNameRu      String   @default("") @db.VarChar(240)
+  ethicsOfficerNameKz      String   @default("") @db.VarChar(240)
+  ethicsOfficerContactsRu  String   @default("") @db.VarChar(1000)
+  ethicsOfficerContactsKz  String   @default("") @db.VarChar(1000)
+  ethicsOfficerPhoto       String   @default("") @db.VarChar(500)
+  reportingDeadlines       Json     @default("[]")
+  panelQrCodes             Json     @default("[]")
+  onlineSpecialists        Json     @default("[]")
   updatedAt                DateTime @updatedAt
 }
 

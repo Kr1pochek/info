@@ -30,11 +30,12 @@ import PackagePage from './pages/kiosk/PackagePage.jsx';
 import AdminPackagesPage from './pages/admin/PackagesPage.jsx';
 import AdminStartPage from './pages/admin/AdminStartPage.jsx';
 import SystemStatusPage from './pages/admin/SystemStatusPage.jsx';
+import InformationPage from './pages/kiosk/InformationPage.jsx';
 
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><Routes>
     <Route index element={<ChoosePage />} />
-    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /></Route>
+    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
     <Route path="news" element={<NewsLayout />}><Route index element={<NewsListPage />} /><Route path=":newsSlug" element={<NewsDetailPage />} /></Route>
     <Route path="admin/login" element={<LoginPage />} />
     <Route path="admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

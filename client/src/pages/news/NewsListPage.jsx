@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Cake, CalendarDays, CircleDollarSign, Image as ImageIcon, Megaphone, Newspaper, PartyPopper, RefreshCw, WifiOff } from 'lucide-react';
+import { Cake, CalendarDays, CircleDollarSign, Clock3, Image as ImageIcon, Megaphone, Newspaper, PartyPopper, RefreshCw, UserRoundCheck, WifiOff } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import api, { apiMessage, assetUrl } from '../../api/client.js';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
@@ -14,11 +14,12 @@ const birthdayCopy = {
 
 function BroadcastScreen({ onOpenNews }) {
   const { language, setLanguage } = useLanguage();
-  const [broadcast, setBroadcast] = useState(null); const [rate, setRate] = useState(null); const [error, setError] = useState(''); const [offline, setOffline] = useState(false); const [index, setIndex] = useState(0);
+  const [broadcast, setBroadcast] = useState(null); const [rate, setRate] = useState(null); const [error, setError] = useState(''); const [offline, setOffline] = useState(false); const [index, setIndex] = useState(0); const [now, setNow] = useState(new Date());
   const load = useCallback(async () => { try { const response = await api.get('/broadcast'); setBroadcast(response.data.data); setOffline(Boolean(response.__fromCache)); setError(''); setIndex((current) => Math.min(current, Math.max(0, response.data.data.slides.length - 1))); } catch (err) { setError(apiMessage(err)); setOffline(true); } }, []);
   useEffect(() => { load(); const timer = setInterval(load, 60 * 1000); const reconnect = () => load(); window.addEventListener('online', reconnect); return () => { clearInterval(timer); window.removeEventListener('online', reconnect); }; }, [load]);
   useEffect(() => { api.get('/exchange-rates/usd-kzt').then((response) => setRate(response.data.data)).catch(() => setRate(null)); }, []);
   useEffect(() => { setLanguage('kz', true); }, [setLanguage]);
+  useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
   const slides = broadcast?.slides || []; const current = slides[index];
   const currentId = current?.id;
   const advance = useCallback(() => setIndex((currentIndex) => slides.length ? (currentIndex + 1) % slides.length : 0), [slides.length]);
@@ -29,17 +30,23 @@ function BroadcastScreen({ onOpenNews }) {
   if (error || !item) return <div className="broadcast-screen"><ErrorState title="Эфир недоступен" text={error || 'Нет активных материалов'} onRetry={load} /></div>;
   const ticker = broadcast.settings[language === 'kz' ? 'tickerTextKz' : 'tickerTextRu'];
   const locale = language === 'kz' ? 'kk-KZ' : 'ru-RU';
+  const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const qrCodes = (broadcast.settings.panelQrCodes || []).filter((entry) => entry.isActive && entry.image);
+  const specialists = (broadcast.settings.onlineSpecialists || []).filter((entry) => entry.isActive && entry.workDate === localDate).slice(0, 2);
   const phaseSeconds = language === 'kz' ? broadcast.settings.broadcastLanguageSeconds : Math.max(5, broadcast.settings.broadcastSlideSeconds - broadcast.settings.broadcastLanguageSeconds);
   const finishVideo = () => { if (language === 'kz') setLanguage('ru', true); else { setLanguage('kz', true); advance(); } };
   return <main className={`broadcast-screen broadcast-screen--${item.kind.toLowerCase()}`}>
     <div className="broadcast-progress" key={`${item.id}-${language}`} style={{ '--duration': `${item.kind === 'VIDEO' ? 120 : phaseSeconds}s` }} />
     <div className="broadcast-corner"><span>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</span><strong>{String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</strong></div>
+    <time className="broadcast-datetime" dateTime={now.toISOString()}><CalendarDays size={20} /><span>{now.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })}</span><Clock3 size={20} /><strong>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</strong></time>
     {offline && <div className="broadcast-offline"><WifiOff size={16} />{language === 'kz' ? 'Сақталған эфир' : 'Сохранённый эфир'}</div>}
     {rate && <div className="broadcast-rate"><CircleDollarSign /><span>USD / KZT</span><strong>{rate.rate.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</strong></div>}
     <button type="button" className={`broadcast-open-button ${rate ? 'broadcast-open-button--with-rate' : ''}`} onClick={onOpenNews}><Newspaper size={18} />{language === 'kz' ? 'Жаңалықтарды ашу' : 'Открыть новости'}</button>
     {item.kind === 'VIDEO' || item.kind === 'IMAGE' ? <section className="broadcast-video-slide">{item.kind === 'IMAGE' ? <img src={assetUrl(item.mediaUrl)} alt="" onError={finishVideo} /> : <video key={`${item.mediaUrl}-${language}`} src={assetUrl(item.mediaUrl)} autoPlay muted playsInline onEnded={finishVideo} onError={finishVideo} />}<div className="broadcast-video-caption"><span>{item.kind === 'IMAGE' ? <ImageIcon size={18} /> : <RefreshCw size={18} />}{language === 'kz' ? item.kind === 'IMAGE' ? 'Фотоматериал' : 'Бейнематериал' : item.kind === 'IMAGE' ? 'Фотоматериал' : 'Видеоматериал'}</span><h1>{item.title}</h1><p>{item.description}</p></div></section>
       : item.kind === 'BIRTHDAY' ? <section className="birthday-slide"><div className="birthday-slide__decor"><PartyPopper /><Cake /></div><div className="birthday-slide__content"><span>{birthdayCopy[language].eyebrow}</span><p>{birthdayCopy[language].prefix}</p><h1>{item.title}</h1><div>{item.description}</div><strong>{birthdayCopy[language].wishes}</strong></div></section>
         : <section className="broadcast-news-slide"><div className="broadcast-news-slide__copy"><div className="broadcast-news-slide__meta"><span><Newspaper size={18} />{newsCategoryLabel(item.category, language)}</span><time><CalendarDays size={17} />{new Date(item.publishedAt || item.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</time></div><h1>{item.title}</h1><p className="broadcast-news-slide__lead">{item.description}</p><div className="broadcast-news-slide__body">{item.content.split(/\n{2,}/).slice(0, 4).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}</div></div><div className="broadcast-news-slide__visual"><img src={assetUrl(item.image)} alt="" /></div></section>}
+    {specialists.length > 0 && <aside className="broadcast-specialists"><header><UserRoundCheck size={22} /><span>{language === 'kz' ? 'Бүгін онлайн' : 'Сегодня онлайн'}</span></header>{specialists.map((specialist) => <article key={specialist.id}>{specialist.photo && <img src={assetUrl(specialist.photo)} alt="" />}<div><strong>{specialist[language === 'kz' ? 'nameKz' : 'nameRu']}</strong><span>{specialist[language === 'kz' ? 'categoryKz' : 'categoryRu']}</span><small>{specialist[language === 'kz' ? 'servicesKz' : 'servicesRu']}</small></div></article>)}</aside>}
+    {qrCodes.length > 0 && <aside className="broadcast-qr-codes">{qrCodes.map((code) => <div key={code.id}><img src={assetUrl(code.image)} alt={code[language === 'kz' ? 'labelKz' : 'labelRu']} /><span>{code[language === 'kz' ? 'labelKz' : 'labelRu']}</span></div>)}</aside>}
     <div className="broadcast-ticker"><span className="broadcast-ticker__label"><Megaphone size={19} />{language === 'kz' ? 'АҚПАРАТ' : 'ВАЖНО'}</span><div><p>{ticker}<i>•</i>{ticker}<i>•</i>{ticker}</p></div></div>
   </main>;
 }
