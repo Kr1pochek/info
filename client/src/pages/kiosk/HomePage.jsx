@@ -12,6 +12,7 @@ import SearchBar from '../../components/kiosk/SearchBar.jsx';
 import CategoryCard from '../../components/kiosk/CategoryCard.jsx';
 import ServiceCard from '../../components/kiosk/ServiceCard.jsx';
 import PackageCard from '../../components/kiosk/PackageCard.jsx';
+import SearchSuggestions from '../../components/common/SearchSuggestions.jsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/common/States.jsx';
 
 export default function HomePage() {
@@ -40,7 +41,7 @@ export default function HomePage() {
       <h1>{t.question}</h1><p>{t.subtitle}</p><SearchBar value={query} onChange={setQuery} />
     </section>
     {searching ? <section className="content-section"><div className="section-heading"><div><span>{t.searchResults}</span><h2>{t.servicesFound}: {search.results.length}</h2></div></div>
-      {search.loading ? <LoadingState text={t.loading} /> : search.error ? <ErrorState title={t.unavailableTitle} text={search.error} /> : search.results.length ? <div className="service-grid">{search.results.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noResults} />}
+      {search.loading ? <LoadingState text={t.loading} /> : search.error ? <ErrorState title={t.unavailableTitle} text={search.error} /> : search.results.length ? <div className="service-grid">{search.results.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <><SearchSuggestions suggestions={search.suggestions} onSelect={setQuery} /><EmptyState text={t.noResults} /></>}
     </section> : <>
       <section className="content-section content-section--home"><div className="section-heading"><div><span>01</span><h2>{t.categories}</h2></div><small>{categories.length}</small></div><div className="category-grid">{categories.map((category) => <CategoryCard key={category.id} category={category} />)}</div></section>
       <section className="content-section content-section--packages"><div className="section-heading"><div><span>02</span><h2>{t.servicePackages}</h2></div><small>{packages.length}</small></div><div className="package-grid">{packages.map((item) => <PackageCard item={item} key={item.id} />)}</div></section>

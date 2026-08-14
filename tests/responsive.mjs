@@ -23,6 +23,27 @@ await new Promise((resolve, reject) => { server.once('listening', resolve); serv
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
 const broadcastResponse = await fetch(`${baseUrl}/api/broadcast`);
 assert.equal(broadcastResponse.status, 200, `Broadcast API failed: ${await broadcastResponse.text()}`);
+const [servicesResponse, newsResponse] = await Promise.all([
+  fetch(`${baseUrl}/api/services?limit=100`),
+  fetch(`${baseUrl}/api/news?limit=100`),
+]);
+assert.equal(servicesResponse.status, 200, 'Services API failed');
+assert.equal(newsResponse.status, 200, 'News API failed');
+const serviceCandidate = (await servicesResponse.json()).data.find((item) => Array.from(item.titleKz).length >= 8);
+const newsCandidate = (await newsResponse.json()).data.find((item) => Array.from(item.titleKz).length >= 8);
+assert.ok(serviceCandidate && newsCandidate, 'Search suggestion fixtures are missing');
+
+function removeMiddleCharacter(value) {
+  const words = value.split(/\s+/);
+  const index = words.reduce((best, word, current) => Array.from(word).length > Array.from(words[best]).length ? current : best, 0);
+  const characters = Array.from(words[index]);
+  characters.splice(Math.floor(characters.length / 2), 1);
+  words[index] = characters.join('');
+  return words.join(' ');
+}
+
+const misspelledServiceTitle = removeMiddleCharacter(serviceCandidate.titleKz);
+const misspelledNewsTitle = removeMiddleCharacter(newsCandidate.titleKz);
 const browser = await chromium.launch({ executablePath, headless: true });
 const requireFromServer = createRequire(path.resolve('server/package.json'));
 const { parse: parseEnv } = requireFromServer('dotenv');
@@ -54,6 +75,17 @@ try {
       assert.ok(layout.text.trim().length > 20, `${viewport.name} ${route}: empty page`);
       assert.ok(layout.bodyWidth <= layout.viewportWidth + 2, `${viewport.name} ${route}: horizontal overflow ${layout.bodyWidth}/${layout.viewportWidth}`);
       assert.equal(pageErrors.length, 0, `${viewport.name} ${route}: ${pageErrors.join('; ')}`);
+      if (route === '/kiosk') {
+        const serviceSearch = page.locator('#service-search');
+        await serviceSearch.click();
+        assert.equal(await page.locator('.virtual-keyboard').count(), 1, `${viewport.name}: service keyboard did not open`);
+        await serviceSearch.pressSequentially(misspelledServiceTitle);
+        await page.locator('.virtual-keyboard__done').click();
+        const serviceSuggestion = page.locator('.search-suggestions__options button').first();
+        await serviceSuggestion.waitFor({ timeout: 10000 });
+        await serviceSuggestion.click();
+        await page.locator('.service-grid .service-card').first().waitFor({ timeout: 10000 });
+      }
       if (route === '/news') {
         const broadcastVisible = await page.locator('.broadcast-progress').count();
         assert.equal(broadcastVisible, 1, `${viewport.name}: broadcast did not load at ${page.url()}: ${layout.text.slice(0, 240)}`);
@@ -74,6 +106,29 @@ try {
         }));
         assert.equal(contrast.background, 'rgb(0, 0, 0)', `${viewport.name}: broadcast background is not high contrast`);
         assert.equal(contrast.tickerColor, 'rgb(255, 229, 0)', `${viewport.name}: ticker is not high contrast`);
+        await page.locator('.broadcast-open-button').click();
+        const newsSearch = page.locator('.news-search input');
+        await newsSearch.waitFor();
+        assert.equal(await newsSearch.getAttribute('inputmode'), 'none', `${viewport.name}: native keyboard is not suppressed`);
+        await newsSearch.click();
+        const virtualKeyboard = page.locator('.virtual-keyboard');
+        assert.equal(await virtualKeyboard.count(), 1, `${viewport.name}: news keyboard did not open`);
+        const firstKey = page.locator('.virtual-keyboard__key').first();
+        const firstCharacter = await firstKey.textContent();
+        await firstKey.click();
+        assert.equal(await newsSearch.inputValue(), firstCharacter, `${viewport.name}: news keyboard did not enter text`);
+        await page.locator('.virtual-keyboard__done').click();
+        assert.equal(await virtualKeyboard.count(), 0, `${viewport.name}: news keyboard did not close`);
+        await newsSearch.click();
+        assert.equal(await virtualKeyboard.count(), 1, `${viewport.name}: news keyboard did not reopen`);
+        await page.locator('.virtual-keyboard__actions button').first().click();
+        assert.equal(await newsSearch.inputValue(), '', `${viewport.name}: news keyboard did not clear text`);
+        await page.locator('.virtual-keyboard__done').click();
+        await newsSearch.pressSequentially(misspelledNewsTitle);
+        const newsSuggestion = page.locator('.search-suggestions__options button').first();
+        await newsSuggestion.waitFor({ timeout: 10000 });
+        await newsSuggestion.click();
+        await page.locator('.featured-news').waitFor({ timeout: 10000 });
       }
       if (route === '/admin/login') {
         const languageSwitch = page.locator('.login-language-switch');

@@ -66,6 +66,5 @@ export function useAdminI18n() {
     locale: language === 'kz' ? 'kk-KZ' : 'ru-RU',
     tr,
     toggleLanguage: () => setLanguage(language === 'kz' ? 'ru' : 'kz', true),
-    localized: (item, ruKey, kzKey) => item?.[language === 'kz' ? kzKey : ruKey],
   }), [language, setLanguage, tr]);
 }
