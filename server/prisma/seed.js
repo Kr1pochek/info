@@ -219,8 +219,11 @@ async function main() {
     create: { login: SEED_ADMIN_LOGIN.toLowerCase(), passwordHash, fullName: SEED_ADMIN_NAME, role: 'SUPER_ADMIN' },
   });
 
-  await prisma.service.updateMany({ where: { slug: { in: legacyServiceSlugs } }, data: { isPublished: false, isPopular: false } });
-  await prisma.category.updateMany({ where: { slug: { in: legacyCategorySlugs } }, data: { isPublished: false } });
+  // Эти записи относятся к первоначальному демонстрационному каталогу и не входят
+  // в официальный перечень из 42 услуг. Удаляем их, чтобы административный список
+  // и счётчики не смешивали архивные карточки с актуальными государственными услугами.
+  await prisma.service.deleteMany({ where: { slug: { in: legacyServiceSlugs } } });
+  await prisma.category.deleteMany({ where: { slug: { in: legacyCategorySlugs } } });
 
   const categoryIds = {};
   for (let index = 0; index < categories.length; index += 1) {
@@ -351,6 +354,8 @@ async function main() {
       contactPhone: '1414', addressRu: 'г. Алматы, проспект Абылай хана, 93/95', addressKz: 'Алматы қ., Абылай хан даңғылы, 93/95',
       workingHoursRu: 'Пн–Пт, 09:00–18:30; перерыв 13:00–14:30', workingHoursKz: 'Дс–Жм, 09:00–18:30; үзіліс 13:00–14:30',
       inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'kz', showCurrentTime: true, maintenanceMode: false,
+      announcementLanguage: 'ru', announcementVolume: 75, announcementRepeatSeconds: 8,
+      accessibleAudioEnabled: true, accessibleAudioVolume: 100,
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
       taxpayerRightsRu: '', taxpayerRightsKz: '', ethicsOfficerNameRu: '', ethicsOfficerNameKz: '',

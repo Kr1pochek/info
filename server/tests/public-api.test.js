@@ -31,6 +31,46 @@ test('health endpoint confirms database connection', async () => {
   assert.equal(body.data.database, 'connected');
 });
 
+test('public settings expose configurable queue announcement parameters', async () => {
+  const { response, body } = await request('/api/settings/public');
+  assert.equal(response.status, 200);
+  assert.ok(['ru', 'kz'].includes(body.data.announcementLanguage));
+  assert.ok(Number.isInteger(body.data.announcementVolume) && body.data.announcementVolume >= 0 && body.data.announcementVolume <= 100);
+  assert.ok(Number.isInteger(body.data.announcementRepeatSeconds) && body.data.announcementRepeatSeconds >= 1);
+  assert.equal(typeof body.data.accessibleAudioEnabled, 'boolean');
+  assert.ok(Number.isInteger(body.data.accessibleAudioVolume) && body.data.accessibleAudioVolume >= 0 && body.data.accessibleAudioVolume <= 100);
+});
+
+test('super administrator can update and restore queue announcement parameters', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const current = await request('/api/admin/settings', { headers });
+  assert.equal(current.response.status, 200);
+  const { id, updatedAt, ...original } = current.body.data;
+  const changed = {
+    ...original,
+    announcementLanguage: original.announcementLanguage === 'ru' ? 'kz' : 'ru',
+    announcementVolume: original.announcementVolume === 74 ? 75 : 74,
+    announcementRepeatSeconds: original.announcementRepeatSeconds === 9 ? 8 : 9,
+    accessibleAudioEnabled: !original.accessibleAudioEnabled,
+    accessibleAudioVolume: original.accessibleAudioVolume === 99 ? 100 : 99,
+  };
+  try {
+    const updated = await request('/api/admin/settings', { method: 'PATCH', headers, body: JSON.stringify(changed) });
+    assert.equal(updated.response.status, 200);
+    assert.equal(updated.body.data.announcementLanguage, changed.announcementLanguage);
+    assert.equal(updated.body.data.announcementVolume, changed.announcementVolume);
+    assert.equal(updated.body.data.announcementRepeatSeconds, changed.announcementRepeatSeconds);
+    assert.equal(updated.body.data.accessibleAudioEnabled, changed.accessibleAudioEnabled);
+    assert.equal(updated.body.data.accessibleAudioVolume, changed.accessibleAudioVolume);
+  } finally {
+    const restored = await request('/api/admin/settings', { method: 'PATCH', headers, body: JSON.stringify(original) });
+    assert.equal(restored.response.status, 200);
+  }
+});
+
 test('catalog exposes all 42 complete DGD services', async () => {
   const { response, body } = await request('/api/services?limit=100');
   assert.equal(response.status, 200);
@@ -42,6 +82,16 @@ test('catalog exposes all 42 complete DGD services', async () => {
     assert.ok(Array.isArray(item.stepsRu) && Array.isArray(item.stepsKz));
     assert.ok(item.category?.id && item.category?.titleRu && item.category?.titleKz);
   }
+});
+
+test('administrator catalog contains only the 42 current services', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const { response, body } = await request('/api/admin/services?limit=100', { headers: { Authorization: `Bearer ${token}` } });
+  assert.equal(response.status, 200);
+  assert.equal(body.meta.total, 42);
+  assert.equal(body.data.length, 42);
 });
 
 test('catalog exposes five categories and six service packages', async () => {

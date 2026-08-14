@@ -1,11 +1,16 @@
 import { AlertCircle, LoaderCircle, RotateCcw } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.jsx';
+import { translateAdminText } from '../../utils/adminLocalization.js';
 
 export function LoadingState({ text = 'Загрузка…' }) {
-  return <div className="state-panel" role="status"><LoaderCircle className="spin" size={42} /><p>{text}</p></div>;
+  const { language } = useLanguage();
+  return <div className="state-panel" role="status"><LoaderCircle className="spin" size={42} /><p>{translateAdminText(text, language)}</p></div>;
 }
 export function EmptyState({ text }) {
-  return <div className="state-panel"><AlertCircle size={42} /><p>{text}</p></div>;
+  const { language } = useLanguage();
+  return <div className="state-panel"><AlertCircle size={42} /><p>{translateAdminText(text, language)}</p></div>;
 }
 export function ErrorState({ title, text, onRetry, retryText = 'Повторить' }) {
-  return <div className="state-panel state-panel--error" role="alert"><AlertCircle size={46} /><h2>{title}</h2><p>{text}</p>{onRetry && <button className="button button--primary" onClick={onRetry}><RotateCcw size={22} />{retryText}</button>}</div>;
+  const { language } = useLanguage();
+  return <div className="state-panel state-panel--error" role="alert"><AlertCircle size={46} /><h2>{translateAdminText(title, language)}</h2><p>{translateAdminText(text, language)}</p>{onRetry && <button className="button button--primary" onClick={onRetry}><RotateCcw size={22} />{translateAdminText(retryText, language)}</button>}</div>;
 }

@@ -9,11 +9,13 @@ import {
 import api, { apiMessage } from "../../api/client.js";
 import AdminPageHeader from "../../components/admin/AdminPageHeader.jsx";
 import { ErrorState, LoadingState } from "../../components/common/States.jsx";
+import { useAdminI18n } from "../../utils/adminLocalization.js";
 
 function dateString(date) {
   return date.toISOString().slice(0, 10);
 }
 export default function AnalyticsPage() {
+  const { language, locale, tr } = useAdminI18n();
   const initialTo = new Date();
   const initialFrom = new Date(Date.now() - 29 * 86400000);
   const [period, setPeriod] = useState({
@@ -41,8 +43,11 @@ export default function AnalyticsPage() {
     <>
       <AdminPageHeader
         eyebrow="Статистика"
+        eyebrowKz="Статистика"
         title="Аналитика киоска"
+        titleKz="Киоск талдауы"
         description="Только обезличенные события взаимодействия посетителей"
+        descriptionKz="Келушілер әрекетінің тек дербестендірілмеген оқиғалары"
         actions={
           <div className="date-filter">
             <CalendarRange />
@@ -64,7 +69,7 @@ export default function AnalyticsPage() {
       />
       {error ? (
         <ErrorState
-          title="Не удалось загрузить аналитику"
+          title={tr("Не удалось загрузить аналитику", "Талдауды жүктеу мүмкін болмады")}
           text={error}
           onRetry={load}
         />
@@ -75,28 +80,28 @@ export default function AnalyticsPage() {
           <div className="stat-grid stat-grid--analytics">
             <article className="stat-card stat-card--navy">
               <div>
-                <span>Открытия услуг</span>
+                <span>{tr("Открытия услуг", "Қызметтерді ашу")}</span>
                 <strong>{eventCount("SERVICE_OPEN")}</strong>
               </div>
               <MousePointerClick />
             </article>
             <article className="stat-card stat-card--violet">
               <div>
-                <span>Поисковые запросы</span>
+                <span>{tr("Поисковые запросы", "Іздеу сұраулары")}</span>
                 <strong>{eventCount("SEARCH")}</strong>
               </div>
               <Search />
             </article>
             <article className="stat-card stat-card--orange">
               <div>
-                <span>Завершения по таймеру</span>
+                <span>{tr("Завершения по таймеру", "Таймер бойынша аяқталу")}</span>
                 <strong>{data.timeouts}</strong>
               </div>
               <Clock3 />
             </article>
             <article className="stat-card stat-card--cyan">
               <div>
-                <span>Всего событий</span>
+                <span>{tr("Всего событий", "Барлық оқиғалар")}</span>
                 <strong>
                   {data.byType.reduce((sum, item) => sum + item._count._all, 0)}
                 </strong>
@@ -108,8 +113,8 @@ export default function AnalyticsPage() {
             <section className="admin-card chart-card admin-card--wide">
               <header>
                 <div>
-                  <span>Динамика</span>
-                  <h2>События по дням</h2>
+                  <span>{tr("Динамика", "Динамика")}</span>
+                  <h2>{tr("События по дням", "Күндер бойынша оқиғалар")}</h2>
                 </div>
               </header>
               <div className="bar-chart bar-chart--large">
@@ -122,7 +127,7 @@ export default function AnalyticsPage() {
                       }}
                     />
                     <small>
-                      {new Date(item.day).toLocaleDateString("ru-RU", {
+                      {new Date(item.day).toLocaleDateString(locale, {
                         day: "2-digit",
                         month: "short",
                       })}
@@ -133,13 +138,13 @@ export default function AnalyticsPage() {
             </section>
             <section className="admin-card">
               <header>
-                <h2>Популярные услуги</h2>
+                <h2>{tr("Популярные услуги", "Танымал қызметтер")}</h2>
               </header>
               <ol className="rank-list">
                 {data.popularServices.map((item, index) => (
                   <li key={item.id}>
                     <span>{index + 1}</span>
-                    <strong>{item.titleRu}</strong>
+                    <strong>{item[language === "kz" ? "titleKz" : "titleRu"]}</strong>
                     <em>{item.count}</em>
                   </li>
                 ))}
@@ -147,13 +152,13 @@ export default function AnalyticsPage() {
             </section>
             <section className="admin-card">
               <header>
-                <h2>Популярные категории</h2>
+                <h2>{tr("Популярные категории", "Танымал санаттар")}</h2>
               </header>
               <ol className="rank-list">
                 {data.popularCategories.map((item, index) => (
                   <li key={item.id}>
                     <span>{index + 1}</span>
-                    <strong>{item.titleRu}</strong>
+                    <strong>{item[language === "kz" ? "titleKz" : "titleRu"]}</strong>
                     <em>{item.count}</em>
                   </li>
                 ))}
@@ -161,7 +166,7 @@ export default function AnalyticsPage() {
             </section>
             <section className="admin-card">
               <header>
-                <h2>Поисковые запросы</h2>
+                <h2>{tr("Поисковые запросы", "Іздеу сұраулары")}</h2>
               </header>
               <ol className="rank-list">
                 {data.popularSearches.map((item, index) => (
@@ -175,15 +180,15 @@ export default function AnalyticsPage() {
             </section>
             <section className="admin-card admin-card--wide admin-table-wrap">
               <header>
-                <h2>Последние события</h2>
+                <h2>{tr("Последние события", "Соңғы оқиғалар")}</h2>
               </header>
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Событие</th>
-                    <th>Услуга / категория</th>
-                    <th>Запрос</th>
-                    <th>Время</th>
+                    <th>{tr("Событие", "Оқиға")}</th>
+                    <th>{tr("Услуга / категория", "Қызмет / санат")}</th>
+                    <th>{tr("Запрос", "Сұрау")}</th>
+                    <th>{tr("Время", "Уақыт")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,11 +200,11 @@ export default function AnalyticsPage() {
                         </span>
                       </td>
                       <td>
-                        {item.service?.titleRu || item.category?.titleRu || "—"}
+                        {item.service?.[language === "kz" ? "titleKz" : "titleRu"] || item.category?.[language === "kz" ? "titleKz" : "titleRu"] || "—"}
                       </td>
                       <td>{item.searchQuery || "—"}</td>
                       <td>
-                        {new Date(item.createdAt).toLocaleString("ru-RU")}
+                        {new Date(item.createdAt).toLocaleString(locale)}
                       </td>
                     </tr>
                   ))}

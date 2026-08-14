@@ -24,6 +24,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import Toast from '../../components/admin/Toast.jsx';
 import { ConfirmDialog, Modal } from '../../components/admin/Modal.jsx';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
+import { useAdminI18n } from '../../utils/adminLocalization.js';
 
 const blank = {
   type: 'VIDEO',
@@ -45,62 +46,64 @@ const toForm = (item) => ({
   eventDate: item.eventDate ? new Date(item.eventDate).toISOString().slice(0, 10) : '',
 });
 
-const eventDateLabel = (eventDate) => (
+const eventDateLabel = (eventDate, locale, missingLabel) => (
   eventDate
-    ? new Date(eventDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
-    : 'Дата не указана'
+    ? new Date(eventDate).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+    : missingLabel
 );
 
 function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy, error }) {
+  const { tr } = useAdminI18n();
   const birthday = form.type === 'BIRTHDAY';
   const image = !birthday && form.mediaKind === 'IMAGE';
   const setType = (type) => setForm({ ...form, type, mediaUrl: '', mediaKind: type === 'VIDEO' ? 'IMAGE' : null, eventDate: '' });
 
   return (
     <form className="admin-form broadcast-item-form" onSubmit={onSubmit}>
-      <div className="broadcast-type-switch" aria-label="Тип слайда">
+      <div className="broadcast-type-switch" aria-label={tr('Тип слайда', 'Слайд түрі')}>
         <button type="button" className={birthday ? 'active' : ''} onClick={() => setType('BIRTHDAY')} aria-pressed={birthday}>
           <Cake size={20} />
-          <span><strong>День рождения</strong><small>Показывается один раз в году</small></span>
+          <span><strong>{tr('День рождения', 'Туған күн')}</strong><small>{tr('Показывается один раз в году', 'Жылына бір рет көрсетіледі')}</small></span>
         </button>
         <button type="button" className={!birthday ? 'active' : ''} onClick={() => setType('VIDEO')} aria-pressed={!birthday}>
           <Video size={20} />
-          <span><strong>Фото или видеоматериал</strong><small>Постоянный материал в ротации</small></span>
+          <span><strong>{tr('Фото или видеоматериал', 'Фото немесе бейнематериал')}</strong><small>{tr('Постоянный материал в ротации', 'Ротациядағы тұрақты материал')}</small></span>
         </button>
       </div>
 
       <div className="form-grid">
         <label>
-          <span>Порядок показа</span>
+          <span>{tr('Порядок показа', 'Көрсету реті')}</span>
           <input type="number" min="0" max="10000" value={form.sortOrder} onChange={(event) => setForm({ ...form, sortOrder: Number(event.target.value) })} />
-          <small>Чем меньше число, тем раньше материал появится в эфире.</small>
+          <small>{tr('Чем меньше число, тем раньше материал появится в эфире.', 'Сан неғұрлым аз болса, материал эфирде соғұрлым ертерек шығады.')}</small>
         </label>
-        {birthday && <label><span>Дата рождения</span><input required type="date" value={form.eventDate} onChange={(event) => setForm({ ...form, eventDate: event.target.value })} /><small>Год на публичном экране не показывается.</small></label>}
-        <label><span>{birthday ? 'Имя сотрудника (русский)' : 'Название материала (русский)'}</span><input required maxLength="240" value={form.titleRu} onChange={(event) => setForm({ ...form, titleRu: event.target.value })} /></label>
-        <label><span>{birthday ? 'Қызметкердің аты-жөні (қазақша)' : 'Материал атауы (қазақша)'}</span><input required maxLength="240" value={form.titleKz} onChange={(event) => setForm({ ...form, titleKz: event.target.value })} /></label>
-        <label><span>{birthday ? 'Должность и поздравление (русский)' : 'Описание (русский)'}</span><textarea required maxLength="1200" value={form.descriptionRu} onChange={(event) => setForm({ ...form, descriptionRu: event.target.value })} /></label>
-        <label><span>{birthday ? 'Лауазымы және құттықтау (қазақша)' : 'Сипаттама (қазақша)'}</span><textarea required maxLength="1200" value={form.descriptionKz} onChange={(event) => setForm({ ...form, descriptionKz: event.target.value })} /></label>
+        {birthday && <label><span>{tr('Дата рождения', 'Туған күні')}</span><input required type="date" value={form.eventDate} onChange={(event) => setForm({ ...form, eventDate: event.target.value })} /><small>{tr('Год на публичном экране не показывается.', 'Жыл жалпы экранда көрсетілмейді.')}</small></label>}
+        <label><span>{birthday ? tr('Имя сотрудника (русский)', 'Қызметкердің аты-жөні (орысша)') : tr('Название материала (русский)', 'Материал атауы (орысша)')}</span><input required maxLength="240" value={form.titleRu} onChange={(event) => setForm({ ...form, titleRu: event.target.value })} /></label>
+        <label><span>{birthday ? tr('Имя сотрудника (казахский)', 'Қызметкердің аты-жөні (қазақша)') : tr('Название материала (казахский)', 'Материал атауы (қазақша)')}</span><input required maxLength="240" value={form.titleKz} onChange={(event) => setForm({ ...form, titleKz: event.target.value })} /></label>
+        <label><span>{birthday ? tr('Должность и поздравление (русский)', 'Лауазымы және құттықтау (орысша)') : tr('Описание (русский)', 'Сипаттамасы (орысша)')}</span><textarea required maxLength="1200" value={form.descriptionRu} onChange={(event) => setForm({ ...form, descriptionRu: event.target.value })} /></label>
+        <label><span>{birthday ? tr('Должность и поздравление (казахский)', 'Лауазымы және құттықтау (қазақша)') : tr('Описание (казахский)', 'Сипаттамасы (қазақша)')}</span><textarea required maxLength="1200" value={form.descriptionKz} onChange={(event) => setForm({ ...form, descriptionKz: event.target.value })} /></label>
         {!birthday && (
           <label className="form-grid__wide">
-            <span>Фото или видео</span>
-            <span className="image-upload-control"><Upload size={20} />{uploading ? 'Загрузка…' : form.mediaUrl ? 'Заменить файл' : 'Загрузить файл'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={onUpload} disabled={uploading} /></span>
-            <small>JPG, PNG, WebP, GIF, MP4 или WebM. Видео воспроизводится автоматически без звука.</small>
-            {form.mediaUrl && (image ? <img className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} alt="Предпросмотр материала" /> : <video className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} controls muted />)}
+            <span>{tr('Фото или видео', 'Фото немесе бейне')}</span>
+            <span className="image-upload-control"><Upload size={20} />{uploading ? tr('Загрузка…') : form.mediaUrl ? tr('Заменить файл', 'Файлды ауыстыру') : tr('Загрузить файл', 'Файлды жүктеу')}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={onUpload} disabled={uploading} /></span>
+            <small>{tr('JPG, PNG, WebP, GIF, MP4 или WebM. Видео воспроизводится автоматически без звука.', 'JPG, PNG, WebP, GIF, MP4 немесе WebM. Бейне дыбыссыз автоматты түрде ойнатылады.')}</small>
+            {form.mediaUrl && (image ? <img className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} alt={tr('Предпросмотр материала', 'Материалды алдын ала қарау')} /> : <video className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} controls muted />)}
           </label>
         )}
-        <label className="toggle-label broadcast-active-toggle form-grid__wide"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} /><span>Показывать материал в эфире</span></label>
+        <label className="toggle-label broadcast-active-toggle form-grid__wide"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} /><span>{tr('Показывать материал в эфире', 'Материалды эфирде көрсету')}</span></label>
       </div>
 
-      {error && <div className="form-error">{error}</div>}
+      {error && <div className="form-error">{tr(error)}</div>}
       <div className="form-actions">
-        <button type="button" className="admin-button admin-button--secondary" onClick={onCancel}>Отмена</button>
-        <button className="admin-button admin-button--primary" disabled={busy || uploading || (!birthday && !form.mediaUrl)}>{busy ? 'Сохранение…' : 'Сохранить слайд'}</button>
+        <button type="button" className="admin-button admin-button--secondary" onClick={onCancel}>{tr('Отмена')}</button>
+        <button className="admin-button admin-button--primary" disabled={busy || uploading || (!birthday && !form.mediaUrl)}>{busy ? tr('Сохранение…') : tr('Сохранить слайд', 'Слайдты сақтау')}</button>
       </div>
     </form>
   );
 }
 
 export default function BroadcastPage() {
+  const { language, locale, tr } = useAdminI18n();
   const [settings, setSettings] = useState(null);
   const [items, setItems] = useState(null);
   const [slides, setSlides] = useState(null);
@@ -206,7 +209,7 @@ export default function BroadcastPage() {
   };
 
   if (!settings || !items || !slides) {
-    return error ? <ErrorState title="Не удалось загрузить эфир" text={error} onRetry={load} /> : <LoadingState />;
+    return error ? <ErrorState title={tr('Не удалось загрузить эфир', 'Эфирді жүктеу мүмкін болмады')} text={error} onRetry={load} /> : <LoadingState />;
   }
 
   const activeCount = slides.length;
@@ -218,57 +221,60 @@ export default function BroadcastPage() {
     <div className="broadcast-admin-page">
       <AdminPageHeader
         eyebrow="Контент"
+        eyebrowKz="Контент"
         title="Эфир"
+        titleKz="Эфир"
         description="Управляйте экраном ожидания, ротацией материалов и автоматикой"
-        actions={<div className="broadcast-header-actions"><a className="admin-button admin-button--secondary" href="/news" target="_blank" rel="noreferrer"><Eye size={18} />Открыть эфир</a><button className="admin-button admin-button--primary" onClick={() => setEditing({ ...blank })}><Plus size={19} />Добавить слайд</button></div>}
+        descriptionKz="Күту экранын, материалдар ротациясын және автоматиканы басқарыңыз"
+        actions={<div className="broadcast-header-actions"><a className="admin-button admin-button--secondary" href="/news" target="_blank" rel="noreferrer"><Eye size={18} />{tr('Открыть эфир', 'Эфирді ашу')}</a><button className="admin-button admin-button--primary" onClick={() => setEditing({ ...blank })}><Plus size={19} />{tr('Добавить слайд', 'Слайд қосу')}</button></div>}
       />
 
       <section className="broadcast-admin-hero">
         <div className="broadcast-admin-hero__copy">
-          <div className="broadcast-live-badge"><span />Эфир активен</div>
-          <h2>Новостные фотослайды под контролем</h2>
-          <p>Опубликованные новости с фотографиями автоматически собираются в эфир, чередуются на казахском и русском языках, а важная информация остаётся в бегущей строке.</p>
+          <div className="broadcast-live-badge"><span />{tr('Эфир активен', 'Эфир белсенді')}</div>
+          <h2>{tr('Новостные фотослайды под контролем', 'Жаңалық фотослайдтары бақылауда')}</h2>
+          <p>{tr('Опубликованные новости с фотографиями автоматически собираются в эфир, чередуются на казахском и русском языках, а важная информация остаётся в бегущей строке.', 'Фотосуреті бар жарияланған жаңалықтар эфирге автоматты жиналып, қазақ және орыс тілдерінде кезектеседі, ал маңызды ақпарат жүгіртпе жолда қалады.')}</p>
           <div className="broadcast-hero-stats">
-            <div><ListVideo size={19} /><span><strong>{activeCount}</strong> слайдов в ротации</span></div>
-            <div><ImageIcon size={19} /><span><strong>{photoCount}</strong> фотослайдов</span></div>
-            <div><Languages size={19} /><span><strong>{settings.broadcastLanguageSeconds} сек.</strong> до смены языка</span></div>
+            <div><ListVideo size={19} /><span><strong>{activeCount}</strong> {tr('слайдов в ротации', 'слайд ротацияда')}</span></div>
+            <div><ImageIcon size={19} /><span><strong>{photoCount}</strong> {tr('фотослайдов', 'фотослайд')}</span></div>
+            <div><Languages size={19} /><span><strong>{settings.broadcastLanguageSeconds} {tr('сек.', 'сек.')}</strong> {tr('до смены языка', 'тіл ауысқанға дейін')}</span></div>
           </div>
         </div>
         <div className="broadcast-admin-screen" aria-hidden="true">
-          <div className="broadcast-admin-screen__bar"><span>ДГД · ЭФИР</span><i>ҚАЗ</i></div>
-          <div className="broadcast-admin-screen__visual"><ImageIcon size={32} /><strong>Новостной фотослайд</strong><small>{activeCount ? `${activeCount} слайдов сейчас в эфире` : 'Опубликуйте новости для эфира'}</small></div>
-          <div className="broadcast-admin-screen__ticker"><Radio size={13} /><span>{settings.tickerTextRu}</span></div>
+          <div className="broadcast-admin-screen__bar"><span>{tr('ДГД · ЭФИР', 'МКД · ЭФИР')}</span><i>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</i></div>
+          <div className="broadcast-admin-screen__visual"><ImageIcon size={32} /><strong>{tr('Новостной фотослайд', 'Жаңалық фотослайды')}</strong><small>{activeCount ? tr(`${activeCount} слайдов сейчас в эфире`, `Қазір эфирде ${activeCount} слайд`) : tr('Опубликуйте новости для эфира', 'Эфирге жаңалықтарды жариялаңыз')}</small></div>
+          <div className="broadcast-admin-screen__ticker"><Radio size={13} /><span>{settings[language === 'kz' ? 'tickerTextKz' : 'tickerTextRu']}</span></div>
         </div>
       </section>
 
       <form className="broadcast-control-panel" onSubmit={saveSettings}>
         <header className="broadcast-section-heading">
           <div className="broadcast-section-heading__icon"><Settings2 size={21} /></div>
-          <div><span>Управление показом</span><h2>Настройки эфира</h2><p>Тексты и тайминги применяются ко всему экрану ожидания.</p></div>
+          <div><span>{tr('Управление показом', 'Көрсетуді басқару')}</span><h2>{tr('Настройки эфира', 'Эфир баптаулары')}</h2><p>{tr('Тексты и тайминги применяются ко всему экрану ожидания.', 'Мәтіндер мен уақыт параметрлері бүкіл күту экранына қолданылады.')}</p></div>
         </header>
 
         <div className="broadcast-settings-grid">
           <section className="broadcast-settings-card broadcast-settings-card--ticker">
-            <header><div><Radio size={18} /></div><span><strong>Бегущая строка</strong><small>Сообщение в нижней части экрана</small></span></header>
-            <label><span><i>RU</i> Русский текст</span><textarea required maxLength="1000" value={settings.tickerTextRu} onChange={(event) => setSettings({ ...settings, tickerTextRu: event.target.value })} /></label>
-            <label><span><i>KZ</i> Қазақша мәтін</span><textarea required maxLength="1000" value={settings.tickerTextKz} onChange={(event) => setSettings({ ...settings, tickerTextKz: event.target.value })} /></label>
+            <header><div><Radio size={18} /></div><span><strong>{tr('Бегущая строка', 'Жүгіртпе жол')}</strong><small>{tr('Сообщение в нижней части экрана', 'Экранның төменгі бөлігіндегі хабарлама')}</small></span></header>
+            <label><span><i>RU</i> {tr('Русский текст', 'Орысша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextRu} onChange={(event) => setSettings({ ...settings, tickerTextRu: event.target.value })} /></label>
+            <label><span><i>KZ</i> {tr('Казахский текст', 'Қазақша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextKz} onChange={(event) => setSettings({ ...settings, tickerTextKz: event.target.value })} /></label>
           </section>
 
           <section className="broadcast-settings-card broadcast-settings-card--timing">
-            <header><div><Clock3 size={18} /></div><span><strong>Тайминги и автоматика</strong><small>Все значения указываются в секундах</small></span></header>
-            <label><span>Полный цикл слайда</span><div className="broadcast-number-field"><input type="number" min="12" max="240" value={settings.broadcastSlideSeconds} onChange={(event) => setSettings({ ...settings, broadcastSlideSeconds: Number(event.target.value) })} /><b>сек.</b></div><small>Казахская и русская версии вместе.</small></label>
-            <label><span>Смена языка</span><div className="broadcast-number-field"><input type="number" min="5" max="120" value={settings.broadcastLanguageSeconds} onChange={(event) => setSettings({ ...settings, broadcastLanguageSeconds: Number(event.target.value) })} /><b>сек.</b></div><small>Когда включить русскую версию слайда.</small></label>
-            <label><span>Возврат в эфир</span><div className="broadcast-number-field"><input type="number" min="15" max="1800" value={settings.broadcastIdleSeconds} onChange={(event) => setSettings({ ...settings, broadcastIdleSeconds: Number(event.target.value) })} /><b>сек.</b></div><small>После последнего касания в обычной ленте.</small></label>
+            <header><div><Clock3 size={18} /></div><span><strong>{tr('Тайминги и автоматика', 'Уақыт және автоматика')}</strong><small>{tr('Все значения указываются в секундах', 'Барлық мән секундпен көрсетіледі')}</small></span></header>
+            <label><span>{tr('Полный цикл слайда', 'Слайдтың толық циклі')}</span><div className="broadcast-number-field"><input type="number" min="12" max="240" value={settings.broadcastSlideSeconds} onChange={(event) => setSettings({ ...settings, broadcastSlideSeconds: Number(event.target.value) })} /><b>{tr('сек.', 'сек.')}</b></div><small>{tr('Казахская и русская версии вместе.', 'Қазақша және орысша нұсқалар бірге.')}</small></label>
+            <label><span>{tr('Смена языка', 'Тілді ауыстыру')}</span><div className="broadcast-number-field"><input type="number" min="5" max="120" value={settings.broadcastLanguageSeconds} onChange={(event) => setSettings({ ...settings, broadcastLanguageSeconds: Number(event.target.value) })} /><b>{tr('сек.', 'сек.')}</b></div><small>{tr('Когда включить русскую версию слайда.', 'Слайдтың орысша нұсқасын қашан қосу керек.')}</small></label>
+            <label><span>{tr('Возврат в эфир', 'Эфирге оралу')}</span><div className="broadcast-number-field"><input type="number" min="15" max="1800" value={settings.broadcastIdleSeconds} onChange={(event) => setSettings({ ...settings, broadcastIdleSeconds: Number(event.target.value) })} /><b>{tr('сек.', 'сек.')}</b></div><small>{tr('После последнего касания в обычной ленте.', 'Қалыпты таспадағы соңғы түртуден кейін.')}</small></label>
           </section>
         </div>
 
-        <footer className="broadcast-settings-footer"><div><CheckCircle2 size={18} /><span>Изменения появятся на экране сразу после сохранения</span></div><button className="admin-button admin-button--primary" disabled={busy}><Save size={18} />{busy ? 'Сохранение…' : 'Сохранить настройки'}</button></footer>
+        <footer className="broadcast-settings-footer"><div><CheckCircle2 size={18} /><span>{tr('Изменения появятся на экране сразу после сохранения', 'Өзгерістер сақталғаннан кейін экранда бірден көрінеді')}</span></div><button className="admin-button admin-button--primary" disabled={busy}><Save size={18} />{busy ? tr('Сохранение…') : tr('Сохранить настройки', 'Баптауларды сақтау')}</button></footer>
       </form>
 
       <section className="broadcast-materials">
         <header className="broadcast-materials__header">
-          <div><span>Дополнения к фотослайдам</span><h2>Дополнительные материалы</h2><p>Видео и поздравления добавляются в ротацию вместе с новостными фотослайдами.</p></div>
-          <div className="broadcast-materials__summary"><span><ImageIcon size={16} />{photoCount} фотослайдов</span><span><Video size={16} />{videoCount} видео</span><span><Cake size={16} />{birthdayCount} поздравлений</span></div>
+          <div><span>{tr('Дополнения к фотослайдам', 'Фотослайдтарға толықтырулар')}</span><h2>{tr('Дополнительные материалы', 'Қосымша материалдар')}</h2><p>{tr('Видео и поздравления добавляются в ротацию вместе с новостными фотослайдами.', 'Бейне мен құттықтаулар жаңалық фотослайдтарымен бірге ротацияға қосылады.')}</p></div>
+          <div className="broadcast-materials__summary"><span><ImageIcon size={16} />{photoCount} {tr('фотослайдов', 'фотослайд')}</span><span><Video size={16} />{videoCount} {tr('видео', 'бейне')}</span><span><Cake size={16} />{birthdayCount} {tr('поздравлений', 'құттықтау')}</span></div>
         </header>
 
         {items.length ? (
@@ -281,26 +287,26 @@ export default function BroadcastPage() {
                   <div className={`broadcast-material-card__visual broadcast-material-card__visual--${birthday ? 'birthday' : 'video'}`}>
                     <span className="broadcast-material-card__order">{String(index + 1).padStart(2, '0')}</span>
                     {birthday ? <Cake size={34} /> : image ? <ImageIcon size={38} /> : <MonitorPlay size={38} />}
-                    <small>{birthday ? eventDateLabel(item.eventDate) : image ? 'Фотоматериал' : 'Видеоматериал'}</small>
+                    <small>{birthday ? eventDateLabel(item.eventDate, locale, tr('Дата не указана', 'Күні көрсетілмеген')) : image ? tr('Фотоматериал', 'Фотоматериал') : tr('Видеоматериал', 'Бейнематериал')}</small>
                   </div>
                   <div className="broadcast-material-card__body">
-                    <div className="broadcast-material-card__meta"><span>{birthday ? <Cake size={14} /> : image ? <ImageIcon size={14} /> : <Video size={14} />}{birthday ? 'Поздравление' : image ? 'Фото' : 'Видео'}</span><span className={`status-pill ${item.isActive ? 'status-pill--success' : 'status-pill--muted'}`}>{item.isActive ? 'В эфире' : 'Отключён'}</span></div>
-                    <h3>{item.titleRu}</h3>
-                    <p>{item.titleKz}</p>
-                    <div className="broadcast-material-card__condition">{birthday ? <><CalendarDays size={15} /><span>Показ {eventDateLabel(item.eventDate)}</span></> : <>{image ? <ImageIcon size={15} /> : <Film size={15} />}<span>Показывается постоянно</span></>}</div>
-                    <footer><span>Порядок: {item.sortOrder}</span><div className="row-actions"><button type="button" onClick={() => setEditing(toForm(item))} aria-label="Редактировать"><Edit3 /></button><button type="button" onClick={() => setDeleting(item)} aria-label="Удалить"><Trash2 /></button></div></footer>
+                    <div className="broadcast-material-card__meta"><span>{birthday ? <Cake size={14} /> : image ? <ImageIcon size={14} /> : <Video size={14} />}{birthday ? tr('Поздравление', 'Құттықтау') : image ? tr('Фото', 'Фото') : tr('Видео', 'Бейне')}</span><span className={`status-pill ${item.isActive ? 'status-pill--success' : 'status-pill--muted'}`}>{item.isActive ? tr('В эфире', 'Эфирде') : tr('Отключён', 'Өшірілген')}</span></div>
+                    <h3>{item[language === 'kz' ? 'titleKz' : 'titleRu']}</h3>
+                    <p>{item[language === 'kz' ? 'titleRu' : 'titleKz']}</p>
+                    <div className="broadcast-material-card__condition">{birthday ? <><CalendarDays size={15} /><span>{tr('Показ', 'Көрсету')}: {eventDateLabel(item.eventDate, locale, tr('Дата не указана', 'Күні көрсетілмеген'))}</span></> : <>{image ? <ImageIcon size={15} /> : <Film size={15} />}<span>{tr('Показывается постоянно', 'Тұрақты көрсетіледі')}</span></>}</div>
+                    <footer><span>{tr('Порядок')}: {item.sortOrder}</span><div className="row-actions"><button type="button" onClick={() => setEditing(toForm(item))} aria-label={tr('Редактировать', 'Өңдеу')}><Edit3 /></button><button type="button" onClick={() => setDeleting(item)} aria-label={tr('Удалить')}><Trash2 /></button></div></footer>
                   </div>
                 </article>
               );
             })}
           </div>
         ) : (
-          <div className="broadcast-materials-empty"><MonitorPlay size={34} /><h3>В эфире пока нет дополнительных материалов</h3><p>Добавьте фото или видеоматериал — новости продолжат показываться автоматически.</p><button className="admin-button admin-button--primary" onClick={() => setEditing({ ...blank })}><Plus size={18} />Добавить слайд</button></div>
+          <div className="broadcast-materials-empty"><MonitorPlay size={34} /><h3>{tr('В эфире пока нет дополнительных материалов', 'Эфирде әзірге қосымша материалдар жоқ')}</h3><p>{tr('Добавьте фото или видеоматериал — новости продолжат показываться автоматически.', 'Фото немесе бейнематериал қосыңыз — жаңалықтар автоматты көрсетіле береді.')}</p><button className="admin-button admin-button--primary" onClick={() => setEditing({ ...blank })}><Plus size={18} />{tr('Добавить слайд', 'Слайд қосу')}</button></div>
         )}
       </section>
 
-      {editing && <Modal title={editing.id ? 'Редактирование слайда' : 'Новый слайд'} onClose={() => setEditing(null)} wide><ItemForm form={editing} setForm={setEditing} onSubmit={saveItem} onCancel={() => setEditing(null)} onUpload={upload} uploading={uploading} busy={busy} error={error} /></Modal>}
-      {deleting && <ConfirmDialog title="Удалить слайд?" text={`«${deleting.titleRu}» будет удалён без возможности восстановления.`} onConfirm={remove} onCancel={() => setDeleting(null)} busy={busy} />}
+      {editing && <Modal title={editing.id ? 'Редактирование слайда' : 'Новый слайд'} titleKz={editing.id ? 'Слайдты өңдеу' : 'Жаңа слайд'} onClose={() => setEditing(null)} wide><ItemForm form={editing} setForm={setEditing} onSubmit={saveItem} onCancel={() => setEditing(null)} onUpload={upload} uploading={uploading} busy={busy} error={error} /></Modal>}
+      {deleting && <ConfirmDialog title="Удалить слайд?" titleKz="Слайдты жою керек пе?" text={`«${deleting.titleRu}» будет удалён без возможности восстановления.`} textKz={`«${deleting.titleKz}» қалпына келтіру мүмкіндігінсіз жойылады.`} onConfirm={remove} onCancel={() => setDeleting(null)} busy={busy} />}
       <Toast {...toast} onClose={() => setToast(null)} />
     </div>
   );

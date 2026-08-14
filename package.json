@@ -18,6 +18,7 @@
     "test:responsive": "node tests/responsive.mjs",
     "tts:dry-run": "node scripts/tts/generate.mjs --dry-run",
     "tts:generate": "node scripts/tts/generate.mjs",
+    "tts:premium": "node scripts/tts/generate-premium-voiceovers.mjs",
     "tts:variants": "node scripts/tts/generate-voice-variants.mjs",
     "tts:kk:silero": "node scripts/tts/generate-silero-kazakh.mjs",
     "tts:kk:silero:final": "node scripts/tts/generate-silero-kazakh.mjs --final",

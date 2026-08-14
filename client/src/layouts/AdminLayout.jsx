@@ -1,6 +1,7 @@
-import { Activity, BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users } from 'lucide-react';
+import { Activity, BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Languages, LayoutDashboard, LogOut, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useAdminI18n } from '../utils/adminLocalization.js';
 
 const contentRoles = ['SUPER_ADMIN', 'ADMIN'];
 const links = [
@@ -19,14 +20,15 @@ const links = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { language, tr, toggleLanguage } = useAdminI18n();
   const navigate = useNavigate();
   const signOut = async () => { await logout(); navigate('/admin/login', { replace: true }); };
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <div className="admin-brand"><span>ДГД</span><div><strong>Корпоративный портал</strong><small>Панель управления</small></div></div>
-      <nav>{links.filter((item) => !item.roles || item.roles.includes(user.role)).map(({ to, label, icon: Icon, end }) => <NavLink key={to} to={to} end={end}><Icon size={21} /><span>{label}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>)}</nav>
-      <div className="admin-profile"><div className="admin-profile__avatar"><ShieldCheck /></div><div><strong>{user.fullName}</strong><small>{user.role}</small></div><button onClick={signOut} aria-label="Выйти"><LogOut size={21} /></button></div>
+      <div className="admin-brand"><span>{language === 'kz' ? 'МКД' : 'ДГД'}</span><div><strong>{tr('Корпоративный портал')}</strong><small>{tr('Панель управления')}</small></div></div>
+      <nav>{links.filter((item) => !item.roles || item.roles.includes(user.role)).map(({ to, label, icon: Icon, end }) => <NavLink key={to} to={to} end={end}><Icon size={21} /><span>{tr(label)}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>)}</nav>
+      <div className="admin-profile"><div className="admin-profile__avatar"><ShieldCheck /></div><div><strong>{user.fullName}</strong><small>{user.role}</small></div><button onClick={signOut} aria-label={tr('Выйти')}><LogOut size={21} /></button></div>
     </aside>
-    <div className="admin-workspace"><header className="admin-topbar"><div><span>Департамент государственных доходов</span><strong>Управление внутренними сервисами</strong></div><a href="/" className="admin-preview-link">Открыть главную</a></header><main className="admin-main"><Outlet /></main></div>
+    <div className="admin-workspace"><header className="admin-topbar"><div><span>{tr('Департамент государственных доходов')}</span><strong>{tr('Управление внутренними сервисами')}</strong></div><div className="admin-topbar__actions"><button type="button" className="admin-language-switch" onClick={toggleLanguage}><Languages size={18} />{language === 'kz' ? 'Рус' : 'Қаз'}</button><a href="/" className="admin-preview-link">{tr('Открыть главную')}</a></div></header><main className="admin-main"><Outlet /></main></div>
   </div>;
 }

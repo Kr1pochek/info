@@ -15,6 +15,7 @@ import { ConfirmDialog, Modal } from "../../components/admin/Modal.jsx";
 import { LoadingState } from "../../components/common/States.jsx";
 import AppIcon from "../../components/common/AppIcon.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useAdminI18n } from "../../utils/adminLocalization.js";
 
 const listFields = [
   "requiredDocumentsRu",
@@ -27,7 +28,7 @@ const listFields = [
   "rejectionReasonsKz",
 ];
 const textPairs = [
-  ["title", "Название", "input", 220],
+  ["title", "Название", "input", 500],
   ["shortDescription", "Краткое описание", "textarea", 800],
   ["fullDescription", "Полное описание", "textarea", 10000],
   ["targetAudience", "Кому предназначена", "textarea", 3000],
@@ -46,6 +47,8 @@ const listPairs = [
   ["steps", "Пошаговая инструкция"],
   ["rejectionReasons", "Причины отказа"],
 ];
+const fieldLabelsKz = { title: "Атауы", shortDescription: "Қысқаша сипаттама", fullDescription: "Толық сипаттама", targetAudience: "Кімге арналған", conditions: "Алу шарттары", processingTime: "Көрсету мерзімі", cost: "Құны", result: "Қызмет нәтижесі", contacts: "Байланыстар", officeAddress: "Бөлімше мекенжайы", workingHours: "Жұмыс кестесі", keywords: "Түйінді сөздер" };
+const listLabelsKz = { requiredDocuments: "Қажетті құжаттар", requiredData: "Қажетті деректер", steps: "Қадамдық нұсқаулық", rejectionReasons: "Бас тарту себептері" };
 const icons = [
   "FileText",
   "Home",
@@ -154,6 +157,7 @@ function ServiceForm({
   busy,
   error,
 }) {
+  const { language, tr } = useAdminI18n();
   const [preview, setPreview] = useState("card");
   const update = (key, value) => setForm({ ...form, [key]: value });
   return (
@@ -165,22 +169,22 @@ function ServiceForm({
             className={preview === "card" ? "active" : ""}
             onClick={() => setPreview("card")}
           >
-            Карточка
+            {tr("Карточка", "Карточка")}
           </button>
           <button
             type="button"
             className={preview === "page" ? "active" : ""}
             onClick={() => setPreview("page")}
           >
-            Страница
+            {tr("Страница", "Бет")}
           </button>
         </div>
-        <span>Предварительный вид</span>
+        <span>{tr("Предварительный вид", "Алдын ала қарау")}</span>
       </div>
       <div className="service-editor__layout">
         <div className="service-editor__fields">
           <fieldset>
-            <legend>Основные данные</legend>
+            <legend>{tr("Основные данные", "Негізгі деректер")}</legend>
             <div className="form-grid">
               <label>
                 <span>Slug</span>
@@ -193,22 +197,22 @@ function ServiceForm({
                 />
               </label>
               <label>
-                <span>Категория</span>
+                <span>{tr("Категория", "Санат")}</span>
                 <select
                   required
                   value={form.categoryId}
                   onChange={(e) => update("categoryId", e.target.value)}
                 >
-                  <option value="">Выберите категорию</option>
+                  <option value="">{tr("Выберите категорию", "Санатты таңдаңыз")}</option>
                   {categories.map((item) => (
                     <option value={item.id} key={item.id}>
-                      {item.titleRu}
+                      {item[language === "kz" ? "titleKz" : "titleRu"]}
                     </option>
                   ))}
                 </select>
               </label>
               <label>
-                <span>Иконка</span>
+                <span>{tr("Иконка")}</span>
                 <select
                   value={form.icon}
                   onChange={(e) => update("icon", e.target.value)}
@@ -219,7 +223,7 @@ function ServiceForm({
                 </select>
               </label>
               <label>
-                <span>Порядок</span>
+                <span>{tr("Порядок")}</span>
                 <input
                   type="number"
                   min="0"
@@ -235,7 +239,7 @@ function ServiceForm({
                   checked={form.isPublished}
                   onChange={(e) => update("isPublished", e.target.checked)}
                 />
-                <span>Опубликована</span>
+                <span>{tr("Опубликована")}</span>
               </label>
               <label className="toggle-label">
                 <input
@@ -243,16 +247,16 @@ function ServiceForm({
                   checked={form.isPopular}
                   onChange={(e) => update("isPopular", e.target.checked)}
                 />
-                <span>Популярная</span>
+                <span>{tr("Популярная", "Танымал")}</span>
               </label>
             </div>
           </fieldset>
           {textPairs.map(([base, label, type, max]) => (
             <fieldset key={base}>
-              <legend>{label}</legend>
+              <legend>{tr(label, fieldLabelsKz[base])}</legend>
               <div className="form-grid">
                 <label>
-                  <span>Русский</span>
+                  <span>{tr("Русский", "Орысша")}</span>
                   {type === "textarea" ? (
                     <textarea
                       required
@@ -270,7 +274,7 @@ function ServiceForm({
                   )}
                 </label>
                 <label>
-                  <span>Қазақша</span>
+                  <span>{tr("Казахский", "Қазақша")}</span>
                   {type === "textarea" ? (
                     <textarea
                       required
@@ -292,10 +296,10 @@ function ServiceForm({
           ))}
           {listPairs.map(([base, label]) => (
             <fieldset key={base}>
-              <legend>{label} — один пункт на строку</legend>
+              <legend>{tr(`${label} — один пункт на строку`, `${listLabelsKz[base]} — әр жолға бір тармақ`)}</legend>
               <div className="form-grid">
                 <label>
-                  <span>Русский</span>
+                  <span>{tr("Русский", "Орысша")}</span>
                   <textarea
                     required
                     value={form[`${base}Ru`]}
@@ -303,7 +307,7 @@ function ServiceForm({
                   />
                 </label>
                 <label>
-                  <span>Қазақша</span>
+                  <span>{tr("Казахский", "Қазақша")}</span>
                   <textarea
                     required
                     value={form[`${base}Kz`]}
@@ -320,21 +324,19 @@ function ServiceForm({
           </div>
           <span>
             {categories.find((item) => item.id === Number(form.categoryId))
-              ?.titleRu || "Категория"}
+              ?.[language === "kz" ? "titleKz" : "titleRu"] || tr("Категория", "Санат")}
           </span>
-          <h3>{form.titleRu || "Название услуги"}</h3>
+          <h3>{form[language === "kz" ? "titleKz" : "titleRu"] || tr("Название услуги", "Қызмет атауы")}</h3>
           <p>
             {preview === "page"
-              ? form.fullDescriptionRu ||
-                "Полное описание услуги появится здесь."
-              : form.shortDescriptionRu ||
-                "Краткое описание услуги появится здесь."}
+              ? form[language === "kz" ? "fullDescriptionKz" : "fullDescriptionRu"] || tr("Полное описание услуги появится здесь.", "Қызметтің толық сипаттамасы осында көрсетіледі.")
+              : form[language === "kz" ? "shortDescriptionKz" : "shortDescriptionRu"] || tr("Краткое описание услуги появится здесь.", "Қызметтің қысқаша сипаттамасы осында көрсетіледі.")}
           </p>
           {preview === "page" && (
             <>
-              <h4>Порядок получения</h4>
+              <h4>{tr("Порядок получения", "Алу тәртібі")}</h4>
               <ol>
-                {form.stepsRu
+                {form[language === "kz" ? "stepsKz" : "stepsRu"]
                   .split("\n")
                   .filter(Boolean)
                   .map((item, index) => (
@@ -343,20 +345,20 @@ function ServiceForm({
               </ol>
             </>
           )}
-          <button type="button">Подробнее</button>
+          <button type="button">{tr("Подробнее", "Толығырақ")}</button>
         </aside>
       </div>
-      {error && <div className="form-error">{error}</div>}
+      {error && <div className="form-error">{tr(error)}</div>}
       <div className="form-actions">
         <button
           type="button"
           className="admin-button admin-button--secondary"
           onClick={onCancel}
         >
-          Отмена
+          {tr("Отмена")}
         </button>
         <button className="admin-button admin-button--primary" disabled={busy}>
-          {busy ? "Сохранение…" : "Сохранить услугу"}
+          {busy ? tr("Сохранение…") : tr("Сохранить услугу", "Қызметті сақтау")}
         </button>
       </div>
     </form>
@@ -365,6 +367,7 @@ function ServiceForm({
 
 export default function ServicesPage() {
   const { user } = useAuth();
+  const { language, locale, tr } = useAdminI18n();
   const [rows, setRows] = useState(null);
   const [categories, setCategories] = useState([]);
   const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0 });
@@ -438,15 +441,18 @@ export default function ServicesPage() {
     <>
       <AdminPageHeader
         eyebrow="Контент"
+        eyebrowKz="Контент"
         title="Услуги"
+        titleKz="Қызметтер"
         description="Двуязычные карточки и подробные инструкции для посетителей"
+        descriptionKz="Келушілерге арналған екі тілдегі карточкалар мен толық нұсқаулықтар"
         actions={
           <button
             className="admin-button admin-button--primary"
             onClick={() => setEditing({ ...blank })}
           >
             <Plus size={19} />
-            Новая услуга
+            {tr("Новая услуга", "Жаңа қызмет")}
           </button>
         }
       />
@@ -458,7 +464,7 @@ export default function ServicesPage() {
             onChange={(e) =>
               setFilters({ ...filters, search: e.target.value, page: 1 })
             }
-            placeholder="Поиск по услугам"
+            placeholder={tr("Поиск по услугам", "Қызметтерді іздеу")}
           />
         </label>
         <select
@@ -467,10 +473,10 @@ export default function ServicesPage() {
             setFilters({ ...filters, categoryId: e.target.value, page: 1 })
           }
         >
-          <option value="">Все категории</option>
+          <option value="">{tr("Все категории", "Барлық санаттар")}</option>
           {categories.map((item) => (
             <option value={item.id} key={item.id}>
-              {item.titleRu}
+              {item[language === "kz" ? "titleKz" : "titleRu"]}
             </option>
           ))}
         </select>
@@ -480,11 +486,11 @@ export default function ServicesPage() {
             setFilters({ ...filters, published: e.target.value, page: 1 })
           }
         >
-          <option value="">Все статусы</option>
-          <option value="true">Опубликованные</option>
-          <option value="false">Скрытые</option>
+          <option value="">{tr("Все статусы", "Барлық күйлер")}</option>
+          <option value="true">{tr("Опубликованные", "Жарияланған")}</option>
+          <option value="false">{tr("Скрытые", "Жасырын")}</option>
         </select>
-        <span>{meta.total} записей</span>
+        <span>{meta.total} {tr("записей", "жазба")}</span>
       </div>
       {!rows ? (
         <LoadingState />
@@ -493,11 +499,11 @@ export default function ServicesPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Услуга</th>
-                <th>Категория</th>
-                <th>Статус</th>
-                <th>Порядок</th>
-                <th>Обновлена</th>
+                <th>{tr("Услуга", "Қызмет")}</th>
+                <th>{tr("Категория", "Санат")}</th>
+                <th>{tr("Статус")}</th>
+                <th>{tr("Порядок")}</th>
+                <th>{tr("Обновлена", "Жаңартылған")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -510,33 +516,33 @@ export default function ServicesPage() {
                         <AppIcon name={item.icon} size={22} />
                       </span>
                       <div>
-                        <strong>{item.titleRu}</strong>
+                        <strong>{item[language === "kz" ? "titleKz" : "titleRu"]}</strong>
                         <small>{item.slug}</small>
                       </div>
                     </div>
                   </td>
-                  <td>{item.category.titleRu}</td>
+                  <td>{item.category[language === "kz" ? "titleKz" : "titleRu"]}</td>
                   <td>
                     <span
                       className={`status-pill ${item.isPublished ? "status-pill--success" : "status-pill--muted"}`}
                     >
-                      {item.isPublished ? "Опубликована" : "Скрыта"}
+                      {item.isPublished ? tr("Опубликована") : tr("Скрыта")}
                     </span>
                     {item.isPopular && (
                       <span className="status-pill status-pill--accent">
-                        Популярная
+                        {tr("Популярная", "Танымал")}
                       </span>
                     )}
                   </td>
                   <td>{item.sortOrder}</td>
                   <td>
-                    {new Date(item.updatedAt).toLocaleDateString("ru-RU")}
+                    {new Date(item.updatedAt).toLocaleDateString(locale)}
                   </td>
                   <td>
                     <div className="row-actions">
                       <a
                         href={`/service/${item.slug}`}
-                        aria-label="Предпросмотр"
+                        aria-label={tr("Предпросмотр", "Алдын ала қарау")}
                       >
                         <Eye />
                       </a>
@@ -567,16 +573,16 @@ export default function ServicesPage() {
             onClick={() => setFilters({ ...filters, page: meta.page - 1 })}
           >
             <ChevronLeft />
-            Назад
+            {tr("Назад")}
           </button>
           <span>
-            Страница {meta.page} из {meta.pages}
+            {tr("Страница", "Бет")} {meta.page} {tr("из", "ішінен")} {meta.pages}
           </span>
           <button
             disabled={meta.page >= meta.pages}
             onClick={() => setFilters({ ...filters, page: meta.page + 1 })}
           >
-            Далее
+            {tr("Далее")}
             <ChevronRight />
           </button>
         </div>
@@ -584,6 +590,7 @@ export default function ServicesPage() {
       {editing && (
         <Modal
           title={editing.id ? "Редактирование услуги" : "Новая услуга"}
+          titleKz={editing.id ? "Қызметті өңдеу" : "Жаңа қызмет"}
           onClose={() => setEditing(null)}
           wide
         >
@@ -601,7 +608,9 @@ export default function ServicesPage() {
       {deleting && (
         <ConfirmDialog
           title="Удалить услугу?"
+          titleKz="Қызметті жою керек пе?"
           text={`Услуга «${deleting.titleRu}» и связанные с ней данные будут удалены.`}
+          textKz={`«${deleting.titleKz}» қызметі және онымен байланысты деректер жойылады.`}
           onConfirm={remove}
           onCancel={() => setDeleting(null)}
           busy={busy}

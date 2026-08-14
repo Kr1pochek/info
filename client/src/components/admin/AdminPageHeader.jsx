@@ -1,1 +1,2 @@
-export default function AdminPageHeader({ eyebrow, title, description, actions }) { return <header className="admin-page-header"><div><span>{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{actions && <div className="admin-page-header__actions">{actions}</div>}</header>; }
+import { useAdminI18n } from '../../utils/adminLocalization.js';
+export default function AdminPageHeader({ eyebrow, eyebrowKz, title, titleKz, description, descriptionKz, actions }) { const { tr } = useAdminI18n(); return <header className="admin-page-header"><div><span>{tr(eyebrow, eyebrowKz)}</span><h1>{tr(title, titleKz)}</h1><p>{tr(description, descriptionKz)}</p></div>{actions && <div className="admin-page-header__actions">{actions}</div>}</header>; }

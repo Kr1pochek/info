@@ -23,7 +23,7 @@ export const servicePackageSchema = z.object({
 export const servicePackagePatchSchema = servicePackageSchema.partial().refine((value) => Object.keys(value).length > 0);
 
 export const serviceSchema = z.object({
-  slug, titleRu: text(220), titleKz: text(220), shortDescriptionRu: text(800), shortDescriptionKz: text(800),
+  slug, titleRu: text(500), titleKz: text(500), shortDescriptionRu: text(800), shortDescriptionKz: text(800),
   fullDescriptionRu: text(10000), fullDescriptionKz: text(10000), targetAudienceRu: text(3000), targetAudienceKz: text(3000),
   requiredDocumentsRu: list, requiredDocumentsKz: list, requiredDataRu: list, requiredDataKz: list,
   conditionsRu: text(5000), conditionsKz: text(5000), stepsRu: list, stepsKz: list,
@@ -95,6 +95,9 @@ export const settingsSchema = z.object({
   maintenanceMessageRu: text(500), maintenanceMessageKz: text(500), popularServicesCount: z.coerce.number().int().min(1).max(20),
   tickerTextRu: text(1000), tickerTextKz: text(1000), broadcastSlideSeconds: z.coerce.number().int().min(12).max(240),
   broadcastLanguageSeconds: z.coerce.number().int().min(5).max(120), broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
+  announcementLanguage: z.enum(['ru', 'kz']), announcementVolume: z.coerce.number().int().min(0).max(100),
+  announcementRepeatSeconds: z.coerce.number().int().min(1).max(120), accessibleAudioEnabled: z.boolean(),
+  accessibleAudioVolume: z.coerce.number().int().min(0).max(100),
   taxpayerRightsRu: z.string().trim().max(30000), taxpayerRightsKz: z.string().trim().max(30000),
   ethicsOfficerNameRu: z.string().trim().max(240), ethicsOfficerNameKz: z.string().trim().max(240),
   ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
