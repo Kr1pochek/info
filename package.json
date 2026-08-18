@@ -35,7 +35,7 @@
     "verify": "npm run lint && npm run build && npm test && npm run test:tts && npm run test:responsive"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.5",
     "playwright-core": "^1.62.1"
   },
   "engines": {
