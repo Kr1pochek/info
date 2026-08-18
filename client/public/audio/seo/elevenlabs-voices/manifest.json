@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "purpose": "One realistic ElevenLabs voice speaking Kazakh, Russian, and English",
+  "sampleTicket": "D-428",
+  "provider": "ElevenLabs",
+  "model": "eleven_v3",
+  "voice": {
+    "id": "EXAVITQu4vr4xnSDxMaL",
+    "name": "Sarah - Mature, Reassuring, Confident",
+    "source": "ElevenLabs default premade voice"
+  },
+  "audio": {
+    "format": "mp3",
+    "sampleRateHz": 24000,
+    "channels": 1,
+    "bitrateKbps": 128,
+    "targetLoudnessLufs": -18
+  },
+  "languages": {
+    "kk": {
+      "label": "Қазақша",
+      "file": "kk.mp3",
+      "text": "Д төрт жүз жиырма сегіз нөмірлі талоны бар қызмет алушы, сізді жақын арада шақырады. Күту аймағына өтіңіз.",
+      "languageCode": "kk",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL",
+      "voiceName": "Sarah - Mature, Reassuring, Confident"
+    },
+    "ru": {
+      "label": "Русский",
+      "file": "ru.mp3",
+      "text": "Услугополучатель с талоном Д четыреста двадцать восемь, вас скоро пригласят. Пожалуйста, пройдите в зону ожидания.",
+      "languageCode": "ru",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL",
+      "voiceName": "Sarah - Mature, Reassuring, Confident"
+    },
+    "en": {
+      "label": "English",
+      "file": "en.mp3",
+      "text": "Customer holding ticket D four hundred twenty-eight, you will be invited shortly. Please proceed to the waiting area.",
+      "languageCode": "en",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL",
+      "voiceName": "Sarah - Mature, Reassuring, Confident"
+    }
+  }
+}

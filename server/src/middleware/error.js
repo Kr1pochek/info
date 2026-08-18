@@ -6,10 +6,10 @@ export function notFound(req, res) {
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Маршрут ${req.method} ${req.path} не найден` } });
 }
 
-export function errorHandler(error, _req, res, _next) {
+export function errorHandler(error, req, res, _next) {
   let status = error.status || 500;
   let code = error.code || 'INTERNAL_ERROR';
-  let message = error.message || 'Внутренняя ошибка сервера';
+  let message = status < 500 ? (error.message || 'Не удалось выполнить запрос') : 'Внутренняя ошибка сервера';
   let details = error.details;
 
   if (error instanceof ZodError) {
@@ -25,10 +25,14 @@ export function errorHandler(error, _req, res, _next) {
     } else if (error.code === 'P2003') {
       status = 409; code = 'RELATION_CONFLICT'; message = 'Операция невозможна из-за связанных записей';
     }
+  } else if (error instanceof Prisma.PrismaClientInitializationError) {
+    status = 503;
+    code = 'DATABASE_UNAVAILABLE';
+    message = 'База данных временно недоступна';
   }
 
-  if (status >= 500) console.error(error);
-  const payload = { success: false, error: { code, message } };
+  if (status >= 500) console.error(`[${req.id || 'no-request-id'}]`, error);
+  const payload = { success: false, error: { code, message, requestId: req.id } };
   if (details) payload.error.details = details;
   if (env.NODE_ENV !== 'production' && status >= 500) payload.error.debug = error.message;
   res.status(status).json(payload);

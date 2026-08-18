@@ -4,9 +4,9 @@ services:
     container_name: dgd-infokiosk-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: dgd_infokiosk
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dgd_dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-dgd_infokiosk}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dgd_dev_password}
     ports:
       - "5433:5432"
     volumes:

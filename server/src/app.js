@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { env } from './config/env.js';
 import { publicRoutes } from './routes/publicRoutes.js';
@@ -14,6 +15,13 @@ import { uploadsRoot } from './middleware/upload.js';
 import { prisma } from './config/prisma.js';
 
 export const app = express();
+
+app.use((req, res, next) => {
+  const suppliedId = req.get('x-request-id');
+  req.id = suppliedId && /^[a-zA-Z0-9._:-]{8,128}$/.test(suppliedId) ? suppliedId : randomUUID();
+  res.set('X-Request-Id', req.id);
+  next();
+});
 
 const localFrontendPorts = new Set(['5173', '5174']);
 function allowFrontendOrigin(origin, requestHost, callback) {
@@ -56,20 +64,39 @@ app.use(cors((req, callback) => {
 }));
 app.use(express.json({ limit: '100kb', strict: true }));
 app.use(cookieParser());
-app.use(rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false }));
 app.use('/uploads', express.static(uploadsRoot, { fallthrough: false, maxAge: env.NODE_ENV === 'production' ? '7d' : 0 }));
 
-app.get('/api/health', async (_req, res) => {
+function apiRateLimit(limit, scope) {
+  return rateLimit({
+    windowMs: env.RATE_LIMIT_WINDOW_MS,
+    limit,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({
+      success: false,
+      error: { code: 'RATE_LIMITED', message: 'Слишком много запросов, повторите позже', scope, requestId: req.id },
+    }),
+  });
+}
+
+app.get('/api/health/live', (_req, res) => {
+  res.json({ success: true, data: { status: 'ok', service: 'available' } });
+});
+
+async function readiness(_req, res) {
   try {
     await prisma.setting.count();
     res.json({ success: true, data: { status: 'ok', database: 'connected' } });
   } catch {
     res.status(503).json({ success: false, data: { status: 'degraded', database: 'unavailable' } });
   }
-});
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api', publicRoutes);
+}
+
+app.get('/api/health', readiness);
+app.get('/api/health/ready', readiness);
+app.use('/api/auth', apiRateLimit(env.AUTH_RATE_LIMIT, 'auth'), authRoutes);
+app.use('/api/admin', apiRateLimit(env.ADMIN_RATE_LIMIT, 'admin'), adminRoutes);
+app.use('/api', apiRateLimit(env.PUBLIC_RATE_LIMIT, 'public'), publicRoutes);
 
 if (env.NODE_ENV === 'production') {
   const clientDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');

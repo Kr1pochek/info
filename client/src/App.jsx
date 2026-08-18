@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import RoleRoute from './routes/RoleRoute.jsx';
 import { LoadingState } from './components/common/States.jsx';
+import ConnectivityBanner from './components/common/ConnectivityBanner.jsx';
 
 const KioskLayout = lazy(() => import('./layouts/KioskLayout.jsx'));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout.jsx'));
@@ -36,7 +37,7 @@ const SettingsPage = lazy(() => import('./pages/admin/SettingsPage.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage.jsx'));
 
 export default function App() {
-  return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><Suspense fallback={<LoadingState />}><Routes>
+  return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><ConnectivityBanner /><Suspense fallback={<LoadingState />}><Routes>
     <Route index element={<ChoosePage />} />
     <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
     <Route path="news" element={<NewsLayout />}><Route index element={<NewsListPage />} /><Route path=":newsSlug" element={<NewsDetailPage />} /></Route>

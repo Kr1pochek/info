@@ -29,6 +29,15 @@ test('health endpoint confirms database connection', async () => {
   const { response, body } = await request('/api/health');
   assert.equal(response.status, 200);
   assert.equal(body.data.database, 'connected');
+  assert.match(response.headers.get('x-request-id'), /^[a-f0-9-]{36}$/);
+});
+
+test('live and ready health probes expose separate process and database status', async () => {
+  const [live, ready] = await Promise.all([request('/api/health/live'), request('/api/health/ready')]);
+  assert.equal(live.response.status, 200);
+  assert.equal(live.body.data.service, 'available');
+  assert.equal(ready.response.status, 200);
+  assert.equal(ready.body.data.database, 'connected');
 });
 
 test('public settings expose configurable queue announcement parameters', async () => {
@@ -39,6 +48,10 @@ test('public settings expose configurable queue announcement parameters', async 
   assert.ok(Number.isInteger(body.data.announcementRepeatSeconds) && body.data.announcementRepeatSeconds >= 1);
   assert.equal(typeof body.data.accessibleAudioEnabled, 'boolean');
   assert.ok(Number.isInteger(body.data.accessibleAudioVolume) && body.data.accessibleAudioVolume >= 0 && body.data.accessibleAudioVolume <= 100);
+  assert.match(body.data.taxpayerRightsRu, /статье 36/i);
+  assert.match(body.data.taxpayerRightsKz, /36-бабы/i);
+  assert.match(body.data.ethicsOfficerContactsRu, /267-69-55/);
+  assert.match(body.data.ethicsOfficerContactsKz, /267-69-55/);
 });
 
 test('super administrator can update and restore queue announcement parameters', async () => {

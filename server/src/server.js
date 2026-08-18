@@ -6,13 +6,30 @@ const server = app.listen(env.PORT, '0.0.0.0', () => {
   console.log(`DGD API запущен на всех сетевых интерфейсах: порт ${env.PORT}`);
 });
 
-async function shutdown(signal) {
+let shuttingDown = false;
+async function shutdown(signal, exitCode = 0) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   console.log(`${signal}: завершение работы`);
-  server.close(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
+  const forceExit = setTimeout(() => {
+    console.error(`Сервер не завершился за ${env.SHUTDOWN_GRACE_MS} мс, соединения будут закрыты принудительно`);
+    server.closeAllConnections?.();
+    process.exit(exitCode || 1);
+  }, env.SHUTDOWN_GRACE_MS);
+  forceExit.unref();
+  server.close(async (error) => {
+    clearTimeout(forceExit);
+    try { await prisma.$disconnect(); } finally { process.exit(error ? 1 : exitCode); }
   });
 }
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => { void shutdown('SIGINT'); });
+process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
+process.on('uncaughtException', (error) => {
+  console.error('Необработанная ошибка процесса', error);
+  void shutdown('uncaughtException', 1);
+});
+process.on('unhandledRejection', (error) => {
+  console.error('Необработанное отклонение Promise', error);
+  void shutdown('unhandledRejection', 1);
+});

@@ -31,6 +31,10 @@ const api = axios.create({
 const publicCachePrefix = 'dgd-public-api:';
 const publicPaths = ['/broadcast', '/categories', '/service-packages', '/services', '/search', '/news', '/settings', '/exchange-rates'];
 
+function announceConnectivity(online, detail = {}) {
+  window.dispatchEvent(new CustomEvent('dgd-connectivity', { detail: { online, ...detail } }));
+}
+
 function publicCacheKey(config) {
   const url = String(config?.url || '');
   const cacheable = String(config?.method || 'get').toLowerCase() === 'get'
@@ -41,6 +45,7 @@ function publicCacheKey(config) {
 function savePublicResponse(response) {
   const key = publicCacheKey(response.config);
   if (!key) return;
+  announceConnectivity(true);
   try {
     const value = JSON.stringify({ savedAt: Date.now(), data: response.data });
     if (value.length > 750000) return;
@@ -63,6 +68,7 @@ function restorePublicResponse(error) {
   try {
     const cached = JSON.parse(localStorage.getItem(key) || 'null');
     if (!cached?.data) return null;
+    announceConnectivity(false, { cached: true, savedAt: cached.savedAt });
     return { data: cached.data, status: 200, statusText: 'OK (cached)', headers: {}, config: error.config, request: null, __fromCache: true };
   } catch {
     return null;
@@ -103,6 +109,7 @@ api.interceptors.response.use((response) => {
   }
   const cachedResponse = restorePublicResponse(error);
   if (cachedResponse) return cachedResponse;
+  if (!error.response && publicCacheKey(error.config)) announceConnectivity(false, { cached: false });
   return Promise.reject(error);
 });
 

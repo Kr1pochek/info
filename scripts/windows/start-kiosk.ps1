@@ -1,12 +1,23 @@
 [CmdletBinding()]
 param(
   [ValidateSet('news', 'kiosk', 'home')][string]$Page = 'news',
-  [int]$Port = 4000
+  [int]$Port = 4000,
+  [switch]$SkipServerStart
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-& (Join-Path $PSScriptRoot 'start-server.ps1') -Port $Port
+if ($SkipServerStart) {
+  $deadline = (Get-Date).AddSeconds(90)
+  do {
+    try { $ready = (Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/health/ready" -TimeoutSec 2).success } catch { $ready = $false }
+    if ($ready) { break }
+    Start-Sleep -Seconds 2
+  } while ((Get-Date) -lt $deadline)
+  if (-not $ready) { throw "The supervised server did not become ready on port $Port." }
+} else {
+  & (Join-Path $PSScriptRoot 'start-server.ps1') -Port $Port
+}
 
 $route = if ($Page -eq 'home') { '' } else { $Page }
 $url = "http://127.0.0.1:$Port/$route"

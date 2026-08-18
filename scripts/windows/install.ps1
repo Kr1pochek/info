@@ -26,6 +26,7 @@ try {
   npm run db:deploy
   if (-not $SkipSeed) { npm run db:seed }
   npm run build
+  node scripts/doctor.mjs --production
 } finally { Pop-Location }
 
 Write-Host 'Installation complete. Run: .\scripts\windows\start-kiosk.ps1 -Page news' -ForegroundColor Green

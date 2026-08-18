@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,9 @@ import {
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await readFile(path.join(projectRoot, 'client/public/audio/seo/voice-manifest.json'), 'utf8'));
 const variantsManifest = JSON.parse(await readFile(path.join(projectRoot, 'client/public/audio/seo/voice-variants/manifest.json'), 'utf8'));
+const matchedVoicesManifest = JSON.parse(await readFile(path.join(projectRoot, 'client/public/audio/seo/matched-voices/manifest.json'), 'utf8'));
+const elevenLabsManifest = JSON.parse(await readFile(path.join(projectRoot, 'client/public/audio/seo/elevenlabs-voices/manifest.json'), 'utf8'));
+const kazakhVariantsManifest = JSON.parse(await readFile(path.join(projectRoot, 'client/public/audio/seo/elevenlabs-kazakh-variants/manifest.json'), 'utf8'));
 
 test('all supported languages cover every ticket number from 1 to 1000', () => {
   for (const language of supportedLanguages()) {
@@ -105,4 +109,61 @@ test('Kazakh final package uses Silero instead of Aigul', () => {
   assert.equal(manifest.languages.kk.voice, 'kaz_zhazira');
   assert.ok(variantsManifest.languages.kk.variants.every((variant) => variant.provider === 'silero-local'));
   assert.equal(new Set(variantsManifest.languages.kk.variants.map((variant) => variant.voice)).size, 5);
+});
+
+test('matched approval package contains one similar realistic voice per language', async () => {
+  assert.deepEqual(Object.keys(matchedVoicesManifest.languages).sort(), ['en', 'kk', 'ru']);
+  assert.equal(matchedVoicesManifest.provider, 'ElevenLabs');
+  assert.equal(matchedVoicesManifest.model, 'eleven_v3');
+  assert.deepEqual(
+    new Set(Object.values(matchedVoicesManifest.languages).map((item) => item.voiceId)),
+    new Set([matchedVoicesManifest.voice.id]),
+  );
+  assert.deepEqual(matchedVoicesManifest.audio, elevenLabsManifest.audio);
+
+  for (const [language, config] of Object.entries(matchedVoicesManifest.languages)) {
+    const details = await stat(path.join(projectRoot, 'client/public/audio/seo/matched-voices', config.file));
+    assert.ok(details.size > 1000, `${language}/${config.file}`);
+  }
+});
+
+test('ElevenLabs dry-run plans one v3 voice for Kazakh, Russian, and English', () => {
+  const scriptPath = path.join(projectRoot, 'scripts/tts/generate-elevenlabs-voice-trio.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, '--dry-run'], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const plan = JSON.parse(result.stdout);
+  assert.equal(plan.provider, 'ElevenLabs');
+  assert.equal(plan.model, 'eleven_v3');
+  assert.equal(plan.designModel, 'eleven_ttv_v3');
+  assert.deepEqual(plan.samples.map((sample) => sample.language), ['kk', 'ru', 'en']);
+  assert.equal(new Set(plan.samples.map(() => plan.voice)).size, 1);
+});
+
+test('ElevenLabs approval package uses one voice ID for all three languages', async () => {
+  assert.equal(elevenLabsManifest.provider, 'ElevenLabs');
+  assert.equal(elevenLabsManifest.model, 'eleven_v3');
+  assert.deepEqual(Object.keys(elevenLabsManifest.languages), ['kk', 'ru', 'en']);
+  assert.deepEqual(
+    new Set(Object.values(elevenLabsManifest.languages).map((item) => item.voiceId)),
+    new Set([elevenLabsManifest.voice.id]),
+  );
+
+  for (const config of Object.values(elevenLabsManifest.languages)) {
+    const details = await stat(path.join(projectRoot, 'client/public/audio/seo/elevenlabs-voices', config.file));
+    assert.ok(details.size > 1000, config.file);
+  }
+});
+
+test('ElevenLabs Kazakh comparison contains five distinct female voices', async () => {
+  assert.equal(kazakhVariantsManifest.language, 'kk');
+  assert.equal(kazakhVariantsManifest.model, 'eleven_v3');
+  assert.equal(kazakhVariantsManifest.variants.length, 5);
+  assert.equal(new Set(kazakhVariantsManifest.variants.map((item) => item.voiceId)).size, 5);
+  for (const variant of kazakhVariantsManifest.variants) {
+    const details = await stat(path.join(projectRoot, 'client/public/audio/seo/elevenlabs-kazakh-variants', variant.file));
+    assert.ok(details.size > 1000, variant.file);
+  }
 });

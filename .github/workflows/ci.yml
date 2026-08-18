@@ -1,0 +1,67 @@
+name: release-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: release-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: dgd_infokiosk
+          POSTGRES_USER: dgd_ci
+          POSTGRES_PASSWORD: ci_database_password_only
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U dgd_ci -d dgd_infokiosk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix client
+          npm ci --prefix server
+      - name: Configure test environment
+        run: |
+          printf '%s\n' \
+            'NODE_ENV=production' \
+            'PORT=4000' \
+            'DATABASE_URL=postgresql://dgd_ci:ci_database_password_only@127.0.0.1:5433/dgd_infokiosk' \
+            'CLIENT_URL=http://127.0.0.1:4000' \
+            'JWT_ACCESS_SECRET=ci_access_secret_0123456789_abcdef' \
+            'JWT_REFRESH_SECRET=ci_refresh_secret_0123456789_abcdef' \
+            'SEED_ADMIN_LOGIN=admin' \
+            'SEED_ADMIN_PASSWORD=ci_admin_password_only' \
+            'SEED_ADMIN_NAME=CI Administrator' \
+            > server/.env
+      - name: Prepare database
+        run: |
+          npm run db:deploy
+          npm run db:seed
+      - name: Full release verification
+        run: npm run release:check
+      - name: Dependency audit
+        run: npm run security:check

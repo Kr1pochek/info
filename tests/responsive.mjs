@@ -4,13 +4,20 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 
-process.env.NODE_ENV = 'production';
+const requireFromServer = createRequire(path.resolve('server/package.json'));
+const { parse: parseEnv } = requireFromServer('dotenv');
+const seedEnvironment = parseEnv(fs.readFileSync(path.resolve('server/.env')));
+Object.assign(process.env, seedEnvironment, { NODE_ENV: 'production' });
 
 const candidates = [
+  process.env.CHROME_PATH,
   path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
   path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
   path.join(process.env.PROGRAMFILES || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
   path.join(process.env['PROGRAMFILES(X86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
 ].filter(Boolean);
 const executablePath = candidates.find((item) => fs.existsSync(item));
 assert.ok(executablePath, 'Для responsive-теста нужен установленный Chrome или Edge');
@@ -45,17 +52,15 @@ function removeMiddleCharacter(value) {
 const misspelledServiceTitle = removeMiddleCharacter(serviceCandidate.titleKz);
 const misspelledNewsTitle = removeMiddleCharacter(newsCandidate.titleKz);
 const browser = await chromium.launch({ executablePath, headless: true });
-const requireFromServer = createRequire(path.resolve('server/package.json'));
-const { parse: parseEnv } = requireFromServer('dotenv');
-const seedEnvironment = parseEnv(fs.readFileSync(path.resolve('server/.env')));
 assert.ok(seedEnvironment.SEED_ADMIN_LOGIN && seedEnvironment.SEED_ADMIN_PASSWORD, 'В server/.env нужны тестовые данные администратора');
 
 const viewports = [
   { name: 'Full HD', width: 1920, height: 1080, deviceScaleFactor: 1 },
+  { name: 'Full HD portrait', width: 1080, height: 1920, deviceScaleFactor: 1 },
   { name: 'QHD 125%', width: 2048, height: 1152, deviceScaleFactor: 1.25 },
   { name: '4K 150%', width: 2560, height: 1440, deviceScaleFactor: 1.5 },
 ];
-const routes = ['/kiosk', '/packages', '/package/progress', '/news', '/admin/login'];
+const routes = ['/kiosk', '/packages', '/package/progress', '/information/taxpayer-rights', '/information/ethics-officer', '/news', '/admin/login'];
 
 try {
   for (const viewport of viewports) {
@@ -77,6 +82,7 @@ try {
       assert.equal(pageErrors.length, 0, `${viewport.name} ${route}: ${pageErrors.join('; ')}`);
       if (route === '/kiosk') {
         const serviceSearch = page.locator('#service-search');
+        assert.equal(await serviceSearch.count(), 1, `${viewport.name}: service search is missing: ${layout.text.slice(0, 400)}`);
         await serviceSearch.click();
         assert.equal(await page.locator('.virtual-keyboard').count(), 1, `${viewport.name}: service keyboard did not open`);
         await serviceSearch.pressSequentially(misspelledServiceTitle);
@@ -95,17 +101,7 @@ try {
         }));
         assert.notEqual(animations.progress, 'none', `${viewport.name}: progress animation is disabled`);
         assert.notEqual(animations.ticker, 'none', `${viewport.name}: ticker animation is disabled`);
-        const accessibility = page.locator('.news-accessibility-float');
-        assert.equal(await accessibility.count(), 1, `${viewport.name}: news accessibility control is missing`);
-        await accessibility.click();
-        assert.equal(await page.locator('.news-broadcast-entry.vision-mode').count(), 1, `${viewport.name}: news high-contrast mode did not activate`);
-        assert.equal(await accessibility.getAttribute('aria-pressed'), 'true', `${viewport.name}: accessibility state is not announced`);
-        const contrast = await page.evaluate(() => ({
-          background: getComputedStyle(document.querySelector('.broadcast-screen')).backgroundColor,
-          tickerColor: getComputedStyle(document.querySelector('.broadcast-ticker p')).color,
-        }));
-        assert.equal(contrast.background, 'rgb(0, 0, 0)', `${viewport.name}: broadcast background is not high contrast`);
-        assert.equal(contrast.tickerColor, 'rgb(255, 229, 0)', `${viewport.name}: ticker is not high contrast`);
+        assert.equal(await page.locator('.news-accessibility-float, .news-accessibility-button').count(), 0, `${viewport.name}: news accessibility control must be hidden`);
         await page.locator('.broadcast-open-button').click();
         const newsSearch = page.locator('.news-search input');
         await newsSearch.waitFor();
@@ -143,6 +139,26 @@ try {
     await context.close();
   }
 
+  const voiceContext = await browser.newContext({ viewport: { width: viewports[0].width, height: viewports[0].height } });
+  const comparisonPages = [
+    { slug: 'matched-voices', audioCount: 3 },
+    { slug: 'elevenlabs-voices', audioCount: 3 },
+    { slug: 'elevenlabs-kazakh-variants', audioCount: 5 },
+  ];
+  for (const { slug: comparisonPage, audioCount } of comparisonPages) {
+    const voicePage = await voiceContext.newPage();
+    const voiceResponse = await voicePage.goto(`${baseUrl}/audio/seo/${comparisonPage}/index.html`, { waitUntil: 'domcontentloaded' });
+    assert.equal(voiceResponse?.status(), 200, `${comparisonPage}: HTTP status`);
+    assert.equal(await voicePage.locator('audio').count(), audioCount, `${comparisonPage}: voice comparison is incomplete`);
+    for (const viewport of viewports) {
+      await voicePage.setViewportSize({ width: viewport.width, height: viewport.height });
+      const voiceLayout = await voicePage.evaluate(() => ({ bodyWidth: document.body.scrollWidth, viewportWidth: document.documentElement.clientWidth }));
+      assert.ok(voiceLayout.bodyWidth <= voiceLayout.viewportWidth + 2, `${viewport.name}: ${comparisonPage} has horizontal overflow`);
+    }
+    await voicePage.close();
+  }
+  await voiceContext.close();
+
   const adminContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   const adminPage = await adminContext.newPage();
   const adminErrors = [];
@@ -170,7 +186,12 @@ try {
   assert.equal(await adminPage.getByText('Жоғары дыбыс деңгейі, %', { exact: true }).count(), 1, 'Accessible audio volume is missing');
 
   await adminPage.goto(`${baseUrl}/admin/broadcast`, { waitUntil: 'domcontentloaded' });
-  await adminPage.getByRole('heading', { name: 'Эфир баптаулары' }).waitFor();
+  try {
+    await adminPage.getByRole('heading', { name: 'Эфир баптаулары' }).waitFor({ timeout: 15000 });
+  } catch (error) {
+    const pageState = (await adminPage.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 800);
+    throw new Error(`Broadcast admin did not load at ${adminPage.url()}: ${pageState}`, { cause: error });
+  }
   assert.equal(await adminPage.getByText(/^\d+ слайд ротацияда$/).count(), 1, 'Broadcast statistics were not localized');
   assert.equal(adminErrors.length, 0, `Authenticated admin: ${adminErrors.join('; ')}`);
   await adminContext.close();

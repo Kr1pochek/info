@@ -5,8 +5,8 @@ import { useSettings } from '../../context/SettingsContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFontSize } from '../../context/FontSizeContext.jsx';
 import { track } from '../../api/analytics.js';
+import { isDeliberateKioskActivity, kioskActivityEvents } from '../../utils/kioskActivity.js';
 
-const activityEvents = ['touchstart', 'pointerdown', 'mousedown', 'mousemove', 'keydown', 'scroll', 'wheel'];
 export default function InactivityGuard({ children }) {
   const { settings } = useSettings(); const { t, resetLanguage } = useLanguage(); const { resetFontSize } = useFontSize(); const navigate = useNavigate();
   const sessionStarted = useRef(false); const lastActivity = useRef(null); const [remaining, setRemaining] = useState(null);
@@ -16,16 +16,17 @@ export default function InactivityGuard({ children }) {
   }, [navigate, resetFontSize, resetLanguage]);
   useEffect(() => {
     if (!settings) return undefined;
-    const activity = () => {
+    const activity = (event) => {
+      if (!isDeliberateKioskActivity(event)) return;
       if (remaining == null) { sessionStarted.current = true; lastActivity.current = Date.now(); }
     };
-    activityEvents.forEach((event) => window.addEventListener(event, activity, { passive: true }));
+    kioskActivityEvents.forEach((event) => window.addEventListener(event, activity, { passive: true }));
     const timer = setInterval(() => {
       if (!sessionStarted.current || lastActivity.current == null) return;
       const left = settings.inactivitySeconds - Math.floor((Date.now() - lastActivity.current) / 1000);
       if (left <= 0) resetSession('SESSION_TIMEOUT'); else if (left <= settings.warningSeconds) setRemaining(left); else setRemaining(null);
     }, 500);
-    return () => { clearInterval(timer); activityEvents.forEach((event) => window.removeEventListener(event, activity)); };
+    return () => { clearInterval(timer); kioskActivityEvents.forEach((event) => window.removeEventListener(event, activity)); };
   }, [settings, remaining, resetSession]);
   return <>{children}{remaining != null && <div className="modal-backdrop" role="presentation"><section className="session-modal" role="alertdialog" aria-modal="true" aria-labelledby="session-title">
     <div className="session-modal__icon"><Clock3 size={40} /></div><h2 id="session-title">{t.sessionTitle}</h2><p>{t.sessionText}</p><strong className="session-countdown">{remaining} {t.seconds}</strong>
