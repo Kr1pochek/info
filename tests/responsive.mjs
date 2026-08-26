@@ -177,7 +177,8 @@ try {
   await adminPage.locator('.login-form .admin-button').click();
   await adminPage.waitForURL(/\/admin\/?$/, { timeout: 15000 });
   assert.equal(await adminPage.locator('.admin-brand > span').innerText(), 'МКД', 'Kazakh admin brand is missing');
-  assert.equal(await adminPage.getByText('Баптаулар', { exact: true }).count(), 1, 'Authenticated navigation was not localized');
+  assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Инфокиоск', { exact: true }).count(), 1, 'Kiosk workspace navigation was not localized');
+  assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Жаңалықтар таспасы', { exact: true }).count(), 1, 'News workspace navigation was not localized');
 
   await adminPage.goto(`${baseUrl}/admin/settings`, { waitUntil: 'domcontentloaded' });
   await adminPage.getByRole('heading', { name: 'Электрондық кезекті дыбыстау' }).waitFor();

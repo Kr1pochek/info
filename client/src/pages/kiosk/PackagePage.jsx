@@ -18,8 +18,7 @@ export default function PackagePage() {
   if (error || !item) return <ErrorState title={t.unavailableTitle} text={error || t.unavailableText} onRetry={load} retryText={t.retry} />;
   return <section className="page-section"><header className="package-hero"><div><AppIcon name={item.icon} size={56} /></div><section><span>{t.servicePackages}</span><h1>{localized(item, 'title', language)}</h1><p>{localized(item, 'description', language)}</p></section></header>
     <div className="package-facts"><article><small>{t.packageAudience}</small><strong>{localized(item, 'targetAudience', language)}</strong></article><article><small>{t.serviceZone}</small><strong>{localized(item, 'serviceZone', language)}</strong></article></div>
-    {localized(item, 'note', language) && <div className="package-note">{localized(item, 'note', language)}</div>}
     <div className="section-heading section-heading--compact"><div><span>{t.packageServices}</span><h2>{t.servicesFound}: {item.services.length}</h2></div></div>
-    {item.services.length ? <div className="service-grid">{item.services.map((service) => <ServiceCard service={service} key={service.id} />)}</div> : <EmptyState text={localized(item, 'note', language)} />}
+    {item.services.length ? <div className="service-grid">{item.services.map((service) => <ServiceCard service={service} key={service.id} />)}</div> : <EmptyState text={t.noServices} />}
   </section>;
 }

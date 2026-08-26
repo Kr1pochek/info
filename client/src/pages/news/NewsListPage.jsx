@@ -31,7 +31,6 @@ function BroadcastScreen({ onOpenNews }) {
   const ticker = broadcast.settings[language === 'kz' ? 'tickerTextKz' : 'tickerTextRu'];
   const locale = language === 'kz' ? 'kk-KZ' : 'ru-RU';
   const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const qrCodes = (broadcast.settings.panelQrCodes || []).filter((entry) => entry.isActive && entry.image);
   const specialists = (broadcast.settings.onlineSpecialists || []).filter((entry) => entry.isActive && entry.workDate === localDate).slice(0, 2);
   const phaseSeconds = language === 'kz' ? broadcast.settings.broadcastLanguageSeconds : Math.max(5, broadcast.settings.broadcastSlideSeconds - broadcast.settings.broadcastLanguageSeconds);
   const finishVideo = () => { if (language === 'kz') setLanguage('ru', true); else { setLanguage('kz', true); advance(); } };
@@ -46,7 +45,6 @@ function BroadcastScreen({ onOpenNews }) {
       : item.kind === 'BIRTHDAY' ? <section className="birthday-slide"><div className="birthday-slide__decor"><PartyPopper /><Cake /></div><div className="birthday-slide__content"><span>{birthdayCopy[language].eyebrow}</span><p>{birthdayCopy[language].prefix}</p><h1>{item.title}</h1><div>{item.description}</div><strong>{birthdayCopy[language].wishes}</strong></div></section>
         : <section className="broadcast-news-slide"><div className="broadcast-news-slide__copy"><div className="broadcast-news-slide__meta"><span><Newspaper size={18} />{newsCategoryLabel(item.category, language)}</span><time><CalendarDays size={17} />{new Date(item.publishedAt || item.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</time></div><h1>{item.title}</h1><p className="broadcast-news-slide__lead">{item.description}</p><div className="broadcast-news-slide__body">{item.content.split(/\n{2,}/).slice(0, 4).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}</div></div><div className="broadcast-news-slide__visual"><img src={assetUrl(item.image)} alt="" /></div></section>}
     {specialists.length > 0 && <aside className="broadcast-specialists"><header><UserRoundCheck size={22} /><span>{language === 'kz' ? 'Бүгін онлайн' : 'Сегодня онлайн'}</span></header>{specialists.map((specialist) => <article key={specialist.id}>{specialist.photo && <img src={assetUrl(specialist.photo)} alt="" />}<div><strong>{specialist[language === 'kz' ? 'nameKz' : 'nameRu']}</strong><span>{specialist[language === 'kz' ? 'categoryKz' : 'categoryRu']}</span><small>{specialist[language === 'kz' ? 'servicesKz' : 'servicesRu']}</small></div></article>)}</aside>}
-    {qrCodes.length > 0 && <aside className="broadcast-qr-codes">{qrCodes.map((code) => <div key={code.id}><img src={assetUrl(code.image)} alt={code[language === 'kz' ? 'labelKz' : 'labelRu']} /><span>{code[language === 'kz' ? 'labelKz' : 'labelRu']}</span></div>)}</aside>}
     <div className="broadcast-ticker"><span className="broadcast-ticker__label"><Megaphone size={19} />{language === 'kz' ? 'АҚПАРАТ' : 'ВАЖНО'}</span><div><p>{ticker}<i>•</i>{ticker}<i>•</i>{ticker}</p></div></div>
   </main>;
 }

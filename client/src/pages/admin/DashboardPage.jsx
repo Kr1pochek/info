@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, BarChart3, BookOpenCheck, Boxes, Eye, EyeOff, Newspaper, PackageOpen, Search, Tv } from 'lucide-react';
+import {
+  ArrowRight, BarChart3, BookOpenCheck, Boxes, Eye, EyeOff, MonitorSmartphone,
+  Newspaper, PackageOpen, Search, Settings, Tv,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api, { apiMessage } from '../../api/client.js';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
@@ -10,10 +13,28 @@ const statConfig = [
   ['services', 'Всего услуг', BookOpenCheck, 'blue'], ['categories', 'Категории', Boxes, 'cyan'], ['published', 'Опубликовано', Eye, 'green'],
   ['hidden', 'Скрыто', EyeOff, 'orange'], ['searches', 'Поисковых запросов', Search, 'violet'], ['opens', 'Открытий услуг', BarChart3, 'navy'],
 ];
-const quickLinks = [
-  ['/admin/services', 'Услуги', BookOpenCheck], ['/admin/categories', 'Категории', Boxes], ['/admin/packages', 'Пакеты', PackageOpen],
-  ['/admin/news', 'Новости', Newspaper], ['/admin/broadcast', 'Эфир', Tv], ['/admin/system-status', 'Состояние системы', Activity],
+
+const kioskActions = [
+  ['/admin/services', 'Услуги', 'Добавлять и редактировать карточки', 'Қызметтер', 'Карточкаларды қосу және өңдеу', BookOpenCheck],
+  ['/admin/categories', 'Категории', 'Настроить разделы каталога', 'Санаттар', 'Каталог бөлімдерін баптау', Boxes],
+  ['/admin/packages', 'Пакеты', 'Сгруппировать связанные услуги', 'Пакеттер', 'Байланысты қызметтерді топтау', PackageOpen],
+  ['/admin/settings', 'Настройки', 'Контакты и справочные разделы', 'Баптаулар', 'Байланыстар мен анықтамалық бөлімдер', Settings],
 ];
+
+const newsActions = [
+  ['/admin/news', 'Новости', 'Создавать и публиковать материалы', 'Жаңалықтар', 'Материалдарды жасау және жариялау', Newspaper],
+  ['/admin/broadcast', 'Эфир', 'Управлять слайдами и бегущей строкой', 'Эфир', 'Слайдтар мен жүгіртпе жолды басқару', Tv],
+];
+
+function WorkspaceCard({ type, eyebrow, eyebrowKz, title, titleKz, description, descriptionKz, icon: Icon, metrics, actions, preview, previewLabel, previewLabelKz }) {
+  const { locale, tr } = useAdminI18n();
+  return <article className={`admin-workspace-card admin-workspace-card--${type}`}>
+    <header><span className="admin-workspace-card__icon"><Icon size={30} /></span><div><small>{tr(eyebrow, eyebrowKz)}</small><h2>{tr(title, titleKz)}</h2><p>{tr(description, descriptionKz)}</p></div></header>
+    <div className="admin-workspace-card__metrics">{metrics.map(([value, label, labelKz]) => <div key={label}><strong>{Number(value || 0).toLocaleString(locale)}</strong><span>{tr(label, labelKz)}</span></div>)}</div>
+    <nav>{actions.map(([to, label, descriptionRu, labelKz, descriptionKz, ActionIcon]) => <Link to={to} key={to}><span className="admin-workspace-action__icon"><ActionIcon size={21} /></span><span><strong>{tr(label, labelKz)}</strong><small>{tr(descriptionRu, descriptionKz)}</small></span><ArrowRight size={18} /></Link>)}</nav>
+    <a className="admin-workspace-card__preview" href={preview} target="_blank" rel="noreferrer"><Eye size={18} />{tr(previewLabel, previewLabelKz)}</a>
+  </article>;
+}
 
 export default function DashboardPage() {
   const { language, locale, tr } = useAdminI18n();
@@ -24,9 +45,15 @@ export default function DashboardPage() {
   if (!data && !error) return <LoadingState text={tr('Загрузка показателей…', 'Көрсеткіштер жүктелуде…')} />;
   if (error) return <ErrorState title={tr('Не удалось загрузить обзор', 'Шолуды жүктеу мүмкін болмады')} text={error} onRetry={load} />;
   const max = Math.max(...data.daily.map((item) => item.count), 1);
+
   return <>
-    <AdminPageHeader eyebrow="Сводка" eyebrowKz="Жиынтық" title="Обзор системы" titleKz="Жүйеге шолу" description="Ключевые показатели и быстрый доступ к управлению инфокиоском" descriptionKz="Негізгі көрсеткіштер және инфокиоскіні басқаруға жылдам қол жеткізу" />
-    <nav className="admin-quick-links">{quickLinks.map(([to, label, Icon]) => <Link to={to} key={to}><Icon size={20} /><span>{tr(label)}</span></Link>)}</nav>
+    <AdminPageHeader eyebrow="Начало работы" eyebrowKz="Жұмыстың басталуы" title="Что вы хотите изменить?" titleKz="Нені өзгерткіңіз келеді?" description="Выберите один из двух разделов — все связанные инструменты собраны внутри" descriptionKz="Екі бөлімнің бірін таңдаңыз — барлық байланысты құралдар ішінде жинақталған" />
+    <section className="admin-workspace-cards" aria-label={tr('Разделы управления', 'Басқару бөлімдері')}>
+      <WorkspaceCard type="kiosk" eyebrow="Раздел 1" eyebrowKz="1-бөлім" title="Инфокиоск" titleKz="Инфокиоск" description="Услуги и справочная информация, которую посетитель ищет самостоятельно." descriptionKz="Келуші өз бетінше іздейтін қызметтер мен анықтамалық ақпарат." icon={MonitorSmartphone} metrics={[[data.counts.services, 'услуг', 'қызмет'], [data.counts.categories, 'категорий', 'санат'], [data.counts.published, 'опубликовано', 'жарияланған']]} actions={kioskActions} preview="/kiosk" previewLabel="Посмотреть инфокиоск" previewLabelKz="Инфокиоскіні көру" />
+      <WorkspaceCard type="news" eyebrow="Раздел 2" eyebrowKz="2-бөлім" title="Новостная лента" titleKz="Жаңалықтар таспасы" description="Публикации для посетителей и полноэкранный информационный эфир." descriptionKz="Келушілерге арналған жарияланымдар және толық экранды ақпараттық эфир." icon={Newspaper} metrics={[[data.counts.news, 'новостей', 'жаңалық'], [data.counts.publishedNews, 'опубликовано', 'жарияланған'], [data.counts.broadcastMaterials, 'материалов в эфире', 'эфирдегі материал']]} actions={newsActions} preview="/news" previewLabel="Посмотреть новостную ленту" previewLabelKz="Жаңалықтар таспасын көру" />
+    </section>
+
+    <div className="admin-section-title"><span>{tr('Общая сводка', 'Жалпы жиынтық')}</span><h2>{tr('Как используется инфокиоск', 'Инфокиоск қалай пайдаланылады')}</h2></div>
     <div className="stat-grid">{statConfig.map(([key, label, Icon, color]) => <article className={`stat-card stat-card--${color}`} key={key}><div><span>{tr(label, { services: 'Барлық қызметтер', categories: 'Санаттар', published: 'Жарияланған', hidden: 'Жасырын', searches: 'Іздеу сұраулары', opens: 'Қызметті ашу' }[key])}</span><strong>{data.counts[key].toLocaleString(locale)}</strong></div><Icon size={27} /></article>)}</div>
     <div className="dashboard-grid">
       <section className="admin-card chart-card"><header><div><span>{tr('Активность', 'Белсенділік')}</span><h2>{tr('События за 7 дней', '7 күндегі оқиғалар')}</h2></div></header><div className="bar-chart">{data.daily.length ? data.daily.map((item) => <div className="bar-chart__item" key={item.day}><span>{item.count}</span><i style={{ height: `${Math.max(8, item.count / max * 100)}%` }} /><small>{new Date(item.day).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}</small></div>) : <p>{tr('Событий пока нет', 'Әзірге оқиғалар жоқ')}</p>}</div></section>

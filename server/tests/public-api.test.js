@@ -84,11 +84,13 @@ test('super administrator can update and restore queue announcement parameters',
   }
 });
 
-test('catalog exposes all 42 complete DGD services', async () => {
+test('catalog exposes all 41 complete DGD services for the 2026 stand', async () => {
   const { response, body } = await request('/api/services?limit=100');
   assert.equal(response.status, 200);
-  assert.equal(body.meta.total, 42);
-  assert.equal(body.data.length, 42);
+  assert.equal(body.meta.total, 41);
+  assert.equal(body.data.length, 41);
+  assert.ok(body.data.some((item) => item.slug === 'petroleum-product-pin-code'));
+  assert.ok(body.data.every((item) => !['tax-debt-information', 'withdraw-tax-reporting'].includes(item.slug)));
   for (const item of body.data) {
     assert.ok(item.titleRu && item.titleKz && item.fullDescriptionRu && item.fullDescriptionKz);
     assert.ok(Array.isArray(item.requiredDocumentsRu) && Array.isArray(item.requiredDocumentsKz));
@@ -97,30 +99,30 @@ test('catalog exposes all 42 complete DGD services', async () => {
   }
 });
 
-test('administrator catalog contains only the 42 current services', async () => {
+test('administrator catalog contains only the 41 current services', async () => {
   const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
   assert.ok(admin);
   const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
   const { response, body } = await request('/api/admin/services?limit=100', { headers: { Authorization: `Bearer ${token}` } });
   assert.equal(response.status, 200);
-  assert.equal(body.meta.total, 42);
-  assert.equal(body.data.length, 42);
+  assert.equal(body.meta.total, 41);
+  assert.equal(body.data.length, 41);
 });
 
-test('catalog exposes five categories and six service packages', async () => {
+test('catalog exposes five categories and five published service packages', async () => {
   const [categories, packages] = await Promise.all([request('/api/categories'), request('/api/service-packages')]);
   assert.equal(categories.response.status, 200);
   assert.equal(categories.body.data.length, 5);
   assert.equal(packages.response.status, 200);
-  assert.equal(packages.body.data.length, 6);
-  assert.deepEqual(packages.body.data.map((item) => item.slug), ['start', 'profi', 'progress', 'social', 'balapan', 'honorary']);
+  assert.equal(packages.body.data.length, 5);
+  assert.deepEqual(packages.body.data.map((item) => item.slug), ['start', 'profi', 'progress', 'social', 'balapan']);
 });
 
-test('progress package contains all services and honorary package keeps customer note', async () => {
+test('progress package contains all services and honorary package is hidden', async () => {
   const [progress, honorary] = await Promise.all([request('/api/service-packages/progress'), request('/api/service-packages/honorary')]);
-  assert.equal(progress.body.data.services.length, 42);
-  assert.equal(honorary.body.data.services.length, 0);
-  assert.match(honorary.body.data.noteRu, /утвержден|согласован|заказчик/i);
+  assert.equal(progress.body.data.services.length, 41);
+  assert.equal(honorary.response.status, 404);
+  assert.equal(honorary.body.error.code, 'SERVICE_PACKAGE_NOT_FOUND');
 });
 
 test('Russian service search returns matching results', async () => {

@@ -33,9 +33,14 @@ export const systemStatus = asyncHandler(async (_req, res) => {
 });
 
 export const dashboard = asyncHandler(async (_req, res) => {
-  const since = new Date(); since.setDate(since.getDate() - 6); since.setHours(0, 0, 0, 0);
-  const [services, categories, published, searches, opens, popular, recentAudit, daily] = await Promise.all([
+  const now = new Date();
+  const today = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const since = new Date(now); since.setDate(since.getDate() - 6); since.setHours(0, 0, 0, 0);
+  const [services, categories, published, news, publishedNews, liveNews, broadcastItems, searches, opens, popular, recentAudit, daily] = await Promise.all([
     prisma.service.count(), prisma.category.count(), prisma.service.count({ where: { isPublished: true } }),
+    prisma.news.count(), prisma.news.count({ where: { published: true } }),
+    prisma.news.count({ where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } }),
+    prisma.broadcastItem.findMany({ where: { isActive: true }, select: { type: true, eventDate: true, mediaUrl: true } }),
     prisma.analyticsEvent.count({ where: { eventType: 'SEARCH' } }), prisma.analyticsEvent.count({ where: { eventType: 'SERVICE_OPEN' } }),
     prisma.analyticsEvent.groupBy({ by: ['serviceId'], where: { eventType: 'SERVICE_OPEN', serviceId: { not: null } }, _count: { _all: true }, orderBy: { _count: { serviceId: 'desc' } }, take: 5 }),
     prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 8, include: { adminUser: { select: { fullName: true, login: true } } } }),
@@ -44,7 +49,8 @@ export const dashboard = asyncHandler(async (_req, res) => {
   const popularIds = popular.map((item) => item.serviceId).filter(Boolean);
   const popularRows = await prisma.service.findMany({ where: { id: { in: popularIds } }, select: { id: true, titleRu: true, titleKz: true } });
   const popularServices = popular.map((item) => ({ ...popularRows.find((row) => row.id === item.serviceId), count: item._count._all })).filter((item) => item.id);
-  sendData(res, { counts: { services, categories, published, hidden: services - published, searches, opens }, popularServices, recentAudit, daily });
+  const liveBroadcastItems = broadcastItems.filter((item) => item.type === 'VIDEO' ? Boolean(item.mediaUrl) : item.eventDate && `${String(item.eventDate.getUTCMonth() + 1).padStart(2, '0')}-${String(item.eventDate.getUTCDate()).padStart(2, '0')}` === today).length;
+  sendData(res, { counts: { services, categories, published, hidden: services - published, news, publishedNews, broadcastMaterials: liveNews + liveBroadcastItems, searches, opens }, popularServices, recentAudit, daily });
 });
 
 export const listUsers = asyncHandler(async (req, res) => {

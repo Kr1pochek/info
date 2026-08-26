@@ -1,34 +1,90 @@
-import { Activity, BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Languages, LayoutDashboard, LogOut, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users } from 'lucide-react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import {
+  Activity, BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Languages,
+  LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users,
+} from 'lucide-react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAdminI18n } from '../utils/adminLocalization.js';
 
 const contentRoles = ['SUPER_ADMIN', 'ADMIN'];
-const links = [
-  { to: '/admin', label: 'Обзор', icon: LayoutDashboard, end: true, roles: contentRoles },
-  { to: '/admin/services', label: 'Услуги', icon: BookOpenCheck, roles: contentRoles },
-  { to: '/admin/categories', label: 'Категории', icon: Boxes, roles: contentRoles },
-  { to: '/admin/packages', label: 'Пакеты', icon: PackageOpen, roles: contentRoles },
-  { to: '/admin/news', label: 'Новости', icon: Newspaper },
-  { to: '/admin/broadcast', label: 'Эфир', icon: Tv },
-  { to: '/admin/system-status', label: 'Состояние системы', icon: Activity, roles: contentRoles },
-  { to: '/admin/analytics', label: 'Аналитика', icon: BarChart3, roles: contentRoles },
-  { to: '/admin/users', label: 'Администраторы', icon: Users, roles: ['SUPER_ADMIN'] },
-  { to: '/admin/settings', label: 'Настройки', icon: Settings, roles: contentRoles },
-  { to: '/admin/audit-logs', label: 'Журнал действий', icon: ClipboardList, roles: ['SUPER_ADMIN'] },
+
+const workspaces = [
+  {
+    id: 'kiosk',
+    label: 'Инфокиоск', labelKz: 'Инфокиоск',
+    description: 'Услуги и справочная информация', descriptionKz: 'Қызметтер мен анықтамалық ақпарат',
+    icon: MonitorSmartphone,
+    preview: '/kiosk', previewLabel: 'Открыть инфокиоск', previewLabelKz: 'Инфокиоскіні ашу',
+    links: [
+      { to: '/admin/services', label: 'Услуги', labelKz: 'Қызметтер', icon: BookOpenCheck, roles: contentRoles },
+      { to: '/admin/categories', label: 'Категории', labelKz: 'Санаттар', icon: Boxes, roles: contentRoles },
+      { to: '/admin/packages', label: 'Пакеты обслуживания', labelKz: 'Қызмет пакеттері', icon: PackageOpen, roles: contentRoles },
+      { to: '/admin/settings', label: 'Настройки инфокиоска', labelKz: 'Инфокиоск баптаулары', icon: Settings, roles: contentRoles },
+    ],
+  },
+  {
+    id: 'news',
+    label: 'Новостная лента', labelKz: 'Жаңалықтар таспасы',
+    description: 'Публикации и экранный эфир', descriptionKz: 'Жарияланымдар мен экрандық эфир',
+    icon: Newspaper,
+    preview: '/news', previewLabel: 'Открыть новостную ленту', previewLabelKz: 'Жаңалықтар таспасын ашу',
+    links: [
+      { to: '/admin/news', label: 'Новости', labelKz: 'Жаңалықтар', icon: Newspaper },
+      { to: '/admin/broadcast', label: 'Эфир', labelKz: 'Эфир', icon: Tv },
+    ],
+  },
 ];
+
+const utilityLinks = [
+  { to: '/admin/system-status', label: 'Состояние системы', labelKz: 'Жүйе күйі', icon: Activity, roles: contentRoles },
+  { to: '/admin/analytics', label: 'Аналитика', labelKz: 'Талдау', icon: BarChart3, roles: contentRoles },
+  { to: '/admin/users', label: 'Администраторы', labelKz: 'Әкімшілер', icon: Users, roles: ['SUPER_ADMIN'] },
+  { to: '/admin/audit-logs', label: 'Журнал действий', labelKz: 'Әрекеттер журналы', icon: ClipboardList, roles: ['SUPER_ADMIN'] },
+];
+
+const allowed = (item, role) => !item.roles || item.roles.includes(role);
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const { language, tr, toggleLanguage } = useAdminI18n();
+  const location = useLocation();
   const navigate = useNavigate();
+  const role = user?.role;
+  const visibleWorkspaces = workspaces.map((workspace) => ({ ...workspace, links: workspace.links.filter((item) => allowed(item, role)) })).filter((workspace) => workspace.links.length);
+  const visibleUtilities = utilityLinks.filter((item) => allowed(item, role));
+  const activeWorkspace = visibleWorkspaces.find((workspace) => workspace.links.some((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)));
+  const pageContext = activeWorkspace || {
+    label: 'Общее управление', labelKz: 'Жалпы басқару',
+    description: 'Контроль, аналитика и безопасность', descriptionKz: 'Бақылау, талдау және қауіпсіздік',
+    preview: '/', previewLabel: 'Открыть главную', previewLabelKz: 'Басты бетті ашу',
+  };
   const signOut = async () => { await logout(); navigate('/admin/login', { replace: true }); };
+
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <div className="admin-brand"><span>{language === 'kz' ? 'МКД' : 'ДГД'}</span><div><strong>{tr('Корпоративный портал')}</strong><small>{tr('Панель управления')}</small></div></div>
-      <nav>{links.filter((item) => !item.roles || item.roles.includes(user.role)).map(({ to, label, icon: Icon, end }) => <NavLink key={to} to={to} end={end}><Icon size={21} /><span>{tr(label)}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>)}</nav>
+      <div className="admin-brand"><span>{language === 'kz' ? 'МКД' : 'ДГД'}</span><div><strong>{tr('Контент-центр', 'Контент орталығы')}</strong><small>{tr('Панель управления')}</small></div></div>
+      <nav className="admin-navigation" aria-label={tr('Разделы админ-панели', 'Әкімшілік панель бөлімдері')}>
+        {role !== 'EDITOR' && <NavLink className="admin-overview-link" to="/admin" end><LayoutDashboard size={21} /><span>{tr('Начало', 'Басты бет')}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>}
+        {visibleWorkspaces.map((workspace) => {
+          const WorkspaceIcon = workspace.icon;
+          return <section className={`admin-nav-group ${activeWorkspace?.id === workspace.id ? 'is-active' : ''}`} key={workspace.id}>
+            <div className="admin-nav-group__heading"><span><WorkspaceIcon size={21} /></span><div><strong>{tr(workspace.label, workspace.labelKz)}</strong><small>{tr(workspace.description, workspace.descriptionKz)}</small></div></div>
+            <div className="admin-nav-links">{workspace.links.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>
+          </section>;
+        })}
+        {visibleUtilities.length > 0 && <section className="admin-nav-group admin-nav-group--utilities">
+          <div className="admin-nav-label">{tr('Система', 'Жүйе')}</div>
+          <div className="admin-nav-links">{visibleUtilities.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>
+        </section>}
+      </nav>
       <div className="admin-profile"><div className="admin-profile__avatar"><ShieldCheck /></div><div><strong>{user.fullName}</strong><small>{user.role}</small></div><button onClick={signOut} aria-label={tr('Выйти')}><LogOut size={21} /></button></div>
     </aside>
-    <div className="admin-workspace"><header className="admin-topbar"><div><span>{tr('Департамент государственных доходов')}</span><strong>{tr('Управление внутренними сервисами')}</strong></div><div className="admin-topbar__actions"><button type="button" className="admin-language-switch" onClick={toggleLanguage}><Languages size={18} />{language === 'kz' ? 'Рус' : 'Қаз'}</button><a href="/" className="admin-preview-link">{tr('Открыть главную')}</a></div></header><main className="admin-main"><Outlet /></main></div>
+    <div className="admin-workspace">
+      <header className="admin-topbar">
+        <div><span>{tr(pageContext.label, pageContext.labelKz)}</span><strong>{tr(pageContext.description, pageContext.descriptionKz)}</strong></div>
+        <div className="admin-topbar__actions"><button type="button" className="admin-language-switch" onClick={toggleLanguage}><Languages size={18} />{language === 'kz' ? 'Рус' : 'Қаз'}</button><a href={pageContext.preview} target="_blank" rel="noreferrer" className="admin-preview-link"><Eye size={17} />{tr(pageContext.previewLabel, pageContext.previewLabelKz)}</a></div>
+      </header>
+      <main className="admin-main"><Outlet /></main>
+    </div>
   </div>;
 }
