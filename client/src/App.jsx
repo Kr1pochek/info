@@ -30,11 +30,11 @@ const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage.jsx'));
 const AdminPackagesPage = lazy(() => import('./pages/admin/PackagesPage.jsx'));
 const AdminNewsPage = lazy(() => import('./pages/admin/NewsPage.jsx'));
 const BroadcastPage = lazy(() => import('./pages/admin/BroadcastPage.jsx'));
-const SystemStatusPage = lazy(() => import('./pages/admin/SystemStatusPage.jsx'));
 const AnalyticsPage = lazy(() => import('./pages/admin/AnalyticsPage.jsx'));
 const UsersPage = lazy(() => import('./pages/admin/UsersPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/admin/SettingsPage.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage.jsx'));
+const GuidePage = lazy(() => import('./pages/admin/GuidePage.jsx'));
 
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><ConnectivityBanner /><Suspense fallback={<LoadingState />}><Routes>
@@ -47,11 +47,11 @@ export default function App() {
       <Route path="packages" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AdminPackagesPage /></RoleRoute>} />
       <Route path="news" element={<AdminNewsPage />} />
       <Route path="broadcast" element={<BroadcastPage />} />
-      <Route path="system-status" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SystemStatusPage /></RoleRoute>} />
       <Route path="analytics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AnalyticsPage /></RoleRoute>} />
       <Route path="users" element={<RoleRoute roles={['SUPER_ADMIN']}><UsersPage /></RoleRoute>} />
       <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SettingsPage /></RoleRoute>} />
       <Route path="audit-logs" element={<RoleRoute roles={['SUPER_ADMIN']}><AuditLogsPage /></RoleRoute>} />
+      <Route path="guide" element={<GuidePage />} />
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Route>
     <Route path="*" element={<NotFoundPage />} />

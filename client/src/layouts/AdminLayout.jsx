@@ -1,10 +1,11 @@
 import {
-  Activity, BarChart3, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Languages,
+  BarChart3, BookOpen, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Languages,
   LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAdminI18n } from '../utils/adminLocalization.js';
+import DgdLogo from '../components/common/DgdLogo.jsx';
 
 const contentRoles = ['SUPER_ADMIN', 'ADMIN'];
 
@@ -36,7 +37,7 @@ const workspaces = [
 ];
 
 const utilityLinks = [
-  { to: '/admin/system-status', label: 'Состояние системы', labelKz: 'Жүйе күйі', icon: Activity, roles: contentRoles },
+  { to: '/admin/guide', label: 'Инструкция', labelKz: 'Нұсқаулық', icon: BookOpen },
   { to: '/admin/analytics', label: 'Аналитика', labelKz: 'Талдау', icon: BarChart3, roles: contentRoles },
   { to: '/admin/users', label: 'Администраторы', labelKz: 'Әкімшілер', icon: Users, roles: ['SUPER_ADMIN'] },
   { to: '/admin/audit-logs', label: 'Журнал действий', labelKz: 'Әрекеттер журналы', icon: ClipboardList, roles: ['SUPER_ADMIN'] },
@@ -53,7 +54,12 @@ export default function AdminLayout() {
   const visibleWorkspaces = workspaces.map((workspace) => ({ ...workspace, links: workspace.links.filter((item) => allowed(item, role)) })).filter((workspace) => workspace.links.length);
   const visibleUtilities = utilityLinks.filter((item) => allowed(item, role));
   const activeWorkspace = visibleWorkspaces.find((workspace) => workspace.links.some((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)));
-  const pageContext = activeWorkspace || {
+  const guideContext = location.pathname === '/admin/guide' ? {
+    label: 'Помощь и обучение', labelKz: 'Көмек және оқыту',
+    description: 'Инструкция по работе с панелью', descriptionKz: 'Панельмен жұмыс істеу нұсқаулығы',
+    preview: '/', previewLabel: 'Открыть сайт', previewLabelKz: 'Сайтты ашу',
+  } : null;
+  const pageContext = activeWorkspace || guideContext || {
     label: 'Общее управление', labelKz: 'Жалпы басқару',
     description: 'Контроль, аналитика и безопасность', descriptionKz: 'Бақылау, талдау және қауіпсіздік',
     preview: '/', previewLabel: 'Открыть главную', previewLabelKz: 'Басты бетті ашу',
@@ -62,7 +68,7 @@ export default function AdminLayout() {
 
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <div className="admin-brand"><span>{language === 'kz' ? 'МКД' : 'ДГД'}</span><div><strong>{tr('Контент-центр', 'Контент орталығы')}</strong><small>{tr('Панель управления')}</small></div></div>
+      <div className="admin-brand"><DgdLogo className="admin-brand__logo" decorative /><div><strong>{tr('Контент-центр', 'Контент орталығы')}</strong><small>{tr('Панель управления')}</small></div></div>
       <nav className="admin-navigation" aria-label={tr('Разделы админ-панели', 'Әкімшілік панель бөлімдері')}>
         {role !== 'EDITOR' && <NavLink className="admin-overview-link" to="/admin" end><LayoutDashboard size={21} /><span>{tr('Начало', 'Басты бет')}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>}
         {visibleWorkspaces.map((workspace) => {

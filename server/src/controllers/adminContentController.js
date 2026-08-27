@@ -142,7 +142,7 @@ export const deleteServicePackage = asyncHandler(async (req, res) => {
   sendData(res, { deleted: true });
 });
 
-const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'expiresAt', 'sortOrder', 'titleRu', 'titleKz', 'published']);
+const newsOrderFields = new Set(['createdAt', 'updatedAt', 'publishedAt', 'expiresAt', 'sortOrder', 'titleRu', 'titleKz', 'published', 'isPriority']);
 
 export const listAdminNews = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
@@ -158,6 +158,7 @@ export const listAdminNews = asyncHandler(async (req, res) => {
           : req.query.published === 'true' ? { published: true }
             : req.query.published === 'false' ? { published: false } : {}),
     ...(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
+    ...(req.query.priority === 'true' ? { isPriority: true } : req.query.priority === 'false' ? { isPriority: false } : {}),
     ...(search ? { AND: [{ OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) }] } : {}),
   };
   const [data, total] = await prisma.$transaction([
@@ -191,6 +192,9 @@ export const createNews = asyncHandler(async (req, res) => {
   const { publishedAt, expiresAt, ...input } = req.body;
   const publicationDate = req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null;
   const expirationDate = expiresAt ? new Date(expiresAt) : null;
+  if (input.isPriority && req.body.published && !expirationDate) {
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для приоритетной новости укажите время окончания показа');
+  }
   if (publicationDate && expirationDate && expirationDate <= publicationDate) {
     throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
   }
@@ -218,6 +222,11 @@ export const updateNews = asyncHandler(async (req, res) => {
   if (Object.hasOwn(changes, 'expiresAt')) changes.expiresAt = changes.expiresAt ? new Date(changes.expiresAt) : null;
   const resultingPublishedAt = changes.publishedAt === undefined ? oldData.publishedAt : changes.publishedAt;
   const resultingExpiresAt = changes.expiresAt === undefined ? oldData.expiresAt : changes.expiresAt;
+  const resultingPublished = changes.published === undefined ? oldData.published : changes.published;
+  const resultingPriority = changes.isPriority === undefined ? oldData.isPriority : changes.isPriority;
+  if (resultingPriority && resultingPublished && !resultingExpiresAt) {
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для приоритетной новости укажите время окончания показа');
+  }
   if (resultingPublishedAt && resultingExpiresAt && resultingExpiresAt <= resultingPublishedAt) {
     throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
   }
@@ -230,6 +239,9 @@ export const updateNewsPublication = asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   const oldData = await prisma.news.findUnique({ where: { id } });
   if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  if (req.body.published && oldData.isPriority && (!oldData.expiresAt || oldData.expiresAt <= new Date())) {
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Сначала укажите новый период показа приоритетной новости');
+  }
   const data = await prisma.news.update({
     where: { id },
     data: {

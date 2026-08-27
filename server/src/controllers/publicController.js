@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.js';
+import { getNewsInformer } from '../services/newsInformerService.js';
 import { AppError, asyncHandler, pagination, sendData } from '../utils/api.js';
 
 const categorySelect = {
@@ -7,11 +8,6 @@ const categorySelect = {
 };
 const serviceInclude = { category: { select: { id: true, slug: true, titleRu: true, titleKz: true } } };
 const newsCategories = new Set(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']);
-const exchangeRateCache = { data: null, expiresAt: 0 };
-
-function xmlValue(xml, tag) {
-  return xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim();
-}
 
 export const listCategories = asyncHandler(async (_req, res) => {
   const data = await prisma.category.findMany({ where: { isPublished: true }, select: categorySelect, orderBy: [{ sortOrder: 'asc' }, { titleRu: 'asc' }] });
@@ -81,7 +77,7 @@ export const listNews = asyncHandler(async (req, res) => {
   const [data, total] = await prisma.$transaction([
     prisma.news.findMany({
       where,
-      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, isPriority: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: limit,
@@ -95,9 +91,20 @@ export const getNews = asyncHandler(async (req, res) => {
   const now = new Date();
   const data = await prisma.news.findFirst({
     where: { slug: req.params.slug, published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true, updatedAt: true },
+    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, isPriority: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true, updatedAt: true },
   });
   if (!data) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
+  sendData(res, data);
+});
+
+export const listPriorityNews = asyncHandler(async (_req, res) => {
+  const now = new Date();
+  const data = await prisma.news.findMany({
+    where: { isPriority: true, published: true, publishedAt: { lte: now }, expiresAt: { gt: now } },
+    select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, image: true, category: true, isPriority: true, publishedAt: true, expiresAt: true, createdAt: true, updatedAt: true },
+    orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+    take: 5,
+  });
   sendData(res, data);
 });
 
@@ -111,7 +118,7 @@ export const getBroadcast = asyncHandler(async (_req, res) => {
     } }),
     prisma.news.findMany({
       where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true },
+      select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, isPriority: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true, updatedAt: true },
       orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
       take: 20,
     }),
@@ -126,37 +133,21 @@ export const getBroadcast = asyncHandler(async (_req, res) => {
   sendData(res, { settings, slides });
 });
 
-export const usdKztRate = asyncHandler(async (_req, res) => {
-  const now = Date.now();
-  if (exchangeRateCache.data && exchangeRateCache.expiresAt > now) return sendData(res, exchangeRateCache.data);
-
+export const newsInformer = asyncHandler(async (_req, res) => {
   try {
-    const response = await fetch('https://nationalbank.kz/rss/rates_all.xml', {
-      headers: { accept: 'application/xml,text/xml' },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) throw new Error(`National Bank responded with ${response.status}`);
-    const xml = await response.text();
-    const item = xml.match(/<item>\s*<title>USD<\/title>[\s\S]*?<\/item>/)?.[0];
-    if (!item) throw new Error('USD rate is missing');
-    const rawDate = xmlValue(item, 'pubDate');
-    const [day, month, year] = rawDate?.split('.') || [];
-    const quantity = Number(xmlValue(item, 'quant')) || 1;
-    const rate = Number(xmlValue(item, 'description')) / quantity;
-    if (!Number.isFinite(rate)) throw new Error('USD rate is invalid');
-
-    exchangeRateCache.data = {
-      base: 'USD', quote: 'KZT', rate, quantity: 1,
-      change: Number(xmlValue(item, 'change')) || 0,
-      direction: xmlValue(item, 'index') || 'UNCHANGED',
-      date: year && month && day ? `${year}-${month}-${day}` : new Date().toISOString().slice(0, 10),
-      source: 'Национальный Банк Республики Казахстан',
-      stale: false,
-    };
-    exchangeRateCache.expiresAt = now + 60 * 60 * 1000;
-    sendData(res, exchangeRateCache.data);
+    sendData(res, await getNewsInformer());
   } catch (error) {
-    if (exchangeRateCache.data) return sendData(res, { ...exchangeRateCache.data, stale: true });
+    throw new AppError(503, 'NEWS_INFORMER_UNAVAILABLE', 'Курсы валют и погода временно недоступны', error.message);
+  }
+});
+
+export const usdKztRate = asyncHandler(async (_req, res) => {
+  try {
+    const informer = await getNewsInformer();
+    const usd = informer.rates.find((item) => item.code === 'USD');
+    if (!usd) throw new Error('USD rate is missing');
+    sendData(res, { base: 'USD', quote: 'KZT', quantity: 1, ...usd, source: informer.source.rates, stale: informer.stale });
+  } catch (error) {
     throw new AppError(503, 'EXCHANGE_RATE_UNAVAILABLE', 'Курс валют временно недоступен', error.message);
   }
 });

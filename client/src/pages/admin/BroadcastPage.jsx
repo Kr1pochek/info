@@ -25,6 +25,7 @@ import Toast from '../../components/admin/Toast.jsx';
 import { ConfirmDialog, Modal } from '../../components/admin/Modal.jsx';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
 import { useAdminI18n } from '../../utils/adminLocalization.js';
+import DgdLogo from '../../components/common/DgdLogo.jsx';
 
 const blank = {
   type: 'VIDEO',
@@ -241,7 +242,7 @@ export default function BroadcastPage() {
           </div>
         </div>
         <div className="broadcast-admin-screen" aria-hidden="true">
-          <div className="broadcast-admin-screen__bar"><span>{tr('ДГД · ЭФИР', 'МКД · ЭФИР')}</span><i>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</i></div>
+          <div className="broadcast-admin-screen__bar"><span><DgdLogo className="broadcast-admin-logo" decorative />{tr('ДГД · ЭФИР', 'МКД · ЭФИР')}</span><i>{language === 'kz' ? 'ҚАЗ' : 'РУС'}</i></div>
           <div className="broadcast-admin-screen__visual"><ImageIcon size={32} /><strong>{tr('Новостной фотослайд', 'Жаңалық фотослайды')}</strong><small>{activeCount ? tr(`${activeCount} слайдов сейчас в эфире`, `Қазір эфирде ${activeCount} слайд`) : tr('Опубликуйте новости для эфира', 'Эфирге жаңалықтарды жариялаңыз')}</small></div>
           <div className="broadcast-admin-screen__ticker"><Radio size={13} /><span>{settings[language === 'kz' ? 'tickerTextKz' : 'tickerTextRu']}</span></div>
         </div>

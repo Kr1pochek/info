@@ -148,6 +148,47 @@ test('editor can manage news but cannot access service administration', async ()
   }
 });
 
+test('priority news requires an end time and is exposed for modal display', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const suffix = Date.now();
+  const publicationDate = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const expirationDate = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const common = {
+    titleRu: 'Проверка приоритетной новости', titleKz: 'Басым жаңалықты тексеру',
+    descriptionRu: 'Описание тестовой новости', descriptionKz: 'Сынақ жаңалығының сипаттамасы',
+    contentRu: 'Полный текст тестовой новости', contentKz: 'Сынақ жаңалығының толық мәтіні',
+    image: '', category: 'IMPORTANT', published: true,
+    publishedAt: publicationDate, sortOrder: 9999,
+  };
+
+  const invalid = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: `priority-missing-period-${suffix}`, isPriority: true }) });
+  assert.equal(invalid.response.status, 400);
+  assert.equal(invalid.body.error.code, 'PRIORITY_NEWS_PERIOD_REQUIRED');
+
+  const slugs = [`ordinary-order-test-${suffix}`, `priority-order-test-${suffix}`];
+  try {
+    const ordinary = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[0], category: 'GENERAL', isPriority: false }) });
+    const priority = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[1], isPriority: true, expiresAt: expirationDate }) });
+    assert.equal(ordinary.response.status, 201);
+    assert.equal(priority.response.status, 201);
+    assert.equal(priority.body.data.image, '');
+
+    const [modal, feed, broadcast] = await Promise.all([request('/api/news/priority'), request('/api/news?limit=100'), request('/api/broadcast')]);
+    assert.equal(modal.response.status, 200);
+    assert.ok(modal.body.data.some((item) => item.slug === slugs[1]));
+    assert.ok(!modal.body.data.some((item) => item.slug === slugs[0]));
+    assert.ok(feed.body.data.some((item) => item.slug === slugs[0]));
+    assert.ok(feed.body.data.some((item) => item.slug === slugs[1]));
+    const prioritySlide = broadcast.body.data.slides.find((item) => item.id === `news-${priority.body.data.id}`);
+    assert.equal(prioritySlide?.isPriority, true);
+  } finally {
+    await prisma.news.deleteMany({ where: { slug: { in: slugs } } });
+  }
+});
+
 test('administrator can create, update and delete a service package', async () => {
   const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
   const serviceRows = await prisma.service.findMany({ take: 2, orderBy: { id: 'asc' }, select: { id: true } });

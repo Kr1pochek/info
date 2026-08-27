@@ -14,6 +14,8 @@ publicRoutes.get('/services/popular', publicController.popularServices);
 publicRoutes.get('/services/search', publicController.searchServices);
 publicRoutes.get('/services/:slug', publicController.getService);
 publicRoutes.get('/news', publicController.listNews);
+publicRoutes.get('/news/informer', publicController.newsInformer);
+publicRoutes.get('/news/priority', publicController.listPriorityNews);
 publicRoutes.get('/news/:slug', publicController.getNews);
 publicRoutes.get('/broadcast', publicController.getBroadcast);
 publicRoutes.get('/exchange-rates/usd-kzt', publicController.usdKztRate);

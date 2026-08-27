@@ -21,7 +21,12 @@ const schema = z.object({
   PUBLIC_RATE_LIMIT: z.coerce.number().int().min(60).max(10000).default(1200),
   ADMIN_RATE_LIMIT: z.coerce.number().int().min(20).max(5000).default(300),
   AUTH_RATE_LIMIT: z.coerce.number().int().min(5).max(1000).default(30),
+  INFORMER_PROVIDER: z.enum(['official', 'api-ninjas']).default('official'),
+  API_NINJAS_KEY: z.preprocess((value) => value || undefined, z.string().trim().min(1).optional()),
 }).superRefine((value, context) => {
+  if (value.INFORMER_PROVIDER === 'api-ninjas' && !value.API_NINJAS_KEY) {
+    context.addIssue({ code: 'custom', path: ['API_NINJAS_KEY'], message: 'Для провайдера api-ninjas укажите API-ключ' });
+  }
   if (value.NODE_ENV !== 'production') return;
   for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) {
     if (developmentSecrets.has(value[key]) || /^replace_/i.test(value[key])) {

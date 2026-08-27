@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { CalendarClock, ChevronRight, Headphones, MapPin, Phone, RotateCcw, Scale, UserRoundCheck, X } from 'lucide-react';
+import { CalendarClock, ChevronRight, Headphones, MapPin, Phone, RotateCcw, Scale, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api, { apiMessage } from '../../api/client.js';
 import { track } from '../../api/analytics.js';
@@ -48,7 +48,6 @@ export default function HomePage() {
       <section className="content-section content-section--tinted"><div className="section-heading"><div><span>03</span><h2>{t.popular}</h2></div></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
       <section className="content-section information-section"><div className="section-heading"><div><span>04</span><h2>{t.usefulInformation}</h2></div></div><div className="information-grid">
         <Link className="information-card" to="/information/taxpayer-rights"><span><Scale size={34} /></span><h3>{t.taxpayerRights}</h3><ChevronRight /></Link>
-        <Link className="information-card" to="/information/ethics-officer"><span><UserRoundCheck size={34} /></span><h3>{t.ethicsOfficer}</h3><ChevronRight /></Link>
       </div></section>
       {deadlines.length > 0 && <section className="content-section content-section--tinted deadline-section"><div className="section-heading"><div><span>05</span><h2>{t.deadlines}</h2></div><CalendarClock size={36} /></div><div className="deadline-grid">{deadlines.map((item) => <article className="deadline-card" key={item.id}><time dateTime={item.date.toISOString()}>{item.date.toLocaleDateString(language === 'kz' ? 'kk-KZ' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</time><h3>{item[language === 'kz' ? 'titleKz' : 'titleRu']}</h3><strong>{item.days === 0 ? t.deadlineToday : `${item.days} ${t.daysLeft}`}</strong></article>)}</div></section>}
     </>}

@@ -99,6 +99,7 @@ model News {
   contentKz     String       @db.Text
   image         String       @db.VarChar(500)
   category      NewsCategory @default(GENERAL)
+  isPriority    Boolean      @default(false)
   published     Boolean      @default(false)
   publishedAt   DateTime?
   expiresAt     DateTime?
@@ -112,6 +113,7 @@ model News {
   @@index([expiresAt])
   @@index([sortOrder])
   @@index([category])
+  @@index([isPriority, published, publishedAt, expiresAt])
   @@index([createdAt])
   @@index([authorId])
 }
