@@ -62,28 +62,22 @@ Production-сервер слушает порт 4000 и сам отдаёт со
 
 ## 5. Автозапуск
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\windows\register-autostart.ps1 -Page news
-```
+Автоматическая регистрация задач Windows не входит в поставку: корпоративные антивирусы часто блокируют PowerShell-сценарии, которые создают скрытые задачи планировщика. Для обычной работы запускайте киоск командой из раздела 4.
 
-После входа текущего пользователя планировщик запустит сервер и браузер в kiosk-режиме. Удаление задачи:
+Если автозапуск обязателен, попросите системного администратора создать задачу через штатный интерфейс «Планировщика заданий» согласно политикам организации. Задача должна запускать `scripts\windows\start-kiosk.ps1` после входа выделенного пользователя.
 
-Backend регистрируется отдельной долгоживущей задачей. Если Node.js аварийно завершится, планировщик перезапустит его; браузер запускается только после успешной проверки готовности API.
+Оставшиеся от предыдущей установки задачи можно удалить безопасным сценарием:
 
 ```powershell
 .\scripts\windows\unregister-autostart.ps1
-```
-
-Регистрация эксплуатационных задач — health-check каждые 5 минут и backup ежедневно в 02:00:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\windows\register-maintenance.ps1 -BackupRoot D:\DGD-Backups -RetentionDays 14 -BackupTime 02:00
-```
-
-Удаление эксплуатационных задач:
-
-```powershell
 .\scripts\windows\unregister-maintenance.ps1
+```
+
+Проверку состояния и резервное копирование можно запускать вручную:
+
+```powershell
+.\scripts\windows\health-check.ps1
+.\scripts\windows\backup.ps1 -BackupRoot D:\DGD-Backups -RetentionDays 14
 ```
 
 ## 6. Проверка и диагностика

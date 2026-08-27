@@ -52,7 +52,7 @@ Backend: Node.js 20+, Express, PostgreSQL 16, Prisma ORM, Zod, bcrypt, JWT, cook
 │       ├── schemas/
 │       ├── services/
 │       └── utils/
-├── scripts/windows/        Установка, запуск, автозапуск и backup без Docker
+├── scripts/windows/        Установка, запуск, диагностика и backup без Docker
 ├── tests/                  Проверка kiosk-разрешений в Chromium
 ├── docs/                   Эксплуатационная и приёмочная документация
 ├── docker-compose.yml
