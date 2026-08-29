@@ -40,48 +40,21 @@ test('live and ready health probes expose separate process and database status',
   assert.equal(ready.body.data.database, 'connected');
 });
 
-test('public settings expose configurable queue announcement parameters', async () => {
+test('public settings expose current kiosk content without retired queue fields', async () => {
   const { response, body } = await request('/api/settings/public');
   assert.equal(response.status, 200);
-  assert.ok(['ru', 'kz'].includes(body.data.announcementLanguage));
-  assert.ok(Number.isInteger(body.data.announcementVolume) && body.data.announcementVolume >= 0 && body.data.announcementVolume <= 100);
-  assert.ok(Number.isInteger(body.data.announcementRepeatSeconds) && body.data.announcementRepeatSeconds >= 1);
-  assert.equal(typeof body.data.accessibleAudioEnabled, 'boolean');
-  assert.ok(Number.isInteger(body.data.accessibleAudioVolume) && body.data.accessibleAudioVolume >= 0 && body.data.accessibleAudioVolume <= 100);
+  assert.equal(body.data.defaultLanguage, 'kz');
+  for (const field of ['announcementLanguage', 'announcementVolume', 'announcementRepeatSeconds', 'accessibleAudioEnabled', 'accessibleAudioVolume']) {
+    assert.equal(field in body.data, false);
+  }
   assert.match(body.data.taxpayerRightsRu, /статье 36/i);
   assert.match(body.data.taxpayerRightsKz, /36-бабы/i);
   assert.match(body.data.ethicsOfficerContactsRu, /267-69-55/);
   assert.match(body.data.ethicsOfficerContactsKz, /267-69-55/);
-});
-
-test('super administrator can update and restore queue announcement parameters', async () => {
-  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
-  assert.ok(admin);
-  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-  const current = await request('/api/admin/settings', { headers });
-  assert.equal(current.response.status, 200);
-  const { id, updatedAt, ...original } = current.body.data;
-  const changed = {
-    ...original,
-    announcementLanguage: original.announcementLanguage === 'ru' ? 'kz' : 'ru',
-    announcementVolume: original.announcementVolume === 74 ? 75 : 74,
-    announcementRepeatSeconds: original.announcementRepeatSeconds === 9 ? 8 : 9,
-    accessibleAudioEnabled: !original.accessibleAudioEnabled,
-    accessibleAudioVolume: original.accessibleAudioVolume === 99 ? 100 : 99,
-  };
-  try {
-    const updated = await request('/api/admin/settings', { method: 'PATCH', headers, body: JSON.stringify(changed) });
-    assert.equal(updated.response.status, 200);
-    assert.equal(updated.body.data.announcementLanguage, changed.announcementLanguage);
-    assert.equal(updated.body.data.announcementVolume, changed.announcementVolume);
-    assert.equal(updated.body.data.announcementRepeatSeconds, changed.announcementRepeatSeconds);
-    assert.equal(updated.body.data.accessibleAudioEnabled, changed.accessibleAudioEnabled);
-    assert.equal(updated.body.data.accessibleAudioVolume, changed.accessibleAudioVolume);
-  } finally {
-    const restored = await request('/api/admin/settings', { method: 'PATCH', headers, body: JSON.stringify(original) });
-    assert.equal(restored.response.status, 200);
-  }
+  assert.equal(typeof body.data.fireSafetyVideo, 'string');
+  assert.equal(body.data.workingHoursRu, 'Пн–Пт, 08:30–17:30');
+  assert.equal(body.data.workingHoursKz, 'Дс–Жм, 08:30–17:30');
+  assert.equal(body.data.panelQrCodes.find((item) => item.id === 'kgd-official')?.url, 'https://portal.kgd.gov.kz/');
 });
 
 test('catalog exposes all 41 complete DGD services for the 2026 stand', async () => {
@@ -96,6 +69,8 @@ test('catalog exposes all 41 complete DGD services for the 2026 stand', async ()
     assert.ok(Array.isArray(item.requiredDocumentsRu) && Array.isArray(item.requiredDocumentsKz));
     assert.ok(Array.isArray(item.stepsRu) && Array.isArray(item.stepsKz));
     assert.ok(item.category?.id && item.category?.titleRu && item.category?.titleKz);
+    assert.equal(item.workingHoursRu, 'Понедельник–пятница, 08:30–17:30');
+    assert.equal(item.workingHoursKz, 'Дүйсенбі–жұма, 08:30–17:30');
   }
 });
 
@@ -186,6 +161,29 @@ test('priority news requires an end time and is exposed for modal display', asyn
     assert.equal(prioritySlide?.isPriority, true);
   } finally {
     await prisma.news.deleteMany({ where: { slug: { in: slugs } } });
+  }
+});
+
+test('published news can stay in the feed without becoming a broadcast slide', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const slug = `feed-only-news-${Date.now()}`;
+  try {
+    const created = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({
+      slug, titleRu: 'Новость только для ленты', titleKz: 'Тек таспаға арналған жаңалық',
+      descriptionRu: 'Проверка размещения новости.', descriptionKz: 'Жаңалықтың орналасуын тексеру.',
+      contentRu: 'Новость должна быть в ленте, но не в эфире.', contentKz: 'Жаңалық таспада болып, эфирде болмауы керек.',
+      image: '', category: 'GENERAL', isPriority: false, showInBroadcast: false, published: true, sortOrder: 9999,
+    }) });
+    assert.equal(created.response.status, 201);
+
+    const [feed, broadcast] = await Promise.all([request('/api/news?limit=100'), request('/api/broadcast')]);
+    assert.ok(feed.body.data.some((item) => item.slug === slug));
+    assert.ok(!broadcast.body.data.slides.some((item) => item.slug === slug));
+  } finally {
+    await prisma.news.deleteMany({ where: { slug } });
   }
 });
 

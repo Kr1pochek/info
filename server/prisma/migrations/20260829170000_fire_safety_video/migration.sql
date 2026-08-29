@@ -1,0 +1,2 @@
+ALTER TABLE "Setting"
+  ADD COLUMN "fireSafetyVideo" VARCHAR(500) NOT NULL DEFAULT '';

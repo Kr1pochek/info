@@ -117,7 +117,7 @@ export const getBroadcast = asyncHandler(async (_req, res) => {
       panelQrCodes: true, onlineSpecialists: true,
     } }),
     prisma.news.findMany({
-      where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      where: { showInBroadcast: true, published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
       select: { id: true, slug: true, titleRu: true, titleKz: true, descriptionRu: true, descriptionKz: true, contentRu: true, contentKz: true, image: true, category: true, isPriority: true, publishedAt: true, expiresAt: true, sortOrder: true, createdAt: true, updatedAt: true },
       orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
       take: 20,

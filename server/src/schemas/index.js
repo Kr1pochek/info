@@ -8,13 +8,13 @@ const slug = z.string().trim().min(2).max(140).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$
 export const loginSchema = z.object({ login: text(80), password: z.string().min(8).max(128) });
 
 export const categorySchema = z.object({
-  slug, titleRu: text(160), titleKz: text(160), descriptionRu: text(600), descriptionKz: text(600),
+  slug: slug.optional(), titleRu: text(160), titleKz: text(160), descriptionRu: text(600), descriptionKz: text(600),
   icon: text(60), isPublished: z.boolean(), sortOrder: z.coerce.number().int().min(0).max(10000),
 });
 export const categoryPatchSchema = categorySchema.partial().refine((value) => Object.keys(value).length > 0);
 
 export const servicePackageSchema = z.object({
-  slug, titleRu: text(160), titleKz: text(160), targetAudienceRu: text(800), targetAudienceKz: text(800),
+  slug: slug.optional(), titleRu: text(160), titleKz: text(160), targetAudienceRu: text(800), targetAudienceKz: text(800),
   descriptionRu: text(5000), descriptionKz: text(5000), serviceZoneRu: text(500), serviceZoneKz: text(500),
   noteRu: optionalText(1000).nullable(), noteKz: optionalText(1000).nullable(), icon: text(60),
   isPublished: z.boolean(), sortOrder: z.coerce.number().int().min(0).max(10000),
@@ -23,7 +23,7 @@ export const servicePackageSchema = z.object({
 export const servicePackagePatchSchema = servicePackageSchema.partial().refine((value) => Object.keys(value).length > 0);
 
 export const serviceSchema = z.object({
-  slug, titleRu: text(500), titleKz: text(500), shortDescriptionRu: text(800), shortDescriptionKz: text(800),
+  slug: slug.optional(), titleRu: text(500), titleKz: text(500), shortDescriptionRu: text(800), shortDescriptionKz: text(800),
   fullDescriptionRu: text(10000), fullDescriptionKz: text(10000), targetAudienceRu: text(3000), targetAudienceKz: text(3000),
   requiredDocumentsRu: list, requiredDocumentsKz: list, requiredDataRu: list, requiredDataKz: list,
   conditionsRu: text(5000), conditionsKz: text(5000), stepsRu: list, stepsKz: list,
@@ -37,10 +37,10 @@ export const serviceSchema = z.object({
 export const servicePatchSchema = serviceSchema.partial().refine((value) => Object.keys(value).length > 0);
 
 export const newsSchema = z.object({
-  slug: slug.max(180), titleRu: text(240), titleKz: text(240),
+  slug: slug.max(180).optional(), titleRu: text(240), titleKz: text(240),
   descriptionRu: text(800), descriptionKz: text(800), contentRu: text(30000), contentKz: text(30000),
   image: z.string().trim().max(500).default(''), category: z.enum(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']).default('GENERAL'),
-  isPriority: z.boolean().default(false),
+  isPriority: z.boolean().default(false), showInBroadcast: z.boolean().default(true),
   published: z.boolean().default(false), publishedAt: z.string().datetime().optional().nullable(),
   expiresAt: z.string().datetime().optional().nullable(), sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
 });
@@ -96,13 +96,10 @@ export const settingsSchema = z.object({
   maintenanceMessageRu: text(500), maintenanceMessageKz: text(500), popularServicesCount: z.coerce.number().int().min(1).max(20),
   tickerTextRu: text(1000), tickerTextKz: text(1000), broadcastSlideSeconds: z.coerce.number().int().min(12).max(240),
   broadcastLanguageSeconds: z.coerce.number().int().min(5).max(120), broadcastIdleSeconds: z.coerce.number().int().min(15).max(1800),
-  announcementLanguage: z.enum(['ru', 'kz']), announcementVolume: z.coerce.number().int().min(0).max(100),
-  announcementRepeatSeconds: z.coerce.number().int().min(1).max(120), accessibleAudioEnabled: z.boolean(),
-  accessibleAudioVolume: z.coerce.number().int().min(0).max(100),
   taxpayerRightsRu: z.string().trim().max(30000), taxpayerRightsKz: z.string().trim().max(30000),
   ethicsOfficerNameRu: z.string().trim().max(240), ethicsOfficerNameKz: z.string().trim().max(240),
   ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
-  ethicsOfficerPhoto: z.string().trim().max(500), reportingDeadlines: z.array(deadlineSchema).max(30),
+  ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500), reportingDeadlines: z.array(deadlineSchema).max(30),
   panelQrCodes: z.array(qrCodeSchema).max(6), onlineSpecialists: z.array(specialistSchema).max(30),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });
 

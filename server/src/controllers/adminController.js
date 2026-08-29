@@ -17,8 +17,6 @@ export const systemStatus = asyncHandler(async (_req, res) => {
     { key: 'backend', label: 'Сервер приложения', status: 'ONLINE', detail: `Node.js ${process.version}` },
     database,
     storage,
-    { key: 'nomad', label: 'NOMAD / электронная очередь', status: 'NOT_CONFIGURED', detail: 'Подключается после передачи API и тестового стенда' },
-    { key: 'printer', label: 'Принтер и сканер', status: 'NOT_CONFIGURED', detail: 'Требуется оборудование и драйверы' },
     { key: 'tv1', label: 'Экран зала №1', status: 'NOT_CONFIGURED', detail: 'Канал связи не настроен' },
     { key: 'tv2', label: 'Экран зала №2', status: 'NOT_CONFIGURED', detail: 'Канал связи не настроен' },
   ];

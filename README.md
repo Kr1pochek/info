@@ -184,7 +184,7 @@ npm run verify
 npm run doctor
 ```
 
-`verify` включает lint, сборку, API- и TTS-тесты, а также Chromium-проверку горизонтального и вертикального Full HD, QHD и 4K с масштабированием. `doctor` проверяет Node.js, обязательные переменные, production-сборку, PostgreSQL и применённые миграции. Перед выпуском используйте `npm run release:check` с production-настройками в `server/.env`.
+`verify` включает lint, сборку, API- и UI-тесты, а также Chromium-проверку горизонтального и вертикального Full HD, QHD и 4K с масштабированием. `doctor` проверяет Node.js, обязательные переменные, production-сборку, PostgreSQL и применённые миграции. Перед выпуском используйте `npm run release:check` с production-настройками в `server/.env`.
 
 GitHub Actions выполняет тот же `release:check` с отдельной PostgreSQL и запускает аудит production-зависимостей для каждого workspace. Dependabot еженедельно проверяет обновления. Выпускать релиз следует только из чистого коммита с зелёной проверкой.
 
@@ -194,8 +194,6 @@ GitHub Actions выполняет тот же `release:check` с отдельн�
 - [руководство администратора](docs/ADMIN_GUIDE.md);
 - [правила ведения контента](docs/CONTENT_GUIDE.md);
 - [приёмочные проверки](docs/ACCEPTANCE_TESTS.md);
-- [контур будущей интеграции NOMAD](docs/NOMAD_INTEGRATION.md);
-- [генерация озвучки СЭО](docs/TTS_GUIDE.md);
 - [текущий статус зоны ответственности Романа](docs/PROJECT_STATUS.md).
 
 Карточки Choose формируются из массива `services` в `client/src/pages/portal/ChoosePage.jsx`. Для подключения следующего сервиса достаточно добавить объект с названием, описанием, иконкой и маршрутом; разметка и адаптивная сетка создадутся автоматически.

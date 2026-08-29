@@ -5,3 +5,7 @@ const kioskActivityEventSet = new Set(kioskActivityEvents);
 export function isDeliberateKioskActivity(event) {
   return Boolean(event?.isTrusted && kioskActivityEventSet.has(event.type));
 }
+
+export function shouldUseKioskInactivityTimer(pathname) {
+  return !String(pathname || '').startsWith('/information');
+}

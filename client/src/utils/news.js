@@ -8,7 +8,7 @@ export const newsCategories = [
 
 export const newsCopy = {
   ru: {
-    brand: 'Новости ДГД', brandSubtitle: 'Корпоративная лента', backToFeed: 'К ленте', allServices: 'Все сервисы',
+    brand: 'Департамент государственных доходов по городу Алматы', brandSubtitle: 'Корпоративная лента', backToFeed: 'К ленте', allServices: 'Все сервисы',
     organization: 'Департамент государственных доходов по городу Алматы', administration: 'Администрирование',
     portal: 'Корпоративный медиапортал', title: 'Новости ДГД', officialRate: 'Официальный курс', updating: 'Обновляем…', rateUnavailable: 'Курс недоступен',
     search: 'Поиск по новостям', clearSearch: 'Очистить поиск', loading: 'Загружаем новости…', loadError: 'Не удалось загрузить новости', empty: 'По вашему запросу публикаций не найдено',
@@ -16,7 +16,7 @@ export const newsCopy = {
     readFull: 'Читать полностью', loadingArticle: 'Загружаем публикацию…', unavailable: 'Новость недоступна', news: 'Новости', returnToFeed: 'Вернуться к ленте', continueReading: 'Продолжить чтение', related: 'Другие материалы по теме',
   },
   kz: {
-    brand: 'МКД жаңалықтары', brandSubtitle: 'Корпоративтік жаңалықтар', backToFeed: 'Жаңалықтарға', allServices: 'Барлық сервистер',
+    brand: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті', brandSubtitle: 'Корпоративтік жаңалықтар', backToFeed: 'Жаңалықтарға', allServices: 'Барлық сервистер',
     organization: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті', administration: 'Әкімшілік басқару',
     portal: 'Корпоративтік медиапортал', title: 'МКД жаңалықтары', officialRate: 'Ресми бағам', updating: 'Жаңартылуда…', rateUnavailable: 'Бағам қолжетімсіз',
     search: 'Жаңалықтардан іздеу', clearSearch: 'Іздеуді тазарту', loading: 'Жаңалықтар жүктелуде…', loadError: 'Жаңалықтарды жүктеу мүмкін болмады', empty: 'Сұрауыңыз бойынша жарияланымдар табылмады',

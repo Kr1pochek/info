@@ -3,23 +3,27 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFontSize } from '../../context/FontSizeContext.jsx';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import { track } from '../../api/analytics.js';
+import { localized } from '../../utils/localization.js';
 import DgdLogo from '../common/DgdLogo.jsx';
 
 const qrCodes = [
-  { id: 'kgd', image: '/qr/kgd-portal.png', url: 'kgd.gov.kz', labelRu: 'Портал государственных доходов', labelKz: 'Мемлекеттік кірістер порталы' },
+  { id: 'kgd', image: '/qr/kgd-portal.png', url: 'portal.kgd.gov.kz', labelRu: 'Портал государственных доходов', labelKz: 'Мемлекеттік кірістер порталы' },
   { id: 'egov', image: '/qr/egov-portal.png', url: 'egov.kz', labelRu: 'Электронное правительство', labelKz: 'Электрондық үкімет' },
 ];
 
 export default function KioskHeader() {
   const navigate = useNavigate(); const location = useLocation();
   const { language, setLanguage, t } = useLanguage(); const { fontSize, cycleFontSize, visionMode, toggleVisionMode } = useFontSize();
+  const { settings } = useSettings();
+  const organizationName = localized(settings, 'organizationName', language);
   const [now, setNow] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
   const goHome = () => { track('HOME_RETURN'); navigate('/kiosk'); window.scrollTo({ top: 0 }); };
   return <header className="kiosk-header">
-    <div className="brand" aria-label={language === 'kz' ? 'Мемлекеттік кірістер департаменті' : 'Департамент государственных доходов'}>
-      <DgdLogo className="brand__logo" decorative /><span className="brand__name">{language === 'kz' ? 'Мемлекеттік кірістер департаменті' : 'Департамент государственных доходов'}</span>
+    <div className="brand" aria-label={organizationName}>
+      <DgdLogo className="brand__logo" decorative /><span className="brand__name">{organizationName}</span>
     </div>
     <section className="kiosk-header__qr-list" aria-label={t.officialResources}>
       <span className="kiosk-header__qr-label"><QrCode size={19} />{t.scanQrCode}</span>

@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { AppError, asyncHandler, pagination, sendData } from '../utils/api.js';
 import { writeAudit } from '../services/audit.js';
+import { createUniqueSlug } from '../utils/slug.js';
 
 const orderFields = new Set(['createdAt', 'updatedAt', 'titleRu', 'sortOrder', 'isPublished']);
 function listOptions(query, searchable) {
@@ -32,7 +33,9 @@ export const getAdminService = asyncHandler(async (req, res) => {
 });
 
 export const createService = asyncHandler(async (req, res) => {
-  const data = await prisma.service.create({ data: req.body, include: { category: true } });
+  const input = { ...req.body };
+  if (!input.slug) input.slug = await createUniqueSlug(prisma.service, input.titleRu || input.titleKz, 140);
+  const data = await prisma.service.create({ data: input, include: { category: true } });
   await writeAudit(req, 'CREATE_SERVICE', 'Service', data.id, null, data);
   sendData(res, data, null, 201);
 });
@@ -40,7 +43,8 @@ export const createService = asyncHandler(async (req, res) => {
 export const updateService = asyncHandler(async (req, res) => {
   const oldData = await prisma.service.findUnique({ where: { id: Number(req.params.id) } });
   if (!oldData) throw new AppError(404, 'SERVICE_NOT_FOUND', 'Услуга не найдена');
-  const data = await prisma.service.update({ where: { id: oldData.id }, data: req.body, include: { category: true } });
+  const changes = { ...req.body }; delete changes.slug;
+  const data = await prisma.service.update({ where: { id: oldData.id }, data: changes, include: { category: true } });
   await writeAudit(req, 'UPDATE_SERVICE', 'Service', data.id, oldData, data);
   sendData(res, data);
 });
@@ -69,7 +73,9 @@ export const getAdminCategory = asyncHandler(async (req, res) => {
 });
 
 export const createCategory = asyncHandler(async (req, res) => {
-  const data = await prisma.category.create({ data: req.body });
+  const input = { ...req.body };
+  if (!input.slug) input.slug = await createUniqueSlug(prisma.category, input.titleRu || input.titleKz, 120);
+  const data = await prisma.category.create({ data: input });
   await writeAudit(req, 'CREATE_CATEGORY', 'Category', data.id, null, data);
   sendData(res, data, null, 201);
 });
@@ -77,7 +83,8 @@ export const createCategory = asyncHandler(async (req, res) => {
 export const updateCategory = asyncHandler(async (req, res) => {
   const oldData = await prisma.category.findUnique({ where: { id: Number(req.params.id) } });
   if (!oldData) throw new AppError(404, 'CATEGORY_NOT_FOUND', 'Категория не найдена');
-  const data = await prisma.category.update({ where: { id: oldData.id }, data: req.body });
+  const changes = { ...req.body }; delete changes.slug;
+  const data = await prisma.category.update({ where: { id: oldData.id }, data: changes });
   await writeAudit(req, 'UPDATE_CATEGORY', 'Category', data.id, oldData, data);
   sendData(res, data);
 });
@@ -119,7 +126,9 @@ function packageData(body, relationOperation = 'set') {
 }
 
 export const createServicePackage = asyncHandler(async (req, res) => {
-  const data = await prisma.servicePackage.create({ data: packageData(req.body, 'connect'), include: packageInclude });
+  const input = packageData(req.body, 'connect');
+  if (!input.slug) input.slug = await createUniqueSlug(prisma.servicePackage, input.titleRu || input.titleKz, 120);
+  const data = await prisma.servicePackage.create({ data: input, include: packageInclude });
   await writeAudit(req, 'CREATE_SERVICE_PACKAGE', 'ServicePackage', data.id, null, data);
   sendData(res, data, null, 201);
 });
@@ -128,7 +137,8 @@ export const updateServicePackage = asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   const oldData = await prisma.servicePackage.findUnique({ where: { id }, include: packageInclude });
   if (!oldData) throw new AppError(404, 'SERVICE_PACKAGE_NOT_FOUND', 'Пакет обслуживания не найден');
-  const data = await prisma.servicePackage.update({ where: { id }, data: packageData(req.body), include: packageInclude });
+  const changes = packageData(req.body); delete changes.slug;
+  const data = await prisma.servicePackage.update({ where: { id }, data: changes, include: packageInclude });
   await writeAudit(req, 'UPDATE_SERVICE_PACKAGE', 'ServicePackage', data.id, oldData, data);
   sendData(res, data);
 });
@@ -190,6 +200,7 @@ export const saveNewsImage = asyncHandler(async (req, res) => {
 
 export const createNews = asyncHandler(async (req, res) => {
   const { publishedAt, expiresAt, ...input } = req.body;
+  if (!input.slug) input.slug = await createUniqueSlug(prisma.news, input.titleRu || input.titleKz, 180);
   const publicationDate = req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null;
   const expirationDate = expiresAt ? new Date(expiresAt) : null;
   if (input.isPriority && req.body.published && !expirationDate) {
@@ -215,6 +226,7 @@ export const updateNews = asyncHandler(async (req, res) => {
   const oldData = await prisma.news.findUnique({ where: { id } });
   if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
   const changes = { ...req.body };
+  delete changes.slug;
   const hasPublishedAt = Object.hasOwn(changes, 'publishedAt');
   if (changes.published === true) changes.publishedAt = hasPublishedAt ? changes.publishedAt ? new Date(changes.publishedAt) : new Date() : oldData.published ? oldData.publishedAt || new Date() : new Date();
   if (changes.published === false) changes.publishedAt = null;

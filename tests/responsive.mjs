@@ -139,26 +139,6 @@ try {
     await context.close();
   }
 
-  const voiceContext = await browser.newContext({ viewport: { width: viewports[0].width, height: viewports[0].height } });
-  const comparisonPages = [
-    { slug: 'matched-voices', audioCount: 3 },
-    { slug: 'elevenlabs-voices', audioCount: 3 },
-    { slug: 'elevenlabs-kazakh-variants', audioCount: 5 },
-  ];
-  for (const { slug: comparisonPage, audioCount } of comparisonPages) {
-    const voicePage = await voiceContext.newPage();
-    const voiceResponse = await voicePage.goto(`${baseUrl}/audio/seo/${comparisonPage}/index.html`, { waitUntil: 'domcontentloaded' });
-    assert.equal(voiceResponse?.status(), 200, `${comparisonPage}: HTTP status`);
-    assert.equal(await voicePage.locator('audio').count(), audioCount, `${comparisonPage}: voice comparison is incomplete`);
-    for (const viewport of viewports) {
-      await voicePage.setViewportSize({ width: viewport.width, height: viewport.height });
-      const voiceLayout = await voicePage.evaluate(() => ({ bodyWidth: document.body.scrollWidth, viewportWidth: document.documentElement.clientWidth }));
-      assert.ok(voiceLayout.bodyWidth <= voiceLayout.viewportWidth + 2, `${viewport.name}: ${comparisonPage} has horizontal overflow`);
-    }
-    await voicePage.close();
-  }
-  await voiceContext.close();
-
   const adminContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   const adminPage = await adminContext.newPage();
   const adminErrors = [];
@@ -176,15 +156,9 @@ try {
   await adminPage.locator('input[autocomplete="current-password"]').fill(seedEnvironment.SEED_ADMIN_PASSWORD);
   await adminPage.locator('.login-form .admin-button').click();
   await adminPage.waitForURL(/\/admin\/?$/, { timeout: 15000 });
-  assert.equal(await adminPage.locator('.admin-brand > span').innerText(), 'МКД', 'Kazakh admin brand is missing');
+  assert.equal(await adminPage.locator('.admin-brand strong').innerText(), 'Контент орталығы', 'Kazakh admin brand is missing');
   assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Инфокиоск', { exact: true }).count(), 1, 'Kiosk workspace navigation was not localized');
   assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Жаңалықтар таспасы', { exact: true }).count(), 1, 'News workspace navigation was not localized');
-
-  await adminPage.goto(`${baseUrl}/admin/settings`, { waitUntil: 'domcontentloaded' });
-  await adminPage.getByRole('heading', { name: 'Электрондық кезекті дыбыстау' }).waitFor();
-  assert.equal(await adminPage.getByText('Дыбыстау тілі', { exact: true }).count(), 1, 'Audio language control is missing');
-  assert.equal(await adminPage.getByText('Қайталаулар аралығы, секунд', { exact: true }).count(), 1, 'Audio repeat control is missing');
-  assert.equal(await adminPage.getByText('Жоғары дыбыс деңгейі, %', { exact: true }).count(), 1, 'Accessible audio volume is missing');
 
   await adminPage.goto(`${baseUrl}/admin/broadcast`, { waitUntil: 'domcontentloaded' });
   try {
@@ -197,7 +171,7 @@ try {
   assert.equal(adminErrors.length, 0, `Authenticated admin: ${adminErrors.join('; ')}`);
   await adminContext.close();
   console.log(`Responsive QA: ${viewports.length} kiosk viewports × ${routes.length} routes passed`);
-  console.log('Authenticated admin QA: Kazakh UI, API errors and audio settings passed');
+  console.log('Authenticated admin QA: Kazakh UI and API errors passed');
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

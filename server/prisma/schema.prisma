@@ -100,6 +100,7 @@ model News {
   image         String       @db.VarChar(500)
   category      NewsCategory @default(GENERAL)
   isPriority    Boolean      @default(false)
+  showInBroadcast Boolean    @default(true)
   published     Boolean      @default(false)
   publishedAt   DateTime?
   expiresAt     DateTime?
@@ -114,6 +115,7 @@ model News {
   @@index([sortOrder])
   @@index([category])
   @@index([isPriority, published, publishedAt, expiresAt])
+  @@index([showInBroadcast, published, publishedAt])
   @@index([createdAt])
   @@index([authorId])
 }
@@ -274,11 +276,6 @@ model Setting {
   broadcastSlideSeconds     Int      @default(24)
   broadcastLanguageSeconds  Int      @default(12)
   broadcastIdleSeconds      Int      @default(60)
-  announcementLanguage      String   @default("ru") @db.VarChar(2)
-  announcementVolume        Int      @default(75)
-  announcementRepeatSeconds Int      @default(8)
-  accessibleAudioEnabled    Boolean  @default(true)
-  accessibleAudioVolume     Int      @default(100)
   taxpayerRightsRu          String   @default("") @db.Text
   taxpayerRightsKz          String   @default("") @db.Text
   ethicsOfficerNameRu       String   @default("") @db.VarChar(240)
@@ -286,6 +283,7 @@ model Setting {
   ethicsOfficerContactsRu   String   @default("") @db.VarChar(1000)
   ethicsOfficerContactsKz   String   @default("") @db.VarChar(1000)
   ethicsOfficerPhoto        String   @default("") @db.VarChar(500)
+  fireSafetyVideo           String   @default("") @db.VarChar(500)
   reportingDeadlines        Json     @default("[]")
   panelQrCodes              Json     @default("[]")
   onlineSpecialists         Json     @default("[]")

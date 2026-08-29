@@ -83,7 +83,6 @@ const icons = [
   "Tags",
 ];
 const blank = {
-  slug: "",
   titleRu: "",
   titleKz: "",
   shortDescriptionRu: "",
@@ -186,16 +185,6 @@ function ServiceForm({
           <fieldset>
             <legend>{tr("Основные данные", "Негізгі деректер")}</legend>
             <div className="form-grid">
-              <label>
-                <span>Slug</span>
-                <input
-                  required
-                  pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                  maxLength={140}
-                  value={form.slug}
-                  onChange={(e) => update("slug", e.target.value.toLowerCase())}
-                />
-              </label>
               <label>
                 <span>{tr("Категория", "Санат")}</span>
                 <select

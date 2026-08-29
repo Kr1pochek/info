@@ -1,8 +1,12 @@
-import { BookOpenCheck, CalendarDays, ChevronDown, Clock3, MapPin, QrCode, Scale } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, MapPin, QrCode, Scale } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import NotFoundPage from './NotFoundPage.jsx';
+import EthicsFireSafetyPage from './EthicsFireSafetyPage.jsx';
+
+const RECEPTION_SLIDE_SECONDS = 15;
 
 const receptionSchedule = [
   {
@@ -65,7 +69,7 @@ const receptionSchedule = [
 const districtQrCodes = [
   { id: 'auezov', image: '/qr/districts/almaty-auezov.png', titleKz: 'Әуезов ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Ауэзовскому району' },
   { id: 'bostandyk', image: '/qr/districts/almaty-bostandyk.png', titleKz: 'Бостандық ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Бостандыкскому району' },
-  { id: 'zhetysu', image: '/qr/districts/almaty-zhetysu.png', titleKz: 'Жетісу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Жетисускому району' },
+  { id: 'zhetysu', image: '/qr/districts/almaty-zhetysu.png', titleKz: 'Жетісу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Жетысуйскому району' },
   { id: 'almaly', image: '/qr/districts/almaty-almaly.png', titleKz: 'Алмалы ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Алмалинскому району' },
   { id: 'turksib', image: '/qr/districts/almaty-turksib.png', titleKz: 'Түрксіб ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Турксибскому району' },
   { id: 'medeu', image: '/qr/districts/almaty-medeu.png', titleKz: 'Медеу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Медеускому району' },
@@ -78,6 +82,19 @@ export default function InformationPage() {
   const { language, t } = useLanguage();
   const { settings } = useSettings();
   const kazakh = language === 'kz';
+  const [receptionSlide, setReceptionSlide] = useState(0);
+  const [rotationKey, setRotationKey] = useState(0);
+  const selectReceptionSlide = useCallback((index) => {
+    setReceptionSlide(index);
+    setRotationKey((value) => value + 1);
+  }, []);
+  useEffect(() => {
+    if (informationSlug !== 'reception-schedule') return undefined;
+    const timer = setTimeout(() => setReceptionSlide((value) => (value + 1) % 2), RECEPTION_SLIDE_SECONDS * 1000);
+    return () => clearTimeout(timer);
+  }, [informationSlug, receptionSlide, rotationKey]);
+
+  if (informationSlug === 'ethics-fire-safety') return <EthicsFireSafetyPage />;
 
   if (informationSlug === 'taxpayer-rights') {
     const content = settings[kazakh ? 'taxpayerRightsKz' : 'taxpayerRightsRu'];
@@ -92,7 +109,13 @@ export default function InformationPage() {
         <h1>{kazakh ? 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшылығының қабылдау кестесі' : 'График приёма руководства Департамента государственных доходов по городу Алматы'}</h1>
       </header>
 
-      <section className="reception-schedule" aria-label={kazakh ? 'Қабылдау кестесі' : 'График приёма'}>
+      <nav className="reception-slides-nav" aria-label={kazakh ? 'Ақпарат бөлімдері' : 'Разделы информации'}>
+        <button className={receptionSlide === 0 ? 'active' : ''} onClick={() => selectReceptionSlide(0)}><CalendarDays size={22} /><span><small>01</small><strong>{kazakh ? 'Қабылдау кестесі' : 'График приёма'}</strong></span>{receptionSlide === 0 && <i key={`schedule-${rotationKey}`} style={{ '--slide-seconds': `${RECEPTION_SLIDE_SECONDS}s` }} />}</button>
+        <button className={receptionSlide === 1 ? 'active' : ''} onClick={() => selectReceptionSlide(1)}><QrCode size={22} /><span><small>02</small><strong>{kazakh ? 'Аудандық басқармалардың QR-кодтары' : 'QR-коды районных управлений'}</strong></span>{receptionSlide === 1 && <i key={`qr-${rotationKey}`} style={{ '--slide-seconds': `${RECEPTION_SLIDE_SECONDS}s` }} />}</button>
+      </nav>
+
+      <div className="reception-slides" key={`${receptionSlide}-${rotationKey}`}>
+      {receptionSlide === 0 ? <section className="reception-schedule" aria-label={kazakh ? 'Қабылдау кестесі' : 'График приёма'}>
         <div className="reception-schedule__heading"><Clock3 size={30} /><strong>{kazakh ? 'Жеке тұлғаларды және заңды тұлғалардың өкілдерін қабылдау' : 'Приём физических лиц и представителей юридических лиц'}</strong></div>
         <div className="reception-schedule__table-wrap">
           <table>
@@ -110,17 +133,16 @@ export default function InformationPage() {
             </tr>)}</tbody>
           </table>
         </div>
-      </section>
-
-      <a className="reception-scroll-arrow" href="#district-qr" aria-label={kazakh ? 'QR-кодтар бөліміне өту' : 'Перейти к разделу QR-кодов'} title={kazakh ? 'QR-кодтарға өту' : 'Перейти к QR-кодам'}><ChevronDown size={38} /></a>
-
-      <section className="district-qr-section" id="district-qr">
+      </section> : <section className="district-qr-section" id="district-qr">
         <header><div><QrCode size={30} /><span>{kazakh ? 'Телефон камерасын QR-кодқа бағыттаңыз' : 'Наведите камеру телефона на QR-код'}</span></div><h2>{kazakh ? 'Алматы қаласы бойынша аудандық мемлекеттік кірістер басқармаларының мекенжайлары' : 'Адреса районных управлений государственных доходов по городу Алматы'}</h2></header>
         <div className="district-qr-grid">{districtQrCodes.map((item) => <figure className="district-qr-card" key={item.id}>
           <img src={item.image} alt={`${item[kazakh ? 'titleKz' : 'titleRu']} — QR-код`} loading="lazy" />
           <figcaption>{item[kazakh ? 'titleKz' : 'titleRu']}</figcaption>
         </figure>)}</div>
-      </section>
+      </section>}
+      </div>
+
+      <div className="reception-slide-controls"><button onClick={() => selectReceptionSlide((receptionSlide + 1) % 2)} aria-label={kazakh ? 'Алдыңғы бөлім' : 'Предыдущий раздел'}><ChevronLeft /></button><span><strong>{receptionSlide + 1}</strong> / 2 · {kazakh ? `${RECEPTION_SLIDE_SECONDS} секундтан кейін автоматты түрде ауысады` : `автоматическое переключение через ${RECEPTION_SLIDE_SECONDS} секунд`}</span><button onClick={() => selectReceptionSlide((receptionSlide + 1) % 2)} aria-label={kazakh ? 'Келесі бөлім' : 'Следующий раздел'}><ChevronRight /></button></div>
 
       <footer><BookOpenCheck />{kazakh ? 'Қабылдануға жазылу «e-Otinish» АЖ «Азаматтарды қабылдау» модулінде жүргізіледі.' : 'Запись на приём производится в модуле «Приём граждан» ИС «e-Otinish».'}</footer>
     </article>;

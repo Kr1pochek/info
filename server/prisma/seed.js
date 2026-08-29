@@ -6,7 +6,7 @@ import { serviceDetails } from './serviceDetails.js';
 const prisma = new PrismaClient();
 
 const officialPanelQrCodes = [
-  { id: 'kgd-official', labelRu: 'Портал государственных доходов', labelKz: 'Мемлекеттік кірістер порталы', image: '/qr/kgd-portal.png', url: 'https://kgd.gov.kz/', isActive: true },
+  { id: 'kgd-official', labelRu: 'Портал государственных доходов', labelKz: 'Мемлекеттік кірістер порталы', image: '/qr/kgd-portal.png', url: 'https://portal.kgd.gov.kz/', isActive: true },
   { id: 'egov-official', labelRu: 'Электронное правительство', labelKz: 'Электрондық үкімет', image: '/qr/egov-portal.png', url: 'https://egov.kz/', isActive: true },
 ];
 
@@ -258,8 +258,8 @@ function serviceData([categorySlug, slug, titleRu, titleKz, icon], index, catego
     contactsRu: 'Единый контакт-центр: 1414. Консультация также доступна у сотрудника ДГД.',
     contactsKz: 'Бірыңғай байланыс орталығы: 1414. Кеңесті МКД қызметкерінен де алуға болады.',
     officeAddressRu: 'г. Алматы, проспект Абылай хана, 93/95', officeAddressKz: 'Алматы қ., Абылай хан даңғылы, 93/95',
-    workingHoursRu: 'Понедельник–пятница, 09:00–18:30; перерыв 13:00–14:30',
-    workingHoursKz: 'Дүйсенбі–жұма, 09:00–18:30; үзіліс 13:00–14:30',
+    workingHoursRu: 'Понедельник–пятница, 08:30–17:30',
+    workingHoursKz: 'Дүйсенбі–жұма, 08:30–17:30',
     keywordsRu: `${titleRu.toLowerCase()} государственная услуга дгд кгд документы заявление`,
     keywordsKz: `${titleKz.toLowerCase()} мемлекеттік қызмет мкд құжаттар өтініш`,
     icon, categoryId, isPopular: popularServiceSlugs.has(slug), isPublished: true, sortOrder: index,
@@ -416,10 +416,8 @@ async function main() {
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
       organizationNameKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті',
       contactPhone: '1414', addressRu: 'г. Алматы, проспект Абылай хана, 93/95', addressKz: 'Алматы қ., Абылай хан даңғылы, 93/95',
-      workingHoursRu: 'Пн–Пт, 09:00–18:30; перерыв 13:00–14:30', workingHoursKz: 'Дс–Жм, 09:00–18:30; үзіліс 13:00–14:30',
+      workingHoursRu: 'Пн–Пт, 08:30–17:30', workingHoursKz: 'Дс–Жм, 08:30–17:30',
       inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'kz', showCurrentTime: true, maintenanceMode: false,
-      announcementLanguage: 'ru', announcementVolume: 75, announcementRepeatSeconds: 8,
-      accessibleAudioEnabled: true, accessibleAudioVolume: 100,
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
       ...officialInformationDefaults, ethicsOfficerPhoto: '',
