@@ -249,6 +249,8 @@ test('priority news requires an end time and is exposed for modal display', asyn
     assert.equal(ordinary.response.status, 201);
     assert.equal(priority.response.status, 201);
     assert.equal(priority.body.data.image, '');
+    assert.equal(priority.body.data.showInBroadcast, false);
+    assert.equal(priority.body.data.sortOrder, 0);
 
     const [modal, feed, broadcast] = await Promise.all([request('/api/news/priority'), request('/api/news?limit=100'), request('/api/broadcast')]);
     assert.equal(modal.response.status, 200);

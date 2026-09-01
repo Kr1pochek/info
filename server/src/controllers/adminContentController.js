@@ -201,6 +201,10 @@ export const saveNewsImage = asyncHandler(async (req, res) => {
 export const createNews = asyncHandler(async (req, res) => {
   const { publishedAt, expiresAt, ...input } = req.body;
   if (!input.slug) input.slug = await createUniqueSlug(prisma.news, input.titleRu || input.titleKz, 180);
+  if (input.isPriority) {
+    input.showInBroadcast = false;
+    input.sortOrder = 0;
+  }
   const publicationDate = req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null;
   const expirationDate = expiresAt ? new Date(expiresAt) : null;
   if (input.isPriority && req.body.published && !expirationDate) {
@@ -236,6 +240,10 @@ export const updateNews = asyncHandler(async (req, res) => {
   const resultingExpiresAt = changes.expiresAt === undefined ? oldData.expiresAt : changes.expiresAt;
   const resultingPublished = changes.published === undefined ? oldData.published : changes.published;
   const resultingPriority = changes.isPriority === undefined ? oldData.isPriority : changes.isPriority;
+  if (resultingPriority) {
+    changes.showInBroadcast = false;
+    changes.sortOrder = 0;
+  }
   if (resultingPriority && resultingPublished && !resultingExpiresAt) {
     throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для приоритетной новости укажите время окончания показа');
   }
