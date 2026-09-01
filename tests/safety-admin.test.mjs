@@ -28,3 +28,12 @@ test('kiosk renders configured fire safety rules', async () => {
   assert.match(page, /fireSafetyWarningKz/);
   assert.match(page, /fireSafetyWarningRu/);
 });
+
+test('fire safety video alternates with the guide instead of shrinking above it', async () => {
+  const page = await readFile(new URL('../client/src/pages/kiosk/EthicsFireSafetyPage.jsx', import.meta.url), 'utf8');
+  assert.match(page, /FIRE_GUIDE_SECONDS = 15/);
+  assert.match(page, /fire-panel__slide--video/);
+  assert.match(page, /fire-panel__slide--guide/);
+  assert.match(page, /onEnded=\{\(\) => setFireView\('guide'\)\}/);
+  assert.match(page, /setTimeout\(\(\) => setFireView\('video'\)/);
+});

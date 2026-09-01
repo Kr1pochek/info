@@ -1,4 +1,5 @@
-import { BadgeCheck, BellRing, DoorOpen, FireExtinguisher, Flame, PhoneCall, UserRoundCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BadgeCheck, BellRing, CirclePlay, DoorOpen, FireExtinguisher, Flame, ListChecks, PhoneCall, UserRoundCheck } from 'lucide-react';
 import { assetUrl } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
@@ -20,6 +21,8 @@ const defaultFireSteps = {
   ],
 };
 
+const FIRE_GUIDE_SECONDS = 15;
+
 export default function EthicsFireSafetyPage() {
   const { language } = useLanguage();
   const { settings } = useSettings();
@@ -33,6 +36,15 @@ export default function EthicsFireSafetyPage() {
   const fireWarning = settings[kazakh ? 'fireSafetyWarningKz' : 'fireSafetyWarningRu'] || (kazakh
     ? 'Түтін болған жағдайда еңкейіп қозғалыңыз және ауыз-мұрныңызды дымқыл матамен жабыңыз.'
     : 'При задымлении двигайтесь пригнувшись и прикройте рот и нос влажной тканью.');
+  const hasFireVideo = Boolean(settings.fireSafetyVideo);
+  const [fireView, setFireView] = useState('video');
+  const activeFireView = hasFireVideo ? fireView : 'guide';
+
+  useEffect(() => {
+    if (!hasFireVideo || activeFireView !== 'guide') return undefined;
+    const timer = setTimeout(() => setFireView('video'), FIRE_GUIDE_SECONDS * 1000);
+    return () => clearTimeout(timer);
+  }, [activeFireView, hasFireVideo]);
 
   return <article className="ethics-fire-page">
     <div className="ethics-fire-grid">
@@ -52,11 +64,19 @@ export default function EthicsFireSafetyPage() {
 
       <section className="fire-panel">
         <header><span><Flame size={24} /></span><div><small>{kazakh ? 'Төтенше жағдай' : 'Экстренная ситуация'}</small><h2>{kazakh ? 'Өрт кезіндегі әрекеттер' : 'Действия при пожаре'}</h2></div><aside className="fire-panel__emergency-number" aria-label={kazakh ? 'Төтенше қызмет нөмірі 112' : 'Номер экстренной службы 112'}><PhoneCall size={21} /><span>{kazakh ? 'Қоңырау шалу' : 'Позвонить'}</span><strong>112</strong></aside></header>
-        {settings.fireSafetyVideo
-          ? <video className="fire-panel__video" src={assetUrl(settings.fireSafetyVideo)} controls muted playsInline preload="metadata" />
-          : <div className="fire-panel__visual" role="img" aria-label={kazakh ? 'Өрт кезіндегі эвакуация сызбасы' : 'Схема эвакуации при пожаре'}><div><BellRing /><span>01</span></div><i /><div><DoorOpen /><span>02</span></div><i /><div><FireExtinguisher /><span>03</span></div><strong>112</strong></div>}
-        <ol className="fire-steps">{fireSteps.map(([title, text], index) => <li key={`${index}-${title}`}><span>{index + 1}</span><div><strong>{title}</strong><p>{text}</p></div></li>)}</ol>
-        <p className="fire-panel__warning"><Flame size={20} />{fireWarning}</p>
+        {hasFireVideo && <nav className="fire-panel__switch" aria-label={kazakh ? 'Өрт қауіпсіздігі материалдары' : 'Материалы по пожарной безопасности'}>
+          <button type="button" className={activeFireView === 'video' ? 'active' : ''} aria-pressed={activeFireView === 'video'} onClick={() => setFireView('video')}><CirclePlay size={21} />{kazakh ? 'Бейненұсқаулық' : 'Видеоинструкция'}</button>
+          <button type="button" className={activeFireView === 'guide' ? 'active' : ''} aria-pressed={activeFireView === 'guide'} onClick={() => setFireView('guide')}><ListChecks size={21} />{kazakh ? 'Жаднама' : 'Памятка'}</button>
+        </nav>}
+        <div className={`fire-panel__stage${hasFireVideo ? ' fire-panel__stage--switching' : ''}`}>
+          {activeFireView === 'video'
+            ? <section className="fire-panel__slide fire-panel__slide--video" aria-label={kazakh ? 'Өрт кезіндегі әрекеттер туралы бейне' : 'Видео о действиях при пожаре'}><video className="fire-panel__video" src={assetUrl(settings.fireSafetyVideo)} controls autoPlay muted playsInline preload="metadata" onEnded={() => setFireView('guide')} onError={() => setFireView('guide')} /></section>
+            : <section className="fire-panel__slide fire-panel__slide--guide">
+              {!hasFireVideo && <div className="fire-panel__visual" role="img" aria-label={kazakh ? 'Өрт кезіндегі эвакуация сызбасы' : 'Схема эвакуации при пожаре'}><div><BellRing /><span>01</span></div><i /><div><DoorOpen /><span>02</span></div><i /><div><FireExtinguisher /><span>03</span></div><strong>112</strong></div>}
+              <ol className="fire-steps">{fireSteps.map(([title, text], index) => <li key={`${index}-${title}`}><span>{index + 1}</span><div><strong>{title}</strong><p>{text}</p></div></li>)}</ol>
+              <p className="fire-panel__warning"><Flame size={20} />{fireWarning}</p>
+            </section>}
+        </div>
       </section>
     </div>
   </article>;
