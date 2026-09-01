@@ -51,7 +51,9 @@ export default function App() {
       <Route path="analytics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AnalyticsPage /></RoleRoute>} />
       <Route path="users" element={<RoleRoute roles={['SUPER_ADMIN']}><UsersPage /></RoleRoute>} />
       <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SettingsPage /></RoleRoute>} />
-      <Route path="safety" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage /></RoleRoute>} />
+      <Route path="ethics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage section="ethics" /></RoleRoute>} />
+      <Route path="fire-safety" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage section="fire" /></RoleRoute>} />
+      <Route path="safety" element={<Navigate to="/admin/ethics" replace />} />
       <Route path="audit-logs" element={<RoleRoute roles={['SUPER_ADMIN']}><AuditLogsPage /></RoleRoute>} />
       <Route path="guide" element={<GuidePage />} />
       <Route path="*" element={<Navigate to="/admin" replace />} />

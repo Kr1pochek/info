@@ -13,7 +13,7 @@ function Section({ icon: Icon, title, titleKz, description, descriptionKz, child
   return <section className="admin-card settings-section"><header><Icon /><div><h2>{tr(title, titleKz)}</h2><p>{tr(description, descriptionKz)}</p></div></header>{children}</section>;
 }
 
-export default function SafetyPage() {
+export default function SafetyPage({ section = 'ethics' }) {
   const { tr } = useAdminI18n();
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -59,9 +59,10 @@ export default function SafetyPage() {
   };
 
   if (!form) return <LoadingState text={tr('Загрузка раздела…', 'Бөлім жүктелуде…')} />;
-  return <><AdminPageHeader eyebrow="Инфокиоск" eyebrowKz="Инфокиоск" title="Этика и пожарная безопасность" titleKz="Әдеп және өрт қауіпсіздігі" description="Уполномоченный по этике и правила действий при пожаре" descriptionKz="Әдеп жөніндегі уәкіл және өрт кезіндегі іс-қимыл ережелері" actions={<a className="admin-button admin-button--secondary" href="/information/ethics-fire-safety" target="_blank" rel="noreferrer">{tr('Открыть страницу инфокиоска', 'Инфокиоск бетін ашу')}</a>} />
+  const ethics = section === 'ethics';
+  return <><AdminPageHeader eyebrow="Этика и безопасность" eyebrowKz="Әдеп және қауіпсіздік" title={ethics ? 'Уполномоченный по этике' : 'Пожарная безопасность'} titleKz={ethics ? 'Әдеп жөніндегі уәкіл' : 'Өрт қауіпсіздігі'} description={ethics ? 'Имя, контакты и фотография уполномоченного' : 'Памятка, предупреждение и видеоинструкция'} descriptionKz={ethics ? 'Уәкілдің аты-жөні, байланыстары және фотосуреті' : 'Жаднама, ескерту және бейненұсқаулық'} actions={<a className="admin-button admin-button--secondary" href="/information/ethics-fire-safety" target="_blank" rel="noreferrer">{tr('Открыть страницу инфокиоска', 'Инфокиоск бетін ашу')}</a>} />
     <form className="settings-layout safety-settings" onSubmit={save}>
-      <Section icon={UserRoundCheck} title="Уполномоченный по этике" titleKz="Әдеп жөніндегі уәкіл" description="Имя, контакты и фотография, которые видит посетитель" descriptionKz="Келуші көретін аты-жөні, байланыстары және фотосуреті">
+      {ethics && <Section icon={UserRoundCheck} title="Уполномоченный по этике" titleKz="Әдеп жөніндегі уәкіл" description="Имя, контакты и фотография, которые видит посетитель" descriptionKz="Келуші көретін аты-жөні, байланыстары және фотосуреті">
         <div className="form-grid settings-fields">
           <label><span>{tr('ФИО или должность на русском', 'Орысша аты-жөні немесе лауазымы')}</span><input required maxLength={240} value={form.ethicsOfficerNameRu} onChange={(event) => update('ethicsOfficerNameRu', event.target.value)} /></label>
           <label><span>{tr('ФИО или должность на казахском', 'Қазақша аты-жөні немесе лауазымы')}</span><input required maxLength={240} value={form.ethicsOfficerNameKz} onChange={(event) => update('ethicsOfficerNameKz', event.target.value)} /></label>
@@ -70,9 +71,9 @@ export default function SafetyPage() {
           <label className="form-grid__wide"><span>{tr('Фотография — необязательно', 'Фотосурет — міндетті емес')}</span><span className="image-upload-control"><ImagePlus size={20} />{uploading === 'ethics-photo' ? tr('Загрузка…') : form.ethicsOfficerPhoto ? tr('Заменить фотографию', 'Фотосуретті ауыстыру') : tr('Загрузить фотографию', 'Фотосурет жүктеу')}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={Boolean(uploading)} onChange={(event) => upload(event, 'ethics-photo', 'ethicsOfficerPhoto')} /></span></label>
           {form.ethicsOfficerPhoto && <><img className="settings-photo-preview" src={assetUrl(form.ethicsOfficerPhoto)} alt="" /><button type="button" className="admin-button admin-button--danger settings-media-remove" onClick={() => update('ethicsOfficerPhoto', '')}><Trash2 size={17} />{tr('Убрать фотографию', 'Фотосуретті алып тастау')}</button></>}
         </div>
-      </Section>
+      </Section>}
 
-      <Section icon={Flame} title="Правила пожарной безопасности" titleKz="Өрт қауіпсіздігі ережелері" description="Пункты показываются посетителю в том же порядке" descriptionKz="Тармақтар келушіге осы ретпен көрсетіледі">
+      {!ethics && <><Section icon={Flame} title="Правила пожарной безопасности" titleKz="Өрт қауіпсіздігі ережелері" description="Пункты показываются посетителю в том же порядке" descriptionKz="Тармақтар келушіге осы ретпен көрсетіледі">
         <div className="settings-repeater safety-rules-editor">
           {form.fireSafetyRules.map((rule, index) => <fieldset className="settings-repeat-card" key={rule.id}>
             <legend>{tr('Правило', 'Ереже')} {index + 1}</legend>
@@ -94,7 +95,7 @@ export default function SafetyPage() {
 
       <Section icon={Video} title="Видео о действиях при пожаре" titleKz="Өрт кезіндегі әрекеттер туралы бейне" description="Если видео загружено, оно показывается крупно и чередуется с памяткой" descriptionKz="Бейне жүктелсе, ол ірі көрсетіліп, жаднамамен кезектеседі">
         <div className="form-grid settings-fields"><label className="form-grid__wide"><span>{tr('Видео — необязательно', 'Бейне — міндетті емес')}</span><span className="image-upload-control"><Video size={20} />{uploading === 'fire-video' ? tr('Загрузка…') : form.fireSafetyVideo ? tr('Заменить видео', 'Бейнені ауыстыру') : tr('Загрузить видео', 'Бейне жүктеу')}<input type="file" accept="video/mp4,video/webm" disabled={Boolean(uploading)} onChange={(event) => upload(event, 'fire-video', 'fireSafetyVideo')} /></span><small>{tr('Поддерживаются видео до 150 МБ.', '150 МБ дейінгі бейнелерге қолдау көрсетіледі.')}</small></label>{form.fireSafetyVideo && <><video className="settings-video-preview" src={assetUrl(form.fireSafetyVideo)} controls muted /><button type="button" className="admin-button admin-button--danger settings-media-remove" onClick={() => update('fireSafetyVideo', '')}><Trash2 size={17} />{tr('Убрать видео', 'Бейнені алып тастау')}</button></>}</div>
-      </Section>
+      </Section></>}
 
       {error && <div className="form-error">{tr(error)}</div>}
       <div className="settings-save"><button className="admin-button admin-button--primary" disabled={busy || Boolean(uploading)}><Save size={19} />{busy ? tr('Сохранение…') : tr('Сохранить раздел', 'Бөлімді сақтау')}</button></div>

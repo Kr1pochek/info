@@ -2,14 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 
-test('ethics and fire safety have a separate administrator section', async () => {
-  const [app, layout, page] = await Promise.all([
+test('ethics and fire safety are the first administrator group with two simple links', async () => {
+  const [app, layout, dashboard, page] = await Promise.all([
     readFile(new URL('../client/src/App.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/layouts/AdminLayout.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../client/src/pages/admin/DashboardPage.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/pages/admin/SafetyPage.jsx', import.meta.url), 'utf8'),
   ]);
-  assert.match(app, /path="safety"/);
+  assert.match(app, /path="ethics"[^]*section="ethics"/);
+  assert.match(app, /path="fire-safety"[^]*section="fire"/);
   assert.match(layout, /Этика и пожарная безопасность/);
+  assert.ok(layout.indexOf("id: 'safety'") < layout.indexOf("id: 'kiosk'"));
+  assert.match(layout, /to: '\/admin\/ethics'/);
+  assert.match(layout, /to: '\/admin\/fire-safety'/);
+  assert.doesNotMatch(layout, /to: '\/admin\/safety'/);
+  assert.match(dashboard, /type="safety"/);
+  assert.ok(dashboard.indexOf('type="safety"') < dashboard.indexOf('type="kiosk"'));
   assert.match(page, /Уполномоченный по этике/);
   assert.match(page, /Правила пожарной безопасности/);
   assert.match(page, /Добавить правило/);

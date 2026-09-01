@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   BarChart3, BookOpen, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Flame, Languages,
-  LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users,
+  LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, UserRoundCheck, Users,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -12,6 +12,17 @@ const contentRoles = ['SUPER_ADMIN', 'ADMIN'];
 
 const workspaces = [
   {
+    id: 'safety',
+    label: 'Этика и пожарная безопасность', labelKz: 'Әдеп және өрт қауіпсіздігі',
+    description: 'Две отдельные настройки', descriptionKz: 'Екі бөлек баптау',
+    icon: ShieldCheck,
+    preview: '/information/ethics-fire-safety', previewLabel: 'Открыть страницу инфокиоска', previewLabelKz: 'Инфокиоск бетін ашу',
+    links: [
+      { to: '/admin/ethics', label: 'Уполномоченный по этике', labelKz: 'Әдеп жөніндегі уәкіл', icon: UserRoundCheck, roles: contentRoles },
+      { to: '/admin/fire-safety', label: 'Пожарная инструкция', labelKz: 'Өрт қауіпсіздігі нұсқаулығы', icon: Flame, roles: contentRoles },
+    ],
+  },
+  {
     id: 'kiosk',
     label: 'Инфокиоск', labelKz: 'Инфокиоск',
     description: 'Услуги и справочная информация', descriptionKz: 'Қызметтер мен анықтамалық ақпарат',
@@ -21,7 +32,6 @@ const workspaces = [
       { to: '/admin/services', label: 'Услуги', labelKz: 'Қызметтер', icon: BookOpenCheck, roles: contentRoles },
       { to: '/admin/categories', label: 'Категории', labelKz: 'Санаттар', icon: Boxes, roles: contentRoles },
       { to: '/admin/packages', label: 'Пакеты обслуживания', labelKz: 'Қызмет пакеттері', icon: PackageOpen, roles: contentRoles },
-      { to: '/admin/safety', label: 'Этика и пожарная безопасность', labelKz: 'Әдеп және өрт қауіпсіздігі', icon: Flame, roles: contentRoles },
       { to: '/admin/settings', label: 'Настройки инфокиоска', labelKz: 'Инфокиоск баптаулары', icon: Settings, roles: contentRoles },
     ],
   },

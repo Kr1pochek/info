@@ -75,7 +75,7 @@ const publicPageRoutes = [
 ];
 const adminPageRoutes = [
   '/admin', '/admin/services', '/admin/categories', '/admin/packages', '/admin/news', '/admin/broadcast',
-  '/admin/analytics', '/admin/users', '/admin/settings', '/admin/safety', '/admin/audit-logs', '/admin/guide',
+  '/admin/analytics', '/admin/users', '/admin/settings', '/admin/ethics', '/admin/fire-safety', '/admin/audit-logs', '/admin/guide',
 ];
 
 try {
@@ -214,15 +214,15 @@ try {
     assert.ok(!adminPage.url().endsWith('/admin/login'), `Admin journey ${route}: session was lost`);
   }
 
-  await adminPage.goto(`${baseUrl}/admin/safety`, { waitUntil: 'domcontentloaded' });
-  await adminPage.getByRole('heading', { name: 'Әдеп және өрт қауіпсіздігі', exact: true }).waitFor({ timeout: 15000 });
+  await adminPage.goto(`${baseUrl}/admin/fire-safety`, { waitUntil: 'domcontentloaded' });
+  await adminPage.getByRole('heading', { name: 'Өрт қауіпсіздігі', exact: true }).waitFor({ timeout: 15000 });
   assert.ok(await adminPage.locator('.safety-rules-editor .settings-repeat-card').count() >= 5, 'Editable fire safety rules are missing');
-  const kioskGroupButton = adminPage.locator('.admin-nav-group__heading').filter({ hasText: 'Инфокиоск' });
+  const safetyGroupButton = adminPage.locator('.admin-nav-group__heading').filter({ hasText: 'Әдеп және өрт қауіпсіздігі' });
   const newsGroupButton = adminPage.locator('.admin-nav-group__heading').filter({ hasText: 'Жаңалықтар таспасы' });
-  assert.equal(await kioskGroupButton.getAttribute('aria-expanded'), 'true', 'Active kiosk navigation group is collapsed');
+  assert.equal(await safetyGroupButton.getAttribute('aria-expanded'), 'true', 'Active safety navigation group is collapsed');
   await newsGroupButton.click();
   assert.equal(await newsGroupButton.getAttribute('aria-expanded'), 'true', 'News navigation group did not expand');
-  assert.equal(await kioskGroupButton.getAttribute('aria-expanded'), 'false', 'Previous navigation group did not collapse');
+  assert.equal(await safetyGroupButton.getAttribute('aria-expanded'), 'false', 'Previous navigation group did not collapse');
 
   await adminPage.goto(`${baseUrl}/admin/guide`, { waitUntil: 'domcontentloaded' });
   await adminPage.getByRole('heading', { name: 'Панельмен жұмыс істеуге арналған түсінікті нұсқаулық' }).waitFor({ timeout: 15000 });
