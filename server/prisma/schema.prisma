@@ -49,6 +49,7 @@ enum AuditAction {
   UPDATE_BROADCAST_ITEM
   DELETE_BROADCAST_ITEM
   UPDATE_BROADCAST_SETTINGS
+  UPDATE_SAFETY
 }
 
 enum NewsCategory {
@@ -284,6 +285,9 @@ model Setting {
   ethicsOfficerContactsKz   String   @default("") @db.VarChar(1000)
   ethicsOfficerPhoto        String   @default("") @db.VarChar(500)
   fireSafetyVideo           String   @default("") @db.VarChar(500)
+  fireSafetyRules           Json     @default("[]")
+  fireSafetyWarningRu       String   @default("") @db.VarChar(1000)
+  fireSafetyWarningKz       String   @default("") @db.VarChar(1000)
   reportingDeadlines        Json     @default("[]")
   panelQrCodes              Json     @default("[]")
   onlineSpecialists         Json     @default("[]")
@@ -292,12 +296,15 @@ model Setting {
 
 model AnalyticsEvent {
   id          Int                @id @default(autoincrement())
+  eventId     String             @unique @db.VarChar(80)
   eventType   AnalyticsEventType
   serviceId   Int?
   categoryId  Int?
   searchQuery String?            @db.VarChar(120)
   sessionId   String             @db.VarChar(80)
+  source      String             @default("LEGACY") @db.VarChar(20)
   metadata    Json?
+  occurredAt  DateTime           @default(now())
   createdAt   DateTime           @default(now())
   service     Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   category    Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -305,6 +312,8 @@ model AnalyticsEvent {
   @@index([eventType])
   @@index([serviceId])
   @@index([categoryId])
+  @@index([source, occurredAt])
+  @@index([sessionId, occurredAt])
   @@index([createdAt])
 }
 

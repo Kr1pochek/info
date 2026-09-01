@@ -257,8 +257,8 @@ export default function BroadcastPage() {
         <div className="broadcast-settings-grid">
           <section className="broadcast-settings-card broadcast-settings-card--ticker">
             <header><div><Radio size={18} /></div><span><strong>{tr('Бегущая строка', 'Жүгіртпе жол')}</strong><small>{tr('Сообщение в нижней части экрана', 'Экранның төменгі бөлігіндегі хабарлама')}</small></span></header>
-            <label><span><i>RU</i> {tr('Русский текст', 'Орысша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextRu} onChange={(event) => setSettings({ ...settings, tickerTextRu: event.target.value })} /></label>
-            <label><span><i>KZ</i> {tr('Казахский текст', 'Қазақша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextKz} onChange={(event) => setSettings({ ...settings, tickerTextKz: event.target.value })} /></label>
+            <label><span><i>{tr('РУС', 'ОРЫС')}</i> {tr('Русский текст', 'Орысша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextRu} onChange={(event) => setSettings({ ...settings, tickerTextRu: event.target.value })} /></label>
+            <label><span><i>{tr('КАЗ', 'ҚАЗ')}</i> {tr('Казахский текст', 'Қазақша мәтін')}</span><textarea required maxLength="1000" value={settings.tickerTextKz} onChange={(event) => setSettings({ ...settings, tickerTextKz: event.target.value })} /></label>
           </section>
 
           <section className="broadcast-settings-card broadcast-settings-card--timing">

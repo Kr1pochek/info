@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { app } from '../src/app.js';
 import { prisma } from '../src/config/prisma.js';
 import { env } from '../src/config/env.js';
+import { analyticsDateString } from '../src/utils/analytics.js';
 
 let server;
 let baseUrl;
@@ -52,9 +53,40 @@ test('public settings expose current kiosk content without retired queue fields'
   assert.match(body.data.ethicsOfficerContactsRu, /267-69-55/);
   assert.match(body.data.ethicsOfficerContactsKz, /267-69-55/);
   assert.equal(typeof body.data.fireSafetyVideo, 'string');
+  assert.ok(Array.isArray(body.data.fireSafetyRules));
+  assert.ok(body.data.fireSafetyRules.length >= 5);
+  assert.match(body.data.fireSafetyWarningRu, /задымлении/i);
   assert.equal(body.data.workingHoursRu, 'Пн–Пт, 08:30–17:30');
   assert.equal(body.data.workingHoursKz, 'Дс–Жм, 08:30–17:30');
   assert.equal(body.data.panelQrCodes.find((item) => item.id === 'kgd-official')?.url, 'https://portal.kgd.gov.kz/');
+});
+
+test('administrator can edit ethics officer and fire safety rules', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const startedAt = new Date();
+  const current = await request('/api/admin/safety', { headers });
+  assert.equal(current.response.status, 200);
+  const { updatedAt, ...original } = current.body.data;
+  assert.ok(updatedAt);
+  const changed = {
+    ...original,
+    ethicsOfficerNameRu: `${original.ethicsOfficerNameRu} (проверка)`,
+    fireSafetyRules: original.fireSafetyRules.map((rule, index) => index === 0 ? { ...rule, titleRu: `${rule.titleRu} (проверка)` } : rule),
+  };
+  try {
+    const updated = await request('/api/admin/safety', { method: 'PATCH', headers, body: JSON.stringify(changed) });
+    assert.equal(updated.response.status, 200);
+    assert.match(updated.body.data.ethicsOfficerNameRu, /проверка/);
+    assert.match(updated.body.data.fireSafetyRules[0].titleRu, /проверка/);
+    const publicSettings = await request('/api/settings/public');
+    assert.match(publicSettings.body.data.fireSafetyRules[0].titleRu, /проверка/);
+  } finally {
+    await request('/api/admin/safety', { method: 'PATCH', headers, body: JSON.stringify(original) });
+    await prisma.auditLog.deleteMany({ where: { adminUserId: admin.id, action: 'UPDATE_SAFETY', createdAt: { gte: startedAt } } });
+  }
 });
 
 test('catalog exposes all 41 complete DGD services for the 2026 stand', async () => {
@@ -106,6 +138,71 @@ test('Russian service search returns matching results', async () => {
   assert.ok(body.data.length > 0);
 });
 
+test('kiosk analytics stores the actual event once and excludes legacy data from the report', async () => {
+  const [service, admin] = await Promise.all([
+    prisma.service.findFirst({ where: { isPublished: true }, select: { id: true, categoryId: true, slug: true } }),
+    prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } }),
+  ]);
+  assert.ok(service && admin);
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const eventId = `event-test-${suffix}`;
+  const legacyEventId = `legacy-test-${suffix}`;
+  const sessionId = `session-test-${suffix}`;
+  const occurredAt = new Date().toISOString();
+  const payload = {
+    eventId,
+    eventType: 'SERVICE_OPEN',
+    serviceId: service.id,
+    categoryId: service.categoryId,
+    sessionId,
+    occurredAt,
+    metadata: { path: `/service/${service.slug}` },
+  };
+
+  try {
+    const [first, duplicate] = await Promise.all([
+      request('/api/analytics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+      request('/api/analytics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+    ]);
+    assert.equal(first.response.status, 201);
+    assert.equal(duplicate.response.status, 201);
+    assert.equal(first.body.data.id, duplicate.body.data.id);
+    assert.equal(await prisma.analyticsEvent.count({ where: { eventId } }), 1);
+
+    const stored = await prisma.analyticsEvent.findUnique({ where: { eventId } });
+    assert.equal(stored.source, 'KIOSK');
+    assert.equal(stored.sessionId, sessionId);
+    assert.equal(stored.occurredAt.toISOString(), occurredAt);
+
+    await prisma.analyticsEvent.create({ data: {
+      eventId: legacyEventId,
+      eventType: 'SERVICE_OPEN',
+      serviceId: service.id,
+      categoryId: service.categoryId,
+      sessionId: `legacy-${sessionId}`,
+      source: 'LEGACY',
+      occurredAt: new Date(occurredAt),
+    } });
+
+    const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+    const day = analyticsDateString(new Date(occurredAt));
+    const report = await request(`/api/admin/analytics?from=${day}&to=${day}`, { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(report.response.status, 200);
+    assert.ok(report.body.data.recent.some((item) => item.eventId === eventId));
+    assert.ok(!report.body.data.recent.some((item) => item.eventId === legacyEventId));
+    assert.ok(report.body.data.sessions >= 1);
+
+    const dashboard = await request('/api/admin/dashboard', { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(dashboard.response.status, 200);
+    assert.equal('recentAudit' in dashboard.body.data, false);
+
+    const invalid = await request('/api/analytics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, eventId: `${eventId}-invalid`, serviceId: null }) });
+    assert.equal(invalid.response.status, 400);
+  } finally {
+    await prisma.analyticsEvent.deleteMany({ where: { eventId: { in: [eventId, legacyEventId] } } });
+  }
+});
+
 test('editor can manage news but cannot access service administration', async () => {
   const login = `test-editor-${Date.now()}`;
   const editor = await prisma.adminUser.create({ data: { login, passwordHash: 'not-used-in-test', fullName: 'Test Editor', role: 'EDITOR' } });
@@ -144,9 +241,11 @@ test('priority news requires an end time and is exposed for modal display', asyn
   assert.equal(invalid.body.error.code, 'PRIORITY_NEWS_PERIOD_REQUIRED');
 
   const slugs = [`ordinary-order-test-${suffix}`, `priority-order-test-${suffix}`];
+  const createdIds = [];
   try {
     const ordinary = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[0], category: 'GENERAL', isPriority: false }) });
     const priority = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[1], isPriority: true, expiresAt: expirationDate }) });
+    createdIds.push(String(ordinary.body.data?.id), String(priority.body.data?.id));
     assert.equal(ordinary.response.status, 201);
     assert.equal(priority.response.status, 201);
     assert.equal(priority.body.data.image, '');
@@ -160,6 +259,7 @@ test('priority news requires an end time and is exposed for modal display', asyn
     const prioritySlide = broadcast.body.data.slides.find((item) => item.id === `news-${priority.body.data.id}`);
     assert.equal(prioritySlide?.isPriority, true);
   } finally {
+    await prisma.auditLog.deleteMany({ where: { entityType: 'News', entityId: { in: createdIds } } });
     await prisma.news.deleteMany({ where: { slug: { in: slugs } } });
   }
 });
@@ -170,6 +270,7 @@ test('published news can stay in the feed without becoming a broadcast slide', a
   const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   const slug = `feed-only-news-${Date.now()}`;
+  let createdId = null;
   try {
     const created = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({
       slug, titleRu: 'Новость только для ленты', titleKz: 'Тек таспаға арналған жаңалық',
@@ -177,12 +278,14 @@ test('published news can stay in the feed without becoming a broadcast slide', a
       contentRu: 'Новость должна быть в ленте, но не в эфире.', contentKz: 'Жаңалық таспада болып, эфирде болмауы керек.',
       image: '', category: 'GENERAL', isPriority: false, showInBroadcast: false, published: true, sortOrder: 9999,
     }) });
+    createdId = String(created.body.data?.id);
     assert.equal(created.response.status, 201);
 
     const [feed, broadcast] = await Promise.all([request('/api/news?limit=100'), request('/api/broadcast')]);
     assert.ok(feed.body.data.some((item) => item.slug === slug));
     assert.ok(!broadcast.body.data.slides.some((item) => item.slug === slug));
   } finally {
+    if (createdId) await prisma.auditLog.deleteMany({ where: { entityType: 'News', entityId: createdId } });
     await prisma.news.deleteMany({ where: { slug } });
   }
 });
@@ -194,12 +297,14 @@ test('administrator can create, update and delete a service package', async () =
   const slug = `test-package-${Date.now()}`;
   const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  let createdId = null;
   try {
     const created = await request('/api/admin/service-packages', { method: 'POST', headers, body: JSON.stringify({
       slug, titleRu: 'Тестовый пакет', titleKz: 'Сынақ пакеті', targetAudienceRu: 'Тестовая аудитория', targetAudienceKz: 'Сынақ аудиториясы',
       descriptionRu: 'Проверка создания пакета.', descriptionKz: 'Пакет жасауды тексеру.', serviceZoneRu: 'Тестовая зона', serviceZoneKz: 'Сынақ аймағы',
       noteRu: null, noteKz: null, icon: 'Package', isPublished: false, sortOrder: 9999, serviceIds: serviceRows.map((item) => item.id),
     }) });
+    createdId = String(created.body.data?.id);
     assert.equal(created.response.status, 201);
     assert.equal(created.body.data.services.length, 2);
     const updated = await request(`/api/admin/service-packages/${created.body.data.id}`, { method: 'PATCH', headers, body: JSON.stringify({ titleRu: 'Обновлённый тестовый пакет', serviceIds: [serviceRows[0].id] }) });
@@ -207,7 +312,13 @@ test('administrator can create, update and delete a service package', async () =
     assert.equal(updated.body.data.services.length, 1);
     const removed = await request(`/api/admin/service-packages/${created.body.data.id}`, { method: 'DELETE', headers });
     assert.equal(removed.response.status, 200);
+    const audit = await request('/api/admin/audit-logs?action=DELETE_SERVICE_PACKAGE&limit=100', { headers });
+    const auditEntry = audit.body.data.find((item) => item.entityId === createdId);
+    assert.equal(auditEntry.objectName, 'Обновлённый тестовый пакет');
+    assert.equal('oldData' in auditEntry, false);
+    assert.equal('newData' in auditEntry, false);
   } finally {
+    if (createdId) await prisma.auditLog.deleteMany({ where: { entityType: 'ServicePackage', entityId: createdId } });
     await prisma.servicePackage.deleteMany({ where: { slug } });
   }
 });

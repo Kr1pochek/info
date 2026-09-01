@@ -88,6 +88,20 @@ export const userPatchSchema = z.object({
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'EDITOR']).optional(), isActive: z.boolean().optional(),
 }).refine((value) => Object.values(value).some((item) => item !== undefined));
 
+const fireSafetyRuleSchema = z.object({
+  id: z.string().trim().min(1).max(80),
+  titleRu: text(240), titleKz: text(240),
+  textRu: text(1000), textKz: text(1000),
+});
+
+export const safetySettingsSchema = z.object({
+  ethicsOfficerNameRu: z.string().trim().max(240), ethicsOfficerNameKz: z.string().trim().max(240),
+  ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
+  ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500),
+  fireSafetyRules: z.array(fireSafetyRuleSchema).min(1).max(12),
+  fireSafetyWarningRu: text(1000), fireSafetyWarningKz: text(1000),
+});
+
 export const settingsSchema = z.object({
   organizationNameRu: text(240), organizationNameKz: text(240), contactPhone: text(80),
   addressRu: text(500), addressKz: text(500), workingHoursRu: text(300), workingHoursKz: text(300),
@@ -99,13 +113,37 @@ export const settingsSchema = z.object({
   taxpayerRightsRu: z.string().trim().max(30000), taxpayerRightsKz: z.string().trim().max(30000),
   ethicsOfficerNameRu: z.string().trim().max(240), ethicsOfficerNameKz: z.string().trim().max(240),
   ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
-  ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500), reportingDeadlines: z.array(deadlineSchema).max(30),
+  ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500),
+  fireSafetyRules: z.array(fireSafetyRuleSchema).min(1).max(12), fireSafetyWarningRu: text(1000), fireSafetyWarningKz: text(1000),
+  reportingDeadlines: z.array(deadlineSchema).max(30),
   panelQrCodes: z.array(qrCodeSchema).max(6), onlineSpecialists: z.array(specialistSchema).max(30),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });
 
+const kioskPath = /^\/(?:kiosk|services|packages|package\/[^/]+|category\/[^/]+|service\/[^/]+|faq|information\/[^/]+)$/;
+
 export const analyticsSchema = z.object({
+  eventId: z.string().min(8).max(80).regex(/^[a-zA-Z0-9._:-]+$/),
   eventType: z.enum(['SERVICE_OPEN', 'CATEGORY_OPEN', 'SEARCH', 'SESSION_TIMEOUT', 'SESSION_RESET', 'LANGUAGE_CHANGE', 'FONT_SIZE_CHANGE', 'HOME_RETURN']),
   serviceId: z.number().int().positive().optional().nullable(), categoryId: z.number().int().positive().optional().nullable(),
   searchQuery: z.string().trim().max(80).optional().nullable(), sessionId: z.string().min(8).max(80),
+  occurredAt: z.string().datetime({ offset: true }),
   metadata: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean(), z.null()])).optional(),
+}).superRefine((value, context) => {
+  if (!kioskPath.test(String(value.metadata?.path || ''))) {
+    context.addIssue({ code: 'custom', path: ['metadata', 'path'], message: 'Событие должно исходить из интерфейса инфокиоска' });
+  }
+  if (value.eventType === 'SERVICE_OPEN' && !value.serviceId) {
+    context.addIssue({ code: 'custom', path: ['serviceId'], message: 'Для открытия услуги требуется идентификатор услуги' });
+  }
+  if (value.eventType === 'CATEGORY_OPEN' && !value.categoryId) {
+    context.addIssue({ code: 'custom', path: ['categoryId'], message: 'Для открытия категории требуется идентификатор категории' });
+  }
+  if (value.eventType === 'SEARCH' && (!value.searchQuery || value.searchQuery.length < 2)) {
+    context.addIssue({ code: 'custom', path: ['searchQuery'], message: 'Поисковый запрос должен содержать не менее двух символов' });
+  }
 });
+
+export const analyticsPeriodSchema = z.object({
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+}).refine((value) => !value.from || !value.to || value.from <= value.to, { path: ['to'], message: 'Дата окончания должна быть не раньше даты начала' });

@@ -21,6 +21,19 @@ export default function KioskHeader() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
   const goHome = () => { track('HOME_RETURN'); navigate('/kiosk'); window.scrollTo({ top: 0 }); };
+  const changeLanguage = () => {
+    const next = language === 'ru' ? 'kz' : 'ru';
+    setLanguage(next);
+    track('LANGUAGE_CHANGE', { metadata: { language: next } });
+  };
+  const changeFontSize = () => {
+    const next = cycleFontSize();
+    track('FONT_SIZE_CHANGE', { metadata: { size: next } });
+  };
+  const changeVisionMode = () => {
+    const enabled = toggleVisionMode();
+    track('FONT_SIZE_CHANGE', { metadata: { size: enabled ? 'vision-mode' : 'normal' } });
+  };
   return <header className="kiosk-header">
     <div className="brand" aria-label={organizationName}>
       <DgdLogo className="brand__logo" decorative /><span className="brand__name">{organizationName}</span>
@@ -35,9 +48,9 @@ export default function KioskHeader() {
     <nav className="kiosk-header__actions" aria-label="Навигация">
       {location.pathname !== '/kiosk' && <button className="header-button" onClick={() => navigate(-1)}><ArrowLeft size={24} /><span>{t.back}</span></button>}
       <button className="header-button" onClick={goHome}><Home size={24} /><span>{t.home}</span></button>
-      <button className="header-button" onClick={() => setLanguage(language === 'ru' ? 'kz' : 'ru')}><Languages size={24} /><span>{t.alternateLanguage}</span></button>
-      <button className="header-button" onClick={cycleFontSize} title={t[fontSize]}><Type size={25} /><span>A{fontSize === 'large' ? '+' : fontSize === 'xlarge' ? '++' : ''}</span></button>
-      <button className={`header-button accessibility-button${visionMode ? ' active' : ''}`} onClick={toggleVisionMode} aria-pressed={visionMode}><Eye size={25} /><span>{t.lowVision}</span></button>
+      <button className="header-button" onClick={changeLanguage}><Languages size={24} /><span>{t.alternateLanguage}</span></button>
+      <button className="header-button" onClick={changeFontSize} title={t[fontSize]}><Type size={25} /><span>A{fontSize === 'large' ? '+' : fontSize === 'xlarge' ? '++' : ''}</span></button>
+      <button className={`header-button accessibility-button${visionMode ? ' active' : ''}`} onClick={changeVisionMode} aria-pressed={visionMode}><Eye size={25} /><span>{t.lowVision}</span></button>
       <time className="kiosk-clock" dateTime={now.toISOString()}><span>{now.toLocaleDateString(language === 'kz' ? 'kk-KZ' : 'ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span><strong>{now.toLocaleTimeString(language === 'kz' ? 'kk-KZ' : 'ru-RU', { hour: '2-digit', minute: '2-digit' })}</strong></time>
     </nav>
   </header>;

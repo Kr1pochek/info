@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Building2, CalendarClock, ChevronRight, CircleHelp, ClipboardList, Headphones, MapPin, Phone, RotateCcw, Scale, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api, { apiMessage } from '../../api/client.js';
-import { track } from '../../api/analytics.js';
+import { endSession } from '../../api/analytics.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFontSize } from '../../context/FontSizeContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
@@ -47,7 +47,7 @@ export default function HomePage() {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
-  const reset = () => { setQuery(''); resetLanguage(); resetFontSize(); track('SESSION_RESET'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const reset = () => { setQuery(''); resetLanguage(); resetFontSize(); endSession('SESSION_RESET'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const openHelp = async () => {
     try { const response = await api.get('/settings/public'); setHelpSettings(response.data.data); }
     catch { setHelpSettings(settings); }

@@ -16,6 +16,7 @@ import { LoadingState } from "../../components/common/States.jsx";
 import AppIcon from "../../components/common/AppIcon.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useAdminI18n } from "../../utils/adminLocalization.js";
+import { iconLabel } from "../../utils/iconLabels.js";
 
 const listFields = [
   "requiredDocumentsRu",
@@ -207,7 +208,7 @@ function ServiceForm({
                   onChange={(e) => update("icon", e.target.value)}
                 >
                   {icons.map((icon) => (
-                    <option key={icon}>{icon}</option>
+                    <option value={icon} key={icon}>{iconLabel(icon, language)}</option>
                   ))}
                 </select>
               </label>
@@ -506,7 +507,6 @@ export default function ServicesPage() {
                       </span>
                       <div>
                         <strong>{item[language === "kz" ? "titleKz" : "titleRu"]}</strong>
-                        <small>{item.slug}</small>
                       </div>
                     </div>
                   </td>

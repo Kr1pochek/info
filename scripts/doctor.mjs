@@ -25,19 +25,24 @@ function parseEnvironment(content) {
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 report(nodeMajor >= 20 ? 'ok' : 'error', 'Node.js', process.versions.node);
 
+const requiredEnvironment = ['DATABASE_URL', 'CLIENT_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
 let environment = {};
 if (!fs.existsSync(serverEnvPath)) {
-  report('error', 'server/.env', 'файл отсутствует');
+  environment = process.env;
+  const suppliedByRuntime = requiredEnvironment.every((key) => environment[key]);
+  report(suppliedByRuntime ? 'ok' : 'error', 'Конфигурация', suppliedByRuntime
+    ? 'получена из переменных окружения'
+    : 'server/.env отсутствует и обязательные переменные окружения не заданы');
 } else {
-  environment = parseEnvironment(fs.readFileSync(serverEnvPath, 'utf8'));
+  const fileEnvironment = parseEnvironment(fs.readFileSync(serverEnvPath, 'utf8'));
+  environment = { ...fileEnvironment, ...process.env };
   report('ok', 'server/.env', 'найден');
-  for (const [key, value] of Object.entries(environment)) {
+  for (const [key, value] of Object.entries(fileEnvironment)) {
     if (process.env[key] === undefined) process.env[key] = value;
-    else environment[key] = process.env[key];
   }
 }
 
-for (const key of ['DATABASE_URL', 'CLIENT_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) {
+for (const key of requiredEnvironment) {
   report(environment[key] ? 'ok' : 'error', key, environment[key] ? 'задан' : 'не задан');
 }
 

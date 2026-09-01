@@ -10,6 +10,7 @@ const developmentSecrets = new Set([
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+  SERVE_CLIENT_DIST: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   DATABASE_URL: z.string().startsWith('postgresql://').default('postgresql://postgres:password@localhost:5432/dgd_infokiosk'),
   CLIENT_URL: z.string().url().default('http://localhost:5174'),
   JWT_ACCESS_SECRET: z.string().min(32).default('development_access_secret_change_123456'),
@@ -21,6 +22,7 @@ const schema = z.object({
   PUBLIC_RATE_LIMIT: z.coerce.number().int().min(60).max(10000).default(1200),
   ADMIN_RATE_LIMIT: z.coerce.number().int().min(20).max(5000).default(300),
   AUTH_RATE_LIMIT: z.coerce.number().int().min(5).max(1000).default(30),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
   INFORMER_PROVIDER: z.enum(['official', 'api-ninjas']).default('official'),
   API_NINJAS_KEY: z.preprocess((value) => value || undefined, z.string().trim().min(1).optional()),
 }).superRefine((value, context) => {
@@ -35,6 +37,15 @@ const schema = z.object({
   }
   if (value.JWT_ACCESS_SECRET === value.JWT_REFRESH_SECRET) {
     context.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'Access и refresh секреты должны отличаться' });
+  }
+  try {
+    const databaseUrl = new URL(value.DATABASE_URL);
+    const password = decodeURIComponent(databaseUrl.password).toLowerCase();
+    if (['password', 'postgres', 'dgd_dev_password', 'change_me'].includes(password) || /^replace_/i.test(password)) {
+      context.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: 'Для production задайте отдельного пользователя и надёжный пароль PostgreSQL' });
+    }
+  } catch {
+    context.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: 'Некорректный URL подключения к PostgreSQL' });
   }
 });
 

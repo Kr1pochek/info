@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ArrowRight, BarChart3, BookOpenCheck, Boxes, Eye, EyeOff, MonitorSmartphone,
+  ArrowRight, BarChart3, BookOpenCheck, Boxes, Eye, EyeOff, Flame, MonitorSmartphone,
   Newspaper, PackageOpen, Search, Settings, Tv,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,6 +18,7 @@ const kioskActions = [
   ['/admin/services', 'Услуги', 'Добавлять и редактировать карточки', 'Қызметтер', 'Карточкаларды қосу және өңдеу', BookOpenCheck],
   ['/admin/categories', 'Категории', 'Настроить разделы каталога', 'Санаттар', 'Каталог бөлімдерін баптау', Boxes],
   ['/admin/packages', 'Пакеты', 'Сгруппировать связанные услуги', 'Пакеттер', 'Байланысты қызметтерді топтау', PackageOpen],
+  ['/admin/safety', 'Этика и безопасность', 'Изменить уполномоченного и правила при пожаре', 'Әдеп және қауіпсіздік', 'Уәкіл мен өрт кезіндегі ережелерді өзгерту', Flame],
   ['/admin/settings', 'Настройки', 'Контакты и справочные разделы', 'Баптаулар', 'Байланыстар мен анықтамалық бөлімдер', Settings],
 ];
 
@@ -58,7 +59,6 @@ export default function DashboardPage() {
     <div className="dashboard-grid">
       <section className="admin-card chart-card"><header><div><span>{tr('Активность', 'Белсенділік')}</span><h2>{tr('События за 7 дней', '7 күндегі оқиғалар')}</h2></div></header><div className="bar-chart">{data.daily.length ? data.daily.map((item) => <div className="bar-chart__item" key={item.day}><span>{item.count}</span><i style={{ height: `${Math.max(8, item.count / max * 100)}%` }} /><small>{new Date(item.day).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}</small></div>) : <p>{tr('Событий пока нет', 'Әзірге оқиғалар жоқ')}</p>}</div></section>
       <section className="admin-card"><header><div><span>{tr('Интерес посетителей', 'Келушілер қызығушылығы')}</span><h2>{tr('Популярные услуги', 'Танымал қызметтер')}</h2></div></header><ol className="rank-list">{data.popularServices.length ? data.popularServices.map((item, index) => <li key={item.id}><span>{index + 1}</span><strong>{item[language === 'kz' ? 'titleKz' : 'titleRu']}</strong><em>{item.count}</em></li>) : <li className="empty-row">{tr('Данных пока нет', 'Әзірге деректер жоқ')}</li>}</ol></section>
-      <section className="admin-card admin-card--wide"><header><div><span>{tr('Безопасность', 'Қауіпсіздік')}</span><h2>{tr('Последние действия', 'Соңғы әрекеттер')}</h2></div></header><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>{tr('Сотрудник')}</th><th>{tr('Действие')}</th><th>{tr('Объект')}</th><th>{tr('Время', 'Уақыт')}</th></tr></thead><tbody>{data.recentAudit.map((item) => <tr key={item.id}><td>{item.adminUser.fullName}</td><td><span className="status-pill status-pill--neutral">{tr(item.action)}</span></td><td>{tr(item.entityType) || '—'} {item.entityId || ''}</td><td>{new Date(item.createdAt).toLocaleString(locale)}</td></tr>)}</tbody></table></div></section>
     </div>
   </>;
 }

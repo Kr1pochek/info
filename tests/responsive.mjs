@@ -7,7 +7,7 @@ import { chromium } from 'playwright-core';
 const requireFromServer = createRequire(path.resolve('server/package.json'));
 const { parse: parseEnv } = requireFromServer('dotenv');
 const seedEnvironment = parseEnv(fs.readFileSync(path.resolve('server/.env')));
-Object.assign(process.env, seedEnvironment, { NODE_ENV: 'production' });
+Object.assign(process.env, seedEnvironment, { NODE_ENV: 'test', SERVE_CLIENT_DIST: 'true' });
 
 const candidates = [
   process.env.CHROME_PATH,
@@ -30,15 +30,21 @@ await new Promise((resolve, reject) => { server.once('listening', resolve); serv
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
 const broadcastResponse = await fetch(`${baseUrl}/api/broadcast`);
 assert.equal(broadcastResponse.status, 200, `Broadcast API failed: ${await broadcastResponse.text()}`);
-const [servicesResponse, newsResponse] = await Promise.all([
+const [servicesResponse, newsResponse, categoriesResponse] = await Promise.all([
   fetch(`${baseUrl}/api/services?limit=100`),
   fetch(`${baseUrl}/api/news?limit=100`),
+  fetch(`${baseUrl}/api/categories?limit=100`),
 ]);
 assert.equal(servicesResponse.status, 200, 'Services API failed');
 assert.equal(newsResponse.status, 200, 'News API failed');
-const serviceCandidate = (await servicesResponse.json()).data.find((item) => Array.from(item.titleKz).length >= 8);
-const newsCandidate = (await newsResponse.json()).data.find((item) => Array.from(item.titleKz).length >= 8);
-assert.ok(serviceCandidate && newsCandidate, 'Search suggestion fixtures are missing');
+assert.equal(categoriesResponse.status, 200, 'Categories API failed');
+const services = (await servicesResponse.json()).data;
+const news = (await newsResponse.json()).data;
+const categories = (await categoriesResponse.json()).data;
+const serviceCandidate = services.find((item) => Array.from(item.titleKz).length >= 8);
+const newsCandidate = news.find((item) => Array.from(item.titleKz).length >= 8);
+const categoryCandidate = categories.find((item) => item.slug);
+assert.ok(serviceCandidate && newsCandidate && categoryCandidate, 'User journey fixtures are missing');
 
 function removeMiddleCharacter(value) {
   const words = value.split(/\s+/);
@@ -60,7 +66,17 @@ const viewports = [
   { name: 'QHD 125%', width: 2048, height: 1152, deviceScaleFactor: 1.25 },
   { name: '4K 150%', width: 2560, height: 1440, deviceScaleFactor: 1.5 },
 ];
-const routes = ['/kiosk', '/packages', '/package/progress', '/information/taxpayer-rights', '/information/ethics-officer', '/news', '/admin/login'];
+const routes = ['/kiosk', '/packages', '/package/progress', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/news', '/admin/login'];
+const publicPageRoutes = [
+  '/', '/kiosk', '/services', '/packages', '/package/progress',
+  `/category/${categoryCandidate.slug}`, `/service/${serviceCandidate.slug}`,
+  '/faq', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/information/reception-schedule',
+  '/news', `/news/${newsCandidate.slug}`, '/missing-page-user-check',
+];
+const adminPageRoutes = [
+  '/admin', '/admin/services', '/admin/categories', '/admin/packages', '/admin/news', '/admin/broadcast',
+  '/admin/analytics', '/admin/users', '/admin/settings', '/admin/safety', '/admin/audit-logs', '/admin/guide',
+];
 
 try {
   for (const viewport of viewports) {
@@ -95,6 +111,12 @@ try {
       if (route === '/news') {
         const broadcastVisible = await page.locator('.broadcast-progress').count();
         assert.equal(broadcastVisible, 1, `${viewport.name}: broadcast did not load at ${page.url()}: ${layout.text.slice(0, 240)}`);
+        const slideControls = page.locator('.broadcast-slide-controls button');
+        assert.equal(await slideControls.count(), 2, `${viewport.name}: manual slide controls are missing`);
+        const slideNumberBefore = await page.locator('.broadcast-corner strong').innerText();
+        await slideControls.last().click();
+        const slideNumberAfter = await page.locator('.broadcast-corner strong').innerText();
+        assert.notEqual(slideNumberAfter, slideNumberBefore, `${viewport.name}: next slide button did not change the slide`);
         const animations = await page.evaluate(() => ({
           progress: getComputedStyle(document.querySelector('.broadcast-progress')).animationName,
           ticker: getComputedStyle(document.querySelector('.broadcast-ticker p')).animationName,
@@ -105,6 +127,8 @@ try {
         await page.locator('.broadcast-open-button').click();
         const newsSearch = page.locator('.news-search input');
         await newsSearch.waitFor();
+        assert.equal(await page.locator('.news-footer a[href="/admin/login"]').count(), 0, `${viewport.name}: administrator link is still visible in news`);
+        assert.ok((await page.locator('.news-footer').innerText()).trim().length > 20, `${viewport.name}: news footer inscription is missing`);
         assert.equal(await newsSearch.getAttribute('inputmode'), 'none', `${viewport.name}: native keyboard is not suppressed`);
         await newsSearch.click();
         const virtualKeyboard = page.locator('.virtual-keyboard');
@@ -139,6 +163,27 @@ try {
     await context.close();
   }
 
+  const publicContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  for (const route of publicPageRoutes) {
+    const page = await publicContext.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    assert.equal(response?.status(), 200, `Public journey ${route}: HTTP status`);
+    await page.waitForTimeout(700);
+    if (route === '/') assert.match(page.url(), /\/kiosk$/, 'Root route did not redirect to the kiosk');
+    const state = await page.evaluate(() => ({
+      text: document.body.innerText.trim(),
+      bodyWidth: document.body.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    assert.ok(state.text.length > 20, `Public journey ${route}: empty page`);
+    assert.ok(state.bodyWidth <= state.viewportWidth + 2, `Public journey ${route}: horizontal overflow ${state.bodyWidth}/${state.viewportWidth}`);
+    assert.equal(errors.length, 0, `Public journey ${route}: ${errors.join('; ')}`);
+    await page.close();
+  }
+  await publicContext.close();
+
   const adminContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   const adminPage = await adminContext.newPage();
   const adminErrors = [];
@@ -160,6 +205,30 @@ try {
   assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Инфокиоск', { exact: true }).count(), 1, 'Kiosk workspace navigation was not localized');
   assert.equal(await adminPage.locator('.admin-nav-group__heading').getByText('Жаңалықтар таспасы', { exact: true }).count(), 1, 'News workspace navigation was not localized');
 
+  for (const route of adminPageRoutes) {
+    const response = await adminPage.goto(`${baseUrl}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    assert.equal(response?.status(), 200, `Admin journey ${route}: HTTP status`);
+    await adminPage.locator('.admin-main').waitFor({ timeout: 15000 });
+    await adminPage.waitForTimeout(500);
+    assert.ok((await adminPage.locator('.admin-main').innerText()).trim().length > 20, `Admin journey ${route}: empty page`);
+    assert.ok(!adminPage.url().endsWith('/admin/login'), `Admin journey ${route}: session was lost`);
+  }
+
+  await adminPage.goto(`${baseUrl}/admin/safety`, { waitUntil: 'domcontentloaded' });
+  await adminPage.getByRole('heading', { name: 'Әдеп және өрт қауіпсіздігі', exact: true }).waitFor({ timeout: 15000 });
+  assert.ok(await adminPage.locator('.safety-rules-editor .settings-repeat-card').count() >= 5, 'Editable fire safety rules are missing');
+  const kioskGroupButton = adminPage.locator('.admin-nav-group__heading').filter({ hasText: 'Инфокиоск' });
+  const newsGroupButton = adminPage.locator('.admin-nav-group__heading').filter({ hasText: 'Жаңалықтар таспасы' });
+  assert.equal(await kioskGroupButton.getAttribute('aria-expanded'), 'true', 'Active kiosk navigation group is collapsed');
+  await newsGroupButton.click();
+  assert.equal(await newsGroupButton.getAttribute('aria-expanded'), 'true', 'News navigation group did not expand');
+  assert.equal(await kioskGroupButton.getAttribute('aria-expanded'), 'false', 'Previous navigation group did not collapse');
+
+  await adminPage.goto(`${baseUrl}/admin/guide`, { waitUntil: 'domcontentloaded' });
+  await adminPage.getByRole('heading', { name: 'Панельмен жұмыс істеуге арналған түсінікті нұсқаулық' }).waitFor({ timeout: 15000 });
+  assert.ok(await adminPage.locator('.admin-guide-steps article').count() >= 40, 'The administrator guide is missing detailed steps');
+  assert.equal(await adminPage.locator('.admin-guide-problems details').count(), 9, 'The administrator guide is missing troubleshooting entries');
+
   await adminPage.goto(`${baseUrl}/admin/broadcast`, { waitUntil: 'domcontentloaded' });
   try {
     await adminPage.getByRole('heading', { name: 'Эфир баптаулары' }).waitFor({ timeout: 15000 });
@@ -171,6 +240,8 @@ try {
   assert.equal(adminErrors.length, 0, `Authenticated admin: ${adminErrors.join('; ')}`);
   await adminContext.close();
   console.log(`Responsive QA: ${viewports.length} kiosk viewports × ${routes.length} routes passed`);
+  console.log(`Public user journey: ${publicPageRoutes.length} routes passed`);
+  console.log(`Administrator journey: ${adminPageRoutes.length} protected routes passed`);
   console.log('Authenticated admin QA: Kazakh UI and API errors passed');
 } finally {
   await browser.close();

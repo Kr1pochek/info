@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BadgeCheck, Banknote, Clock3, FileCheck2, ListChecks, MapPin, Phone, ShieldAlert, UserRound } from 'lucide-react';
 import api, { apiMessage } from '../../api/client.js';
-import { track } from '../../api/analytics.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { localized } from '../../utils/localization.js';
 import AppIcon from '../../components/common/AppIcon.jsx';
@@ -15,7 +14,7 @@ function ListSection({ title, items, icon: Icon, ordered = false }) {
 }
 export default function ServicePage() {
   const { serviceSlug } = useParams(); const { language, t } = useLanguage(); const [service, setService] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
-  const load = useCallback(async () => { setLoading(true); setError(''); try { const response = await api.get(`/services/${serviceSlug}`); setService(response.data.data); track('SERVICE_OPEN', { serviceId: response.data.data.id, categoryId: response.data.data.categoryId }); } catch (err) { setError(apiMessage(err)); } finally { setLoading(false); } }, [serviceSlug]);
+  const load = useCallback(async () => { setLoading(true); setError(''); try { const response = await api.get(`/services/${serviceSlug}`); setService(response.data.data); } catch (err) { setError(apiMessage(err)); } finally { setLoading(false); } }, [serviceSlug]);
   useEffect(() => { load(); }, [load]);
   if (loading) return <LoadingState text={t.loading} />; if (error || !service) return <ErrorState title={t.unavailableTitle} text={error || t.unavailableText} onRetry={load} retryText={t.retry} />;
   const value = (base) => localized(service, base, language); const list = (base) => service[`${base}${language === 'kz' ? 'Kz' : 'Ru'}`];

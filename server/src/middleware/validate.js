@@ -5,6 +5,7 @@ export const validate = (schema, source = 'body') => (req, _res, next) => {
   if (!result.success) {
     return next(new AppError(400, 'VALIDATION_ERROR', 'Проверьте заполненные поля', result.error.flatten()));
   }
-  req[source] = result.data;
+  if (source === 'query') req.validatedQuery = result.data;
+  else req[source] = result.data;
   next();
 };

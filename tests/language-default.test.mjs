@@ -8,9 +8,8 @@ test('Kazakh is the initial and reset language throughout the client', async () 
   assert.match(context, /setLanguage\('kz', true\)/);
 });
 
-test('the service chooser has Kazakh copy and a manual language switch', async () => {
-  const page = await readFile(new URL('../client/src/pages/portal/ChoosePage.jsx', import.meta.url), 'utf8');
-  assert.match(page, /Қажетті сервисті таңдаңыз/);
-  assert.match(page, /nameKz/);
-  assert.match(page, /choose-language-switch/);
+test('the root route opens the kiosk without a service chooser', async () => {
+  const app = await readFile(new URL('../client/src/App.jsx', import.meta.url), 'utf8');
+  assert.match(app, /<Route index element={<Navigate to="\/kiosk" replace \/>} \/>/);
+  assert.doesNotMatch(app, /ChoosePage/);
 });

@@ -16,6 +16,8 @@ import { prisma } from './config/prisma.js';
 
 export const app = express();
 
+if (env.TRUST_PROXY_HOPS > 0) app.set('trust proxy', env.TRUST_PROXY_HOPS);
+
 app.use((req, res, next) => {
   const suppliedId = req.get('x-request-id');
   req.id = suppliedId && /^[a-zA-Z0-9._:-]{8,128}$/.test(suppliedId) ? suppliedId : randomUUID();
@@ -98,7 +100,7 @@ app.use('/api/auth', apiRateLimit(env.AUTH_RATE_LIMIT, 'auth'), authRoutes);
 app.use('/api/admin', apiRateLimit(env.ADMIN_RATE_LIMIT, 'admin'), adminRoutes);
 app.use('/api', apiRateLimit(env.PUBLIC_RATE_LIMIT, 'public'), publicRoutes);
 
-if (env.NODE_ENV === 'production') {
+if (env.NODE_ENV === 'production' || env.SERVE_CLIENT_DIST) {
   const clientDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');
   app.use(express.static(clientDist, { maxAge: '1d', index: false, redirect: false }));
   app.use((req, res, next) => {

@@ -12,7 +12,6 @@ import ConnectivityBanner from './components/common/ConnectivityBanner.jsx';
 const KioskLayout = lazy(() => import('./layouts/KioskLayout.jsx'));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout.jsx'));
 const NewsLayout = lazy(() => import('./layouts/NewsLayout.jsx'));
-const ChoosePage = lazy(() => import('./pages/portal/ChoosePage.jsx'));
 const HomePage = lazy(() => import('./pages/kiosk/HomePage.jsx'));
 const ServicesPage = lazy(() => import('./pages/kiosk/ServicesPage.jsx'));
 const CategoryPage = lazy(() => import('./pages/kiosk/CategoryPage.jsx'));
@@ -34,12 +33,13 @@ const BroadcastPage = lazy(() => import('./pages/admin/BroadcastPage.jsx'));
 const AnalyticsPage = lazy(() => import('./pages/admin/AnalyticsPage.jsx'));
 const UsersPage = lazy(() => import('./pages/admin/UsersPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/admin/SettingsPage.jsx'));
+const SafetyPage = lazy(() => import('./pages/admin/SafetyPage.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage.jsx'));
 const GuidePage = lazy(() => import('./pages/admin/GuidePage.jsx'));
 
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><ConnectivityBanner /><Suspense fallback={<LoadingState />}><Routes>
-    <Route index element={<ChoosePage />} />
+    <Route index element={<Navigate to="/kiosk" replace />} />
     <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="faq" element={<FaqPage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
     <Route path="news" element={<NewsLayout />}><Route index element={<NewsListPage />} /><Route path=":newsSlug" element={<NewsDetailPage />} /></Route>
     <Route path="admin/login" element={<LoginPage />} />
@@ -51,6 +51,7 @@ export default function App() {
       <Route path="analytics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AnalyticsPage /></RoleRoute>} />
       <Route path="users" element={<RoleRoute roles={['SUPER_ADMIN']}><UsersPage /></RoleRoute>} />
       <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SettingsPage /></RoleRoute>} />
+      <Route path="safety" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage /></RoleRoute>} />
       <Route path="audit-logs" element={<RoleRoute roles={['SUPER_ADMIN']}><AuditLogsPage /></RoleRoute>} />
       <Route path="guide" element={<GuidePage />} />
       <Route path="*" element={<Navigate to="/admin" replace />} />

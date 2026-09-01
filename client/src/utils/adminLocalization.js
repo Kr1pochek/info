@@ -58,6 +58,16 @@ export function translateAdminText(value, language) {
   return language === 'kz' ? (kk[value] || value) : value;
 }
 
+const roleLabels = {
+  SUPER_ADMIN: ['Главный администратор', 'Бас әкімші'],
+  ADMIN: ['Администратор', 'Әкімші'],
+  EDITOR: ['Редактор', 'Редактор'],
+};
+
+export function adminRoleLabel(value, language = 'ru') {
+  return roleLabels[value]?.[language === 'kz' ? 1 : 0] || value;
+}
+
 export function useAdminI18n() {
   const { language, setLanguage } = useLanguage();
   const tr = useCallback((ru, kz = kk[ru]) => language === 'kz' ? (kz || ru) : ru, [language]);

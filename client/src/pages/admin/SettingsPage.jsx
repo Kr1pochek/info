@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { CalendarClock, ImagePlus, Plus, Save, Settings2, Trash2, UserRoundCheck, Video } from 'lucide-react';
+import { CalendarClock, ImagePlus, Plus, Save, Settings2, Trash2, UserRoundCheck } from 'lucide-react';
 import api, { apiMessage, assetUrl } from '../../api/client.js';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import Toast from '../../components/admin/Toast.jsx';
@@ -52,18 +52,6 @@ export default function SettingsPage() {
       </div></Section>
 
       <Section title="Права и обязанности налогоплательщика" titleKz="Салық төлеушінің құқықтары мен міндеттері" description="Двуязычный текст для нового раздела киоска" descriptionKz="Киосктің жаңа бөліміне арналған екі тілдегі мәтін"><div className="form-grid settings-fields"><label><span>{tr('Текст (русский)', 'Мәтін (орысша)')}</span><textarea className="settings-long-text" maxLength={30000} value={form.taxpayerRightsRu} onChange={(e) => update('taxpayerRightsRu', e.target.value)} /></label><label><span>{tr('Мәтін (қазақша)', 'Мәтін (қазақша)')}</span><textarea className="settings-long-text" maxLength={30000} value={form.taxpayerRightsKz} onChange={(e) => update('taxpayerRightsKz', e.target.value)} /></label></div></Section>
-
-      <Section icon={UserRoundCheck} title="Уполномоченный по этике" titleKz="Әдеп жөніндегі уәкіл" description="ФИО, фотография и контакты на двух языках" descriptionKz="Аты-жөні, фотосуреті және екі тілдегі байланыстары"><div className="form-grid settings-fields">
-        <label><span>{tr('ФИО (русский)', 'Аты-жөні (орысша)')}</span><input maxLength={240} value={form.ethicsOfficerNameRu} onChange={(e) => update('ethicsOfficerNameRu', e.target.value)} /></label><label><span>{tr('ФИО (казахский)', 'Аты-жөні (қазақша)')}</span><input maxLength={240} value={form.ethicsOfficerNameKz} onChange={(e) => update('ethicsOfficerNameKz', e.target.value)} /></label>
-        <label><span>{tr('Контакты (русский)', 'Байланыстар (орысша)')}</span><textarea maxLength={1000} value={form.ethicsOfficerContactsRu} onChange={(e) => update('ethicsOfficerContactsRu', e.target.value)} /></label><label><span>{tr('Контакты (казахский)', 'Байланыстар (қазақша)')}</span><textarea maxLength={1000} value={form.ethicsOfficerContactsKz} onChange={(e) => update('ethicsOfficerContactsKz', e.target.value)} /></label>
-        <label className="form-grid__wide"><span>{tr('Фотография', 'Фотосурет')}</span><span className="image-upload-control"><ImagePlus size={20} />{uploading === 'ethics' ? tr('Загрузка…') : form.ethicsOfficerPhoto ? tr('Заменить фотографию', 'Фотосуретті ауыстыру') : tr('Загрузить фотографию', 'Фотосурет жүктеу')}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={Boolean(uploading)} onChange={(e) => uploadImage(e, 'ethics', (path) => update('ethicsOfficerPhoto', path))} /></span></label>
-        {form.ethicsOfficerPhoto && <img className="settings-photo-preview" src={assetUrl(form.ethicsOfficerPhoto)} alt="" />}
-      </div></Section>
-
-      <Section icon={Video} title="Видео о действиях при пожаре" titleKz="Өрт кезіндегі әрекеттер туралы бейне" description="Небольшая памятка для страницы этики и пожарной безопасности" descriptionKz="Әдеп және өрт қауіпсіздігі бетіне арналған қысқа нұсқаулық"><div className="form-grid settings-fields">
-        <label className="form-grid__wide"><span>{tr('Видео — необязательно', 'Бейне — міндетті емес')}</span><span className="image-upload-control"><Video size={20} />{uploading === 'fire-video' ? tr('Загрузка…') : form.fireSafetyVideo ? tr('Заменить видео', 'Бейнені ауыстыру') : tr('Загрузить видео', 'Бейне жүктеу')}<input type="file" accept="video/mp4,video/webm" disabled={Boolean(uploading)} onChange={(e) => uploadImage(e, 'fire-video', (path) => update('fireSafetyVideo', path))} /></span><small>{tr('MP4 или WebM, до 150 МБ. Если видео не загружено, посетители увидят наглядную анимированную схему.', 'MP4 немесе WebM, 150 МБ дейін. Бейне жүктелмесе, келушілер көрнекі анимациялық сызбаны көреді.')}</small></label>
-        {form.fireSafetyVideo && <><video className="settings-video-preview" src={assetUrl(form.fireSafetyVideo)} controls muted /><button type="button" className="admin-button admin-button--danger settings-media-remove" onClick={() => update('fireSafetyVideo', '')}><Trash2 size={17} />{tr('Убрать видео', 'Бейнені алып тастау')}</button></>}
-      </div></Section>
 
       <Section icon={CalendarClock} title="Сроки отчётности и уплаты налогов" titleKz="Есептілік пен салық төлеу мерзімдері" description="На киоске автоматически показывается обратный отсчёт до ближайших активных дат" descriptionKz="Киоскіде жақын белсенді күндерге дейінгі кері санақ автоматты көрсетіледі"><div className="settings-repeater">
         {form.reportingDeadlines.map((item, index) => <fieldset className="settings-repeat-card" key={item.id}><div className="form-grid">

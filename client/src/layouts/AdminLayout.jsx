@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
 import {
-  BarChart3, BookOpen, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Languages,
+  BarChart3, BookOpen, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Flame, Languages,
   LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, Users,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useAdminI18n } from '../utils/adminLocalization.js';
+import { adminRoleLabel, useAdminI18n } from '../utils/adminLocalization.js';
 import DgdLogo from '../components/common/DgdLogo.jsx';
 
 const contentRoles = ['SUPER_ADMIN', 'ADMIN'];
@@ -20,6 +21,7 @@ const workspaces = [
       { to: '/admin/services', label: 'Услуги', labelKz: 'Қызметтер', icon: BookOpenCheck, roles: contentRoles },
       { to: '/admin/categories', label: 'Категории', labelKz: 'Санаттар', icon: Boxes, roles: contentRoles },
       { to: '/admin/packages', label: 'Пакеты обслуживания', labelKz: 'Қызмет пакеттері', icon: PackageOpen, roles: contentRoles },
+      { to: '/admin/safety', label: 'Этика и пожарная безопасность', labelKz: 'Әдеп және өрт қауіпсіздігі', icon: Flame, roles: contentRoles },
       { to: '/admin/settings', label: 'Настройки инфокиоска', labelKz: 'Инфокиоск баптаулары', icon: Settings, roles: contentRoles },
     ],
   },
@@ -40,7 +42,7 @@ const utilityLinks = [
   { to: '/admin/guide', label: 'Инструкция', labelKz: 'Нұсқаулық', icon: BookOpen },
   { to: '/admin/analytics', label: 'Аналитика', labelKz: 'Талдау', icon: BarChart3, roles: contentRoles },
   { to: '/admin/users', label: 'Администраторы', labelKz: 'Әкімшілер', icon: Users, roles: ['SUPER_ADMIN'] },
-  { to: '/admin/audit-logs', label: 'Журнал действий', labelKz: 'Әрекеттер журналы', icon: ClipboardList, roles: ['SUPER_ADMIN'] },
+  { to: '/admin/audit-logs', label: 'Журнал аудита', labelKz: 'Аудит журналы', icon: ClipboardList, roles: ['SUPER_ADMIN'] },
 ];
 
 const allowed = (item, role) => !item.roles || item.roles.includes(role);
@@ -54,6 +56,13 @@ export default function AdminLayout() {
   const visibleWorkspaces = workspaces.map((workspace) => ({ ...workspace, links: workspace.links.filter((item) => allowed(item, role)) })).filter((workspace) => workspace.links.length);
   const visibleUtilities = utilityLinks.filter((item) => allowed(item, role));
   const activeWorkspace = visibleWorkspaces.find((workspace) => workspace.links.some((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)));
+  const activeUtility = visibleUtilities.find((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`));
+  const activeGroup = activeWorkspace?.id || (activeUtility ? 'system' : null);
+  const [openGroup, setOpenGroup] = useState(() => activeGroup);
+  useEffect(() => {
+    if (activeGroup) setOpenGroup(activeGroup);
+  }, [activeGroup]);
+  const toggleGroup = (id) => setOpenGroup((current) => current === id ? null : id);
   const guideContext = location.pathname === '/admin/guide' ? {
     label: 'Помощь и обучение', labelKz: 'Көмек және оқыту',
     description: 'Инструкция по работе с панелью', descriptionKz: 'Панельмен жұмыс істеу нұсқаулығы',
@@ -73,17 +82,18 @@ export default function AdminLayout() {
         {role !== 'EDITOR' && <NavLink className="admin-overview-link" to="/admin" end><LayoutDashboard size={21} /><span>{tr('Начало', 'Басты бет')}</span><ChevronRight className="nav-arrow" size={17} /></NavLink>}
         {visibleWorkspaces.map((workspace) => {
           const WorkspaceIcon = workspace.icon;
-          return <section className={`admin-nav-group ${activeWorkspace?.id === workspace.id ? 'is-active' : ''}`} key={workspace.id}>
-            <div className="admin-nav-group__heading"><span><WorkspaceIcon size={21} /></span><div><strong>{tr(workspace.label, workspace.labelKz)}</strong><small>{tr(workspace.description, workspace.descriptionKz)}</small></div></div>
-            <div className="admin-nav-links">{workspace.links.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>
+          const isOpen = openGroup === workspace.id;
+          return <section className={`admin-nav-group ${activeWorkspace?.id === workspace.id ? 'is-active' : ''}${isOpen ? ' is-open' : ''}`} key={workspace.id}>
+            <button type="button" className="admin-nav-group__heading" onClick={() => toggleGroup(workspace.id)} aria-expanded={isOpen} aria-controls={`admin-nav-${workspace.id}`}><span><WorkspaceIcon size={21} /></span><div><strong>{tr(workspace.label, workspace.labelKz)}</strong><small>{tr(workspace.description, workspace.descriptionKz)}</small></div><ChevronRight className="nav-group-chevron" size={17} /></button>
+            {isOpen && <div className="admin-nav-links" id={`admin-nav-${workspace.id}`}>{workspace.links.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>}
           </section>;
         })}
-        {visibleUtilities.length > 0 && <section className="admin-nav-group admin-nav-group--utilities">
-          <div className="admin-nav-label">{tr('Система', 'Жүйе')}</div>
-          <div className="admin-nav-links">{visibleUtilities.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>
+        {visibleUtilities.length > 0 && <section className={`admin-nav-group admin-nav-group--utilities${activeUtility ? ' is-active' : ''}${openGroup === 'system' ? ' is-open' : ''}`}>
+          <button type="button" className="admin-nav-group__heading" onClick={() => toggleGroup('system')} aria-expanded={openGroup === 'system'} aria-controls="admin-nav-system"><span><Settings size={21} /></span><div><strong>{tr('Система', 'Жүйе')}</strong><small>{tr('Помощь, аналитика и доступ', 'Көмек, талдау және қолжетімділік')}</small></div><ChevronRight className="nav-group-chevron" size={17} /></button>
+          {openGroup === 'system' && <div className="admin-nav-links" id="admin-nav-system">{visibleUtilities.map(({ to, label, labelKz, icon: Icon }) => <NavLink key={to} to={to}><Icon size={20} /><span>{tr(label, labelKz)}</span><ChevronRight className="nav-arrow" size={16} /></NavLink>)}</div>}
         </section>}
       </nav>
-      <div className="admin-profile"><div className="admin-profile__avatar"><ShieldCheck /></div><div><strong>{user.fullName}</strong><small>{user.role}</small></div><button onClick={signOut} aria-label={tr('Выйти')}><LogOut size={21} /></button></div>
+      <div className="admin-profile"><div className="admin-profile__avatar"><ShieldCheck /></div><div><strong>{user.fullName}</strong><small>{adminRoleLabel(user.role, language)}</small></div><button onClick={signOut} aria-label={tr('Выйти')}><LogOut size={21} /></button></div>
     </aside>
     <div className="admin-workspace">
       <header className="admin-topbar">

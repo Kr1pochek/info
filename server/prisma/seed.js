@@ -10,6 +10,14 @@ const officialPanelQrCodes = [
   { id: 'egov-official', labelRu: 'Электронное правительство', labelKz: 'Электрондық үкімет', image: '/qr/egov-portal.png', url: 'https://egov.kz/', isActive: true },
 ];
 
+const defaultFireSafetyRules = [
+  { id: 'report', titleRu: 'Сообщите о пожаре', titleKz: 'Өрт туралы хабарлаңыз', textRu: 'Позвоните 101 или 112, назовите точный адрес и место возгорания.', textKz: '101 немесе 112 нөміріне қоңырау шалып, нақты мекенжай мен өрт орнын айтыңыз.' },
+  { id: 'warn', titleRu: 'Предупредите людей', titleKz: 'Адамдарды ескертіңіз', textRu: 'Нажмите кнопку пожарной сигнализации и спокойно сообщите окружающим.', textKz: 'Өрт дабылы түймесін басып, айналадағы адамдарға сабырмен хабарлаңыз.' },
+  { id: 'leave', titleRu: 'Покиньте здание', titleKz: 'Ғимараттан шығыңыз', textRu: 'Идите к ближайшему эвакуационному выходу, закрывая за собой двери. Не пользуйтесь лифтом.', textKz: 'Есіктерді артыңыздан жауып, жақын эвакуациялық шығу жолына барыңыз. Лифтіні пайдаланбаңыз.' },
+  { id: 'help', titleRu: 'Помогите другим', titleKz: 'Басқаларға көмектесіңіз', textRu: 'По возможности помогите детям, пожилым людям и людям с инвалидностью.', textKz: 'Мүмкіндігінше балаларға, қарттарға және мүгедектігі бар адамдарға көмектесіңіз.' },
+  { id: 'stay-outside', titleRu: 'Не возвращайтесь', titleKz: 'Қайтып кірмеңіз', textRu: 'Ожидайте пожарных снаружи и выполняйте указания ответственных лиц.', textKz: 'Өрт сөндірушілерді сыртта күтіп, жауапты адамдардың нұсқауын орындаңыз.' },
+];
+
 const officialInformationDefaults = {
   taxpayerRightsRu: `Краткая памятка по статье 36 Налогового кодекса Республики Казахстан от 18 июля 2025 года № 214-VIII ЗРК.
 
@@ -67,6 +75,8 @@ const officialInformationDefaults = {
 Әдеп жөніндегі уәкіл қызметтік әдеп нормаларының сақталуын қамтамасыз етуге, мемлекеттік қызмет және сыбайлас жемқорлыққа қарсы іс-қимыл туралы заңнаманы бұзудың алдын алуға көмектеседі, сондай-ақ өз өкілеттігі шегінде мемлекеттік қызметшілер мен азаматтарға консультация береді.
 
 Байланыс нөмірі Алматы қаласы бойынша МКД-ның ресми парақшасында жарияланған. Жеке бармас бұрын телефон арқылы қабылдау уақытын нақтылау ұсынылады.`,
+  fireSafetyWarningRu: 'При задымлении двигайтесь пригнувшись и прикройте рот и нос влажной тканью.',
+  fireSafetyWarningKz: 'Түтін болған жағдайда еңкейіп қозғалыңыз және ауыз-мұрныңызды дымқыл матамен жабыңыз.',
 };
 
 const categories = [
@@ -405,12 +415,13 @@ async function main() {
 
   const currentSettings = await prisma.setting.findUnique({
     where: { id: 1 },
-    select: { panelQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true },
+    select: { panelQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true, fireSafetyRules: true, fireSafetyWarningRu: true, fireSafetyWarningKz: true },
   });
   const shouldAddOfficialQrCodes = !currentSettings || !Array.isArray(currentSettings.panelQrCodes) || currentSettings.panelQrCodes.length === 0;
+  const shouldAddFireSafetyRules = !currentSettings || !Array.isArray(currentSettings.fireSafetyRules) || currentSettings.fireSafetyRules.length === 0;
   const missingOfficialInformation = Object.fromEntries(Object.entries(officialInformationDefaults).filter(([key]) => !currentSettings?.[key]?.trim()));
   await prisma.setting.upsert({
-    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}) },
+    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}), ...(shouldAddFireSafetyRules ? { fireSafetyRules: defaultFireSafetyRules } : {}) },
     create: {
       id: 1,
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
@@ -420,7 +431,7 @@ async function main() {
       inactivitySeconds: 60, warningSeconds: 10, defaultLanguage: 'kz', showCurrentTime: true, maintenanceMode: false,
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
-      ...officialInformationDefaults, ethicsOfficerPhoto: '',
+      ...officialInformationDefaults, ethicsOfficerPhoto: '', fireSafetyRules: defaultFireSafetyRules,
       reportingDeadlines: [], panelQrCodes: officialPanelQrCodes, onlineSpecialists: [],
     },
   });

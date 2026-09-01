@@ -170,6 +170,20 @@ export const publicSettings = asyncHandler(async (_req, res) => {
 });
 
 export const createAnalyticsEvent = asyncHandler(async (req, res) => {
-  const data = await prisma.analyticsEvent.create({ data: { ...req.body, searchQuery: req.body.searchQuery?.slice(0, 80) || null } });
+  const { occurredAt, ...event } = req.body;
+  const create = {
+    ...event,
+    source: 'KIOSK',
+    occurredAt: new Date(occurredAt),
+    searchQuery: event.searchQuery?.slice(0, 80) || null,
+  };
+  let data;
+  try {
+    data = await prisma.analyticsEvent.create({ data: create });
+  } catch (error) {
+    if (error.code !== 'P2002') throw error;
+    data = await prisma.analyticsEvent.findUnique({ where: { eventId: event.eventId } });
+    if (!data) throw error;
+  }
   sendData(res, { id: data.id }, null, 201);
 });

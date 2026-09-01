@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireRoles } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { broadcastItemSchema, broadcastSettingsSchema, categoryPatchSchema, categorySchema, newsPatchSchema, newsPublicationSchema, newsSchema, servicePackagePatchSchema, servicePackageSchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
+import { analyticsPeriodSchema, broadcastItemSchema, broadcastSettingsSchema, categoryPatchSchema, categorySchema, newsPatchSchema, newsPublicationSchema, newsSchema, safetySettingsSchema, servicePackagePatchSchema, servicePackageSchema, servicePatchSchema, serviceSchema, settingsSchema, userPatchSchema, userSchema } from '../schemas/index.js';
 import { uploadBroadcastMedia, uploadNewsImage } from '../middleware/upload.js';
 import * as content from '../controllers/adminContentController.js';
 import * as admin from '../controllers/adminController.js';
@@ -55,5 +55,7 @@ adminRoutes.delete('/users/:id', requireRoles('SUPER_ADMIN'), admin.deleteUser);
 
 adminRoutes.get('/settings', requireRoles('SUPER_ADMIN', 'ADMIN'), admin.getSettings);
 adminRoutes.patch('/settings', requireRoles('SUPER_ADMIN', 'ADMIN'), validate(settingsSchema), admin.updateSettings);
-adminRoutes.get('/analytics', requireRoles('SUPER_ADMIN', 'ADMIN'), admin.analytics);
+adminRoutes.get('/safety', requireRoles('SUPER_ADMIN', 'ADMIN'), admin.getSafetySettings);
+adminRoutes.patch('/safety', requireRoles('SUPER_ADMIN', 'ADMIN'), validate(safetySettingsSchema), admin.updateSafetySettings);
+adminRoutes.get('/analytics', requireRoles('SUPER_ADMIN', 'ADMIN'), validate(analyticsPeriodSchema, 'query'), admin.analytics);
 adminRoutes.get('/audit-logs', requireRoles('SUPER_ADMIN'), admin.auditLogs);

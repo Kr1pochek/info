@@ -6,6 +6,7 @@ import { prisma } from '../config/prisma.js';
 import { AppError, asyncHandler, pagination, publicUser, sendData } from '../utils/api.js';
 import { writeAudit } from '../services/audit.js';
 import { uploadsRoot } from '../middleware/upload.js';
+import { ANALYTICS_TIME_ZONE, addAnalyticsDays, analyticsDateString, analyticsPeriod } from '../utils/analytics.js';
 
 export const systemStatus = asyncHandler(async (_req, res) => {
   const checkedAt = new Date();
@@ -32,23 +33,24 @@ export const systemStatus = asyncHandler(async (_req, res) => {
 
 export const dashboard = asyncHandler(async (_req, res) => {
   const now = new Date();
-  const today = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const since = new Date(now); since.setDate(since.getDate() - 6); since.setHours(0, 0, 0, 0);
-  const [services, categories, published, news, publishedNews, liveNews, broadcastItems, searches, opens, popular, recentAudit, daily] = await Promise.all([
+  const todayDay = analyticsDateString(now);
+  const today = todayDay.slice(5);
+  const since = analyticsPeriod({ from: addAnalyticsDays(todayDay, -6), to: todayDay }, 7).from;
+  const verifiedAnalytics = { source: 'KIOSK' };
+  const [services, categories, published, news, publishedNews, liveNews, broadcastItems, searches, opens, popular, daily] = await Promise.all([
     prisma.service.count(), prisma.category.count(), prisma.service.count({ where: { isPublished: true } }),
     prisma.news.count(), prisma.news.count({ where: { published: true } }),
     prisma.news.count({ where: { published: true, publishedAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } }),
     prisma.broadcastItem.findMany({ where: { isActive: true }, select: { type: true, eventDate: true, mediaUrl: true } }),
-    prisma.analyticsEvent.count({ where: { eventType: 'SEARCH' } }), prisma.analyticsEvent.count({ where: { eventType: 'SERVICE_OPEN' } }),
-    prisma.analyticsEvent.groupBy({ by: ['serviceId'], where: { eventType: 'SERVICE_OPEN', serviceId: { not: null } }, _count: { _all: true }, orderBy: { _count: { serviceId: 'desc' } }, take: 5 }),
-    prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 8, include: { adminUser: { select: { fullName: true, login: true } } } }),
-    prisma.$queryRaw(Prisma.sql`SELECT DATE("createdAt") AS day, COUNT(*)::int AS count FROM "AnalyticsEvent" WHERE "createdAt" >= ${since} GROUP BY DATE("createdAt") ORDER BY day ASC`),
+    prisma.analyticsEvent.count({ where: { ...verifiedAnalytics, eventType: 'SEARCH' } }), prisma.analyticsEvent.count({ where: { ...verifiedAnalytics, eventType: 'SERVICE_OPEN' } }),
+    prisma.analyticsEvent.groupBy({ by: ['serviceId'], where: { ...verifiedAnalytics, eventType: 'SERVICE_OPEN', serviceId: { not: null } }, _count: { _all: true }, orderBy: { _count: { serviceId: 'desc' } }, take: 5 }),
+    prisma.$queryRaw(Prisma.sql`SELECT ("occurredAt" AT TIME ZONE ${ANALYTICS_TIME_ZONE})::date::text AS day, COUNT(*)::int AS count FROM "AnalyticsEvent" WHERE "source" = 'KIOSK' AND "occurredAt" >= ${since} GROUP BY 1 ORDER BY 1 ASC`),
   ]);
   const popularIds = popular.map((item) => item.serviceId).filter(Boolean);
   const popularRows = await prisma.service.findMany({ where: { id: { in: popularIds } }, select: { id: true, titleRu: true, titleKz: true } });
   const popularServices = popular.map((item) => ({ ...popularRows.find((row) => row.id === item.serviceId), count: item._count._all })).filter((item) => item.id);
   const liveBroadcastItems = broadcastItems.filter((item) => item.type === 'VIDEO' ? Boolean(item.mediaUrl) : item.eventDate && `${String(item.eventDate.getUTCMonth() + 1).padStart(2, '0')}-${String(item.eventDate.getUTCDate()).padStart(2, '0')}` === today).length;
-  sendData(res, { counts: { services, categories, published, hidden: services - published, news, publishedNews, broadcastMaterials: liveNews + liveBroadcastItems, searches, opens }, popularServices, recentAudit, daily });
+  sendData(res, { counts: { services, categories, published, hidden: services - published, news, publishedNews, broadcastMaterials: liveNews + liveBroadcastItems, searches, opens }, popularServices, daily });
 });
 
 export const listUsers = asyncHandler(async (req, res) => {
@@ -109,24 +111,44 @@ export const updateSettings = asyncHandler(async (req, res) => {
   sendData(res, data);
 });
 
+const safetySettingsSelect = {
+  ethicsOfficerNameRu: true, ethicsOfficerNameKz: true,
+  ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true,
+  ethicsOfficerPhoto: true, fireSafetyVideo: true, fireSafetyRules: true,
+  fireSafetyWarningRu: true, fireSafetyWarningKz: true, updatedAt: true,
+};
+
+export const getSafetySettings = asyncHandler(async (_req, res) => {
+  const data = await prisma.setting.findUnique({ where: { id: 1 }, select: safetySettingsSelect });
+  sendData(res, data);
+});
+
+export const updateSafetySettings = asyncHandler(async (req, res) => {
+  const oldData = await prisma.setting.findUnique({ where: { id: 1 }, select: safetySettingsSelect });
+  const data = await prisma.setting.update({ where: { id: 1 }, data: req.body, select: safetySettingsSelect });
+  await writeAudit(req, 'UPDATE_SAFETY', 'Setting', 1, oldData, data);
+  sendData(res, data);
+});
+
 export const analytics = asyncHandler(async (req, res) => {
-  const to = req.query.to ? new Date(`${req.query.to}T23:59:59.999Z`) : new Date();
-  const from = req.query.from ? new Date(`${req.query.from}T00:00:00.000Z`) : new Date(to.getTime() - 29 * 86400000);
-  if (Number.isNaN(from.valueOf()) || Number.isNaN(to.valueOf())) throw new AppError(400, 'INVALID_PERIOD', 'Некорректный период');
-  const where = { createdAt: { gte: from, lte: to } };
-  const [byType, serviceGroups, categoryGroups, searchGroups, recent, daily, timeouts] = await Promise.all([
+  const { from, to, fromDay, toDay } = analyticsPeriod(req.validatedQuery || req.query);
+  const where = { source: 'KIOSK', occurredAt: { gte: from, lte: to } };
+  const [byType, serviceGroups, categoryGroups, searchGroups, recent, daily, timeouts, sessionRows, firstCaptured] = await Promise.all([
     prisma.analyticsEvent.groupBy({ by: ['eventType'], where, _count: { _all: true } }),
     prisma.analyticsEvent.groupBy({ by: ['serviceId'], where: { ...where, eventType: 'SERVICE_OPEN', serviceId: { not: null } }, _count: { _all: true }, orderBy: { _count: { serviceId: 'desc' } }, take: 10 }),
     prisma.analyticsEvent.groupBy({ by: ['categoryId'], where: { ...where, eventType: 'CATEGORY_OPEN', categoryId: { not: null } }, _count: { _all: true }, orderBy: { _count: { categoryId: 'desc' } }, take: 10 }),
     prisma.analyticsEvent.groupBy({ by: ['searchQuery'], where: { ...where, eventType: 'SEARCH', searchQuery: { not: null } }, _count: { _all: true }, orderBy: { _count: { searchQuery: 'desc' } }, take: 10 }),
-    prisma.analyticsEvent.findMany({ where, orderBy: { createdAt: 'desc' }, take: 50, include: { service: { select: { titleRu: true } }, category: { select: { titleRu: true } } } }),
-    prisma.$queryRaw(Prisma.sql`SELECT DATE("createdAt") AS day, COUNT(*)::int AS count FROM "AnalyticsEvent" WHERE "createdAt" BETWEEN ${from} AND ${to} GROUP BY DATE("createdAt") ORDER BY day ASC`),
+    prisma.analyticsEvent.findMany({ where, orderBy: { occurredAt: 'desc' }, take: 50, include: { service: { select: { titleRu: true, titleKz: true } }, category: { select: { titleRu: true, titleKz: true } } } }),
+    prisma.$queryRaw(Prisma.sql`SELECT ("occurredAt" AT TIME ZONE ${ANALYTICS_TIME_ZONE})::date::text AS day, COUNT(*)::int AS count FROM "AnalyticsEvent" WHERE "source" = 'KIOSK' AND "occurredAt" BETWEEN ${from} AND ${to} GROUP BY 1 ORDER BY 1 ASC`),
     prisma.analyticsEvent.count({ where: { ...where, eventType: 'SESSION_TIMEOUT' } }),
+    prisma.$queryRaw(Prisma.sql`SELECT COUNT(DISTINCT "sessionId")::int AS count FROM "AnalyticsEvent" WHERE "source" = 'KIOSK' AND "occurredAt" BETWEEN ${from} AND ${to}`),
+    prisma.analyticsEvent.aggregate({ where: { source: 'KIOSK' }, _min: { occurredAt: true } }),
   ]);
   const services = await prisma.service.findMany({ where: { id: { in: serviceGroups.map((x) => x.serviceId).filter(Boolean) } }, select: { id: true, titleRu: true, titleKz: true } });
   const categories = await prisma.category.findMany({ where: { id: { in: categoryGroups.map((x) => x.categoryId).filter(Boolean) } }, select: { id: true, titleRu: true, titleKz: true } });
   sendData(res, {
-    period: { from, to }, byType, timeouts, daily, recent,
+    period: { from: fromDay, to: toDay, timeZone: ANALYTICS_TIME_ZONE },
+    byType, timeouts, sessions: sessionRows[0]?.count || 0, firstCapturedAt: firstCaptured._min.occurredAt, daily, recent,
     popularServices: serviceGroups.map((x) => ({ ...services.find((s) => s.id === x.serviceId), count: x._count._all })).filter((x) => x.id),
     popularCategories: categoryGroups.map((x) => ({ ...categories.find((c) => c.id === x.categoryId), count: x._count._all })).filter((x) => x.id),
     popularSearches: searchGroups.map((x) => ({ query: x.searchQuery, count: x._count._all })),
@@ -136,9 +158,14 @@ export const analytics = asyncHandler(async (req, res) => {
 export const auditLogs = asyncHandler(async (req, res) => {
   const { page, limit, skip } = pagination(req.query);
   const where = req.query.action ? { action: req.query.action } : {};
-  const [data, total] = await prisma.$transaction([
+  const [rows, total] = await prisma.$transaction([
     prisma.auditLog.findMany({ where, include: { adminUser: { select: { id: true, login: true, fullName: true } } }, orderBy: { createdAt: 'desc' }, skip, take: limit }),
     prisma.auditLog.count({ where }),
   ]);
+  const data = rows.map(({ oldData, newData, ...item }) => {
+    const object = newData || oldData || {};
+    const objectName = object.titleRu || object.fullName || object.organizationNameRu || object.login || null;
+    return { ...item, objectName };
+  });
   sendData(res, data, { page, limit, total, pages: Math.ceil(total / limit) });
 });

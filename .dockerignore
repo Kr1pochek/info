@@ -1,0 +1,13 @@
+.git
+.github
+**/.env
+**/node_modules
+**/dist
+artifacts
+backups
+docs
+logs
+server/uploads
+tests
+*.log
+*.local

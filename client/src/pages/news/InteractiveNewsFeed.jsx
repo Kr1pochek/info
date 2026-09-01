@@ -14,8 +14,7 @@ import { findSearchSuggestions } from '../../utils/searchSuggestions.js';
 
 const RATE_ROTATION_MS = 5 * 1000;
 const CATEGORY_ROTATION_MS = 8 * 1000;
-
-export default function InteractiveNewsFeed() {
+export default function InteractiveNewsFeed({ dismissedPrioritySignature, dismissPriority }) {
   const { language } = useLanguage(); const copy = newsCopy[language]; const locale = language === 'kz' ? 'kk-KZ' : 'ru-RU';
   const [news, setNews] = useState(null); const [rates, setRates] = useState(null); const [rateIndex, setRateIndex] = useState(0); const [rateLoading, setRateLoading] = useState(true); const [error, setError] = useState('');
   const [priorityNews, setPriorityNews] = useState([]); const [priorityModalOpen, setPriorityModalOpen] = useState(false); const [priorityIndex, setPriorityIndex] = useState(0);
@@ -72,7 +71,7 @@ export default function InteractiveNewsFeed() {
   }, [filters.category, filters.search, keyboardOpen]);
   useEffect(() => { loadPriorityNews(); const timer = setInterval(loadPriorityNews, 60 * 1000); return () => clearInterval(timer); }, [loadPriorityNews]);
   const prioritySignature = priorityNews.map((entry) => `${entry.id}:${entry.updatedAt}:${entry.expiresAt}`).join('|');
-  useEffect(() => { if (!prioritySignature) { setPriorityModalOpen(false); return; } setPriorityIndex(0); setPriorityModalOpen(true); }, [prioritySignature]);
+  useEffect(() => { if (!prioritySignature) { setPriorityModalOpen(false); return; } if (prioritySignature === dismissedPrioritySignature) { setPriorityModalOpen(false); return; } setPriorityIndex(0); setPriorityModalOpen(true); }, [dismissedPrioritySignature, prioritySignature]);
   const rate = rates?.[rateIndex]; const RateTrend = rate?.change > 0 ? TrendingUp : TrendingDown;
   const featured = localizedNews(news?.[0], language); const feed = news?.slice(1) || [];
   const newsRefreshing = filters.category !== displayedFilters.category || filters.search !== displayedFilters.search;
@@ -82,6 +81,6 @@ export default function InteractiveNewsFeed() {
     {keyboardOpen && <VirtualKeyboard value={filters.search} onChange={updateSearch} onClose={closeKeyboard} />}
     {!featured && <SearchSuggestions suggestions={suggestions} onSelect={updateSearch} />}
     {!news && !error ? <LoadingState text={copy.loading} /> : error ? <ErrorState title={copy.loadError} text={error} onRetry={load} /> : !featured ? <EmptyState text={copy.empty} /> : <div className={`news-category-page news-category-page--${categoryTransition}${newsRefreshing ? ' is-refreshing' : ''}`} key={`${displayedFilters.category || 'all'}-${featured.id}`} aria-busy={newsRefreshing}><section className="featured-news"><Link to={`/news/${featured.slug}`} className="featured-news__image">{featured.image ? <img src={assetUrl(featured.image)} alt="" /> : <span className="featured-news__placeholder"><ImageIcon size={58} /></span>}</Link><div className="featured-news__content"><div className="featured-news__meta"><span className={newsCategoryClass(featured.category)}>{newsCategoryLabel(featured.category, language)}</span><time dateTime={featured.publishedAt || featured.createdAt}><CalendarDays size={16} />{newsDate(featured, language)}</time></div><h2><Link to={`/news/${featured.slug}`}>{featured.title}</Link></h2><p>{featured.description}</p><Link to={`/news/${featured.slug}`} className="featured-news__link">{copy.readFeatured} <ArrowRight size={20} /></Link></div></section><section className="news-feed"><div className="news-feed__heading"><div><span>{displayedFilters.search || displayedFilters.category ? copy.results : copy.fresh}</span><h2>{displayedFilters.search ? `${copy.searchResult}: «${displayedFilters.search}»` : displayedFilters.category ? newsCategoryLabel(displayedFilters.category, language) : copy.latest}</h2></div><strong>{news.length.toLocaleString(locale)}</strong></div>{feed.length ? <div className="news-grid">{feed.map((item) => <NewsCard news={item} key={item.id} />)}</div> : <p className="news-feed__single">{copy.onlyOne}</p>}</section></div>}
-    {priorityModalOpen && <PriorityNewsModal news={priorityNews[priorityIndex]} language={language} current={priorityIndex + 1} total={priorityNews.length} onNext={priorityIndex + 1 < priorityNews.length ? () => setPriorityIndex((currentIndex) => currentIndex + 1) : undefined} onClose={() => setPriorityModalOpen(false)} />}
+    {priorityModalOpen && <PriorityNewsModal news={priorityNews[priorityIndex]} language={language} current={priorityIndex + 1} total={priorityNews.length} onNext={priorityIndex + 1 < priorityNews.length ? () => setPriorityIndex((currentIndex) => currentIndex + 1) : undefined} onClose={() => { dismissPriority(prioritySignature); setPriorityModalOpen(false); }} />}
   </>;
 }

@@ -3,7 +3,7 @@ import { assetUrl } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 
-const fireSteps = {
+const defaultFireSteps = {
   ru: [
     ['Сообщите о пожаре', 'Позвоните 101 или 112, назовите точный адрес и место возгорания.'],
     ['Предупредите людей', 'Нажмите кнопку пожарной сигнализации и спокойно сообщите окружающим.'],
@@ -26,6 +26,13 @@ export default function EthicsFireSafetyPage() {
   const kazakh = language === 'kz';
   const officerName = settings[kazakh ? 'ethicsOfficerNameKz' : 'ethicsOfficerNameRu'];
   const officerContacts = settings[kazakh ? 'ethicsOfficerContactsKz' : 'ethicsOfficerContactsRu'];
+  const configuredRules = Array.isArray(settings.fireSafetyRules) ? settings.fireSafetyRules : [];
+  const fireSteps = configuredRules.length
+    ? configuredRules.map((rule) => [rule[kazakh ? 'titleKz' : 'titleRu'], rule[kazakh ? 'textKz' : 'textRu']])
+    : defaultFireSteps[language];
+  const fireWarning = settings[kazakh ? 'fireSafetyWarningKz' : 'fireSafetyWarningRu'] || (kazakh
+    ? 'Түтін болған жағдайда еңкейіп қозғалыңыз және ауыз-мұрныңызды дымқыл матамен жабыңыз.'
+    : 'При задымлении двигайтесь пригнувшись и прикройте рот и нос влажной тканью.');
 
   return <article className="ethics-fire-page">
     <div className="ethics-fire-grid">
@@ -48,8 +55,8 @@ export default function EthicsFireSafetyPage() {
         {settings.fireSafetyVideo
           ? <video className="fire-panel__video" src={assetUrl(settings.fireSafetyVideo)} controls muted playsInline preload="metadata" />
           : <div className="fire-panel__visual" role="img" aria-label={kazakh ? 'Өрт кезіндегі эвакуация сызбасы' : 'Схема эвакуации при пожаре'}><div><BellRing /><span>01</span></div><i /><div><DoorOpen /><span>02</span></div><i /><div><FireExtinguisher /><span>03</span></div><strong>112</strong></div>}
-        <ol className="fire-steps">{fireSteps[language].map(([title, text], index) => <li key={title}><span>{index + 1}</span><div><strong>{title}</strong><p>{text}</p></div></li>)}</ol>
-        <p className="fire-panel__warning"><Flame size={20} />{kazakh ? 'Түтін болған жағдайда еңкейіп қозғалыңыз және ауыз-мұрныңызды дымқыл матамен жабыңыз.' : 'При задымлении двигайтесь пригнувшись и прикройте рот и нос влажной тканью.'}</p>
+        <ol className="fire-steps">{fireSteps.map(([title, text], index) => <li key={`${index}-${title}`}><span>{index + 1}</span><div><strong>{title}</strong><p>{text}</p></div></li>)}</ol>
+        <p className="fire-panel__warning"><Flame size={20} />{fireWarning}</p>
       </section>
     </div>
   </article>;
