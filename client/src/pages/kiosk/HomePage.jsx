@@ -67,17 +67,17 @@ export default function HomePage() {
     <section className="hero-section">
       <h1>{t.question}</h1><p>{t.subtitle}</p><SearchBar value={query} onChange={setQuery} />
     </section>
+    {specialists.length > 0 && <aside className="kiosk-specialists-float" aria-label={language === 'kz' ? 'Бүгін онлайн мамандар' : 'Специалисты онлайн сегодня'}>
+      <header><UserRoundCheck size={20} /><span>{language === 'kz' ? 'Бүгін онлайн' : 'Сегодня онлайн'}</span></header>
+      {specialists.slice(0, 2).map((specialist) => <article key={specialist.id}>
+        {specialist.photo ? <img src={assetUrl(specialist.photo)} alt="" /> : <span className="kiosk-specialists-float__placeholder"><UserRoundCheck size={28} /></span>}
+        <div><strong>{specialist[language === 'kz' ? 'nameKz' : 'nameRu']}</strong><span>{specialist[language === 'kz' ? 'categoryKz' : 'categoryRu']}</span><small>{specialist[language === 'kz' ? 'servicesKz' : 'servicesRu']}</small></div>
+      </article>)}
+    </aside>}
     {searching ? <section className="content-section"><div className="section-heading"><div><span>{t.searchResults}</span><h2>{t.servicesFound}: {search.results.length}</h2></div></div>
       {search.loading ? <LoadingState text={t.loading} /> : search.error ? <ErrorState title={t.unavailableTitle} text={search.error} /> : search.results.length ? <div className="service-grid">{search.results.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <><SearchSuggestions suggestions={search.suggestions} onSelect={setQuery} /><EmptyState text={t.noResults} /></>}
     </section> : <>
       <ContentScrollButton language={language} />
-      {specialists.length > 0 && <section className="content-section kiosk-specialists" data-home-scroll-section>
-        <div className="section-heading"><div><span><UserRoundCheck size={22} />{language === 'kz' ? 'Бүгін онлайн' : 'Сегодня онлайн'}</span><h2>{language === 'kz' ? 'Бүгін көмектесетін мамандар' : 'Специалисты, которые помогут сегодня'}</h2></div><small>{specialists.length}</small></div>
-        <div className="kiosk-specialists__grid">{specialists.map((specialist) => <article className="kiosk-specialist-card" key={specialist.id}>
-          {specialist.photo ? <img src={assetUrl(specialist.photo)} alt="" /> : <span className="kiosk-specialist-card__placeholder"><UserRoundCheck size={38} /></span>}
-          <div><strong>{specialist[language === 'kz' ? 'nameKz' : 'nameRu']}</strong><span>{specialist[language === 'kz' ? 'categoryKz' : 'categoryRu']}</span><p>{specialist[language === 'kz' ? 'servicesKz' : 'servicesRu']}</p></div>
-        </article>)}</div>
-      </section>}
       <section className="content-section content-section--home" data-home-scroll-section><div className="section-heading"><div><span>01</span><h2>{t.popular}</h2></div><small>{popular.length}</small></div>{popular.length ? <div className="service-grid">{popular.map((service) => <ServiceCard key={service.id} service={service} />)}</div> : <EmptyState text={t.noServices} />}</section>
       <section className="content-section content-section--packages service-entry-section" data-home-scroll-section><div className="section-heading"><div><span>02</span><h2>{language === 'kz' ? 'Қызметтерді таңдаңыз' : 'Выберите нужные услуги'}</h2></div></div><div className="service-entry-grid">
         <Link className="service-entry-card service-entry-card--ugd" to="/packages"><span><Building2 size={42} /></span><div><small>{language === 'kz' ? 'Өмірлік жағдайлар бойынша' : 'По жизненным ситуациям'}</small><h3>{t.servicePackages}</h3><p>{language === 'kz' ? 'Қажетті қызметтер бір түсінікті бөлімде жинақталған.' : 'Необходимые услуги собраны в одном понятном разделе.'}</p></div><ChevronRight /></Link>
