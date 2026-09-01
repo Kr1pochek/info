@@ -16,7 +16,7 @@
     "db:studio": "npm run db:studio --prefix server",
     "build": "npm run build --prefix client",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
-    "test": "npm run test --prefix server && node --test tests/search-suggestions.test.mjs tests/inactivity.test.mjs tests/faq.test.mjs tests/language-default.test.mjs tests/audit-labels.test.mjs tests/safety-admin.test.mjs tests/retired-features.test.mjs",
+    "test": "npm run test --prefix server && node --test tests/search-suggestions.test.mjs tests/inactivity.test.mjs tests/faq.test.mjs tests/language-default.test.mjs tests/audit-labels.test.mjs tests/safety-admin.test.mjs tests/retired-features.test.mjs tests/online-specialists-location.test.mjs",
     "test:responsive": "node tests/responsive.mjs",
     "security:check": "npm audit --omit=dev && npm audit --omit=dev --prefix client && npm audit --omit=dev --prefix server",
     "verify": "npm run lint && npm run build && npm test && npm run test:responsive"
