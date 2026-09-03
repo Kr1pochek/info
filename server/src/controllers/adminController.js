@@ -117,6 +117,9 @@ const safetySettingsSelect = {
   ethicsOfficerPhoto: true, fireSafetyVideo: true, fireSafetyRules: true,
   fireSafetyWarningRu: true, fireSafetyWarningKz: true, updatedAt: true,
 };
+const receptionSettingsSelect = {
+  receptionSchedule: true, districtQrCodes: true, updatedAt: true,
+};
 
 export const getSafetySettings = asyncHandler(async (_req, res) => {
   const data = await prisma.setting.findUnique({ where: { id: 1 }, select: safetySettingsSelect });
@@ -127,6 +130,18 @@ export const updateSafetySettings = asyncHandler(async (req, res) => {
   const oldData = await prisma.setting.findUnique({ where: { id: 1 }, select: safetySettingsSelect });
   const data = await prisma.setting.update({ where: { id: 1 }, data: req.body, select: safetySettingsSelect });
   await writeAudit(req, 'UPDATE_SAFETY', 'Setting', 1, oldData, data);
+  sendData(res, data);
+});
+
+export const getReceptionSettings = asyncHandler(async (_req, res) => {
+  const data = await prisma.setting.findUnique({ where: { id: 1 }, select: receptionSettingsSelect });
+  sendData(res, data);
+});
+
+export const updateReceptionSettings = asyncHandler(async (req, res) => {
+  const oldData = await prisma.setting.findUnique({ where: { id: 1 }, select: receptionSettingsSelect });
+  const data = await prisma.setting.update({ where: { id: 1 }, data: req.body, select: receptionSettingsSelect });
+  await writeAudit(req, 'UPDATE_SETTINGS', 'Setting', 1, oldData, data);
   sendData(res, data);
 });
 

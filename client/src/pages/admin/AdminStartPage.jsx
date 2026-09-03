@@ -4,5 +4,5 @@ import DashboardPage from './DashboardPage.jsx';
 
 export default function AdminStartPage() {
   const { user } = useAuth();
-  return user?.role === 'EDITOR' ? <Navigate to="/admin/news" replace /> : <DashboardPage />;
+  return user?.role === 'EDITOR' ? <Navigate to="/admin/reception/schedule" replace /> : <DashboardPage />;
 }

@@ -78,6 +78,15 @@ const specialistSchema = z.object({
   servicesRu: text(1000), servicesKz: text(1000), photo: text(500),
   workDate: z.string().date(), isActive: z.boolean(),
 });
+const receptionScheduleItemSchema = z.object({
+  id: text(80), nameRu: text(240), nameKz: text(240),
+  positionRu: text(500), positionKz: text(500), dayRu: text(240), dayKz: text(240),
+  time: text(120), addressRu: text(500), addressKz: text(500), isActive: z.boolean(),
+});
+const districtQrCodeSchema = z.object({
+  id: text(80), titleRu: text(240), titleKz: text(240),
+  image: z.string().trim().max(500), isActive: z.boolean(),
+});
 
 export const userSchema = z.object({
   login: text(80), password: z.string().min(10).max(128), fullName: text(160),
@@ -102,6 +111,11 @@ export const safetySettingsSchema = z.object({
   fireSafetyWarningRu: text(1000), fireSafetyWarningKz: text(1000),
 });
 
+export const receptionSettingsSchema = z.object({
+  receptionSchedule: z.array(receptionScheduleItemSchema).max(30),
+  districtQrCodes: z.array(districtQrCodeSchema).max(30),
+});
+
 export const settingsSchema = z.object({
   organizationNameRu: text(240), organizationNameKz: text(240), contactPhone: text(80),
   addressRu: text(500), addressKz: text(500), workingHoursRu: text(300), workingHoursKz: text(300),
@@ -115,6 +129,7 @@ export const settingsSchema = z.object({
   ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
   ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500),
   fireSafetyRules: z.array(fireSafetyRuleSchema).min(1).max(12), fireSafetyWarningRu: text(1000), fireSafetyWarningKz: text(1000),
+  receptionSchedule: z.array(receptionScheduleItemSchema).max(30), districtQrCodes: z.array(districtQrCodeSchema).max(30),
   reportingDeadlines: z.array(deadlineSchema).max(30),
   panelQrCodes: z.array(qrCodeSchema).max(6), onlineSpecialists: z.array(specialistSchema).max(30),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });

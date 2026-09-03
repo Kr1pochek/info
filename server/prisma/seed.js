@@ -18,6 +18,25 @@ const defaultFireSafetyRules = [
   { id: 'stay-outside', titleRu: 'Не возвращайтесь', titleKz: 'Қайтып кірмеңіз', textRu: 'Ожидайте пожарных снаружи и выполняйте указания ответственных лиц.', textKz: 'Өрт сөндірушілерді сыртта күтіп, жауапты адамдардың нұсқауын орындаңыз.' },
 ];
 
+const defaultReceptionSchedule = [
+  { id: 'baedilov', nameKz: 'Баеділов Қанат Ескендірұлы', nameRu: 'Баедилов Канат Ескендирович', positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаментінің басшысы', positionRu: 'Руководитель Департамента государственных доходов по городу Алматы', dayKz: 'Әр аптаның бейсенбісінде', dayRu: 'Каждый четверг недели', time: '10:00 – 12:00', addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95', addressRu: 'город Алматы, проспект Абылай хана 93/95', isActive: true },
+  { id: 'mukhametzhanov', nameKz: 'Мұхаметжанов Айдос Қасымбайұлы', nameRu: 'Мухаметжанов Айдос Касымбаевич', positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары', positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы', dayKz: 'Әр аптаның дүйсенбісінде', dayRu: 'Каждый понедельник недели', time: '10:00 – 12:00', addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95', addressRu: 'город Алматы, проспект Абылай хана 93/95', isActive: true },
+  { id: 'sukhambekov', nameKz: 'Сухамбеков Қанат Садуақасұлы', nameRu: 'Сухамбеков Канат Садуакасович', positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары', positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы', dayKz: 'Әр аптаның дүйсенбісінде', dayRu: 'Каждый понедельник недели', time: '10:00 – 12:00', addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95', addressRu: 'город Алматы, проспект Абылай хана 93/95', isActive: true },
+  { id: 'omarov', nameKz: 'Омаров Азат Сапарғалиұлы', nameRu: 'Омаров Азат Сапаргалиевич', positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары', positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы', dayKz: 'Әр аптаның сәрсенбісінде', dayRu: 'Каждую среду недели', time: '10:00 – 12:00', addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95', addressRu: 'город Алматы, проспект Абылай хана 93/95', isActive: true },
+  { id: 'mustafin', nameKz: 'Мұстафин Дәурен Қамзаұлы', nameRu: 'Мустафин Даурен Камзаевич', positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары', positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы', dayKz: 'Әр аптаның жұмасында', dayRu: 'Каждую пятницу недели', time: '10:00 – 12:00', addressKz: 'Алматы қаласы, Достық даңғылы, 136', addressRu: 'город Алматы, проспект Достык, 136', isActive: true },
+];
+
+const defaultDistrictQrCodes = [
+  { id: 'auezov', image: '/qr/districts/almaty-auezov.png', titleKz: 'Әуезов ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Ауэзовскому району', isActive: true },
+  { id: 'bostandyk', image: '/qr/districts/almaty-bostandyk.png', titleKz: 'Бостандық ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Бостандыкскому району', isActive: true },
+  { id: 'zhetysu', image: '/qr/districts/almaty-zhetysu.png', titleKz: 'Жетісу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Жетысуйскому району', isActive: true },
+  { id: 'almaly', image: '/qr/districts/almaty-almaly.png', titleKz: 'Алмалы ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Алмалинскому району', isActive: true },
+  { id: 'turksib', image: '/qr/districts/almaty-turksib.png', titleKz: 'Түрксіб ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Турксибскому району', isActive: true },
+  { id: 'medeu', image: '/qr/districts/almaty-medeu.png', titleKz: 'Медеу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Медеускому району', isActive: true },
+  { id: 'alatau', image: '/qr/districts/almaty-alatau.png', titleKz: 'Алатау ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Алатаускому району', isActive: true },
+  { id: 'nauryzbay', image: '/qr/districts/almaty-nauryzbay.png', titleKz: 'Наурызбай ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Наурызбайскому району', isActive: true },
+];
+
 const officialInformationDefaults = {
   taxpayerRightsRu: `Краткая памятка по статье 36 Налогового кодекса Республики Казахстан от 18 июля 2025 года № 214-VIII ЗРК.
 
@@ -415,13 +434,15 @@ async function main() {
 
   const currentSettings = await prisma.setting.findUnique({
     where: { id: 1 },
-    select: { panelQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true, fireSafetyRules: true, fireSafetyWarningRu: true, fireSafetyWarningKz: true },
+    select: { panelQrCodes: true, receptionSchedule: true, districtQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true, fireSafetyRules: true, fireSafetyWarningRu: true, fireSafetyWarningKz: true },
   });
   const shouldAddOfficialQrCodes = !currentSettings || !Array.isArray(currentSettings.panelQrCodes) || currentSettings.panelQrCodes.length === 0;
+  const shouldAddReceptionSchedule = !currentSettings || !Array.isArray(currentSettings.receptionSchedule) || currentSettings.receptionSchedule.length === 0;
+  const shouldAddDistrictQrCodes = !currentSettings || !Array.isArray(currentSettings.districtQrCodes) || currentSettings.districtQrCodes.length === 0;
   const shouldAddFireSafetyRules = !currentSettings || !Array.isArray(currentSettings.fireSafetyRules) || currentSettings.fireSafetyRules.length === 0;
   const missingOfficialInformation = Object.fromEntries(Object.entries(officialInformationDefaults).filter(([key]) => !currentSettings?.[key]?.trim()));
   await prisma.setting.upsert({
-    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}), ...(shouldAddFireSafetyRules ? { fireSafetyRules: defaultFireSafetyRules } : {}) },
+    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}), ...(shouldAddReceptionSchedule ? { receptionSchedule: defaultReceptionSchedule } : {}), ...(shouldAddDistrictQrCodes ? { districtQrCodes: defaultDistrictQrCodes } : {}), ...(shouldAddFireSafetyRules ? { fireSafetyRules: defaultFireSafetyRules } : {}) },
     create: {
       id: 1,
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
@@ -432,6 +453,7 @@ async function main() {
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
       ...officialInformationDefaults, ethicsOfficerPhoto: '', fireSafetyRules: defaultFireSafetyRules,
+      receptionSchedule: defaultReceptionSchedule, districtQrCodes: defaultDistrictQrCodes,
       reportingDeadlines: [], panelQrCodes: officialPanelQrCodes, onlineSpecialists: [],
     },
   });

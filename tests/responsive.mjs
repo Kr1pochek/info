@@ -66,16 +66,16 @@ const viewports = [
   { name: 'QHD 125%', width: 2048, height: 1152, deviceScaleFactor: 1.25 },
   { name: '4K 150%', width: 2560, height: 1440, deviceScaleFactor: 1.5 },
 ];
-const routes = ['/kiosk', '/packages', '/package/progress', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/news', '/admin/login'];
+const routes = ['/kiosk', '/packages', '/package/progress', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/qr-tavojnya', '/news', '/admin/login'];
 const publicPageRoutes = [
   '/', '/kiosk', '/services', '/packages', '/package/progress',
   `/category/${categoryCandidate.slug}`, `/service/${serviceCandidate.slug}`,
-  '/faq', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/information/reception-schedule',
+  '/faq', '/qr-tavojnya', '/information/taxpayer-rights', '/information/ethics-fire-safety', '/information/reception-schedule',
   '/news', `/news/${newsCandidate.slug}`, '/missing-page-user-check',
 ];
 const adminPageRoutes = [
   '/admin', '/admin/services', '/admin/categories', '/admin/packages', '/admin/news', '/admin/broadcast',
-  '/admin/analytics', '/admin/users', '/admin/settings', '/admin/ethics', '/admin/fire-safety', '/admin/audit-logs', '/admin/guide',
+  '/admin/analytics', '/admin/users', '/admin/reception/schedule', '/admin/reception/qr', '/admin/settings', '/admin/ethics', '/admin/fire-safety', '/admin/audit-logs', '/admin/guide',
 ];
 
 try {

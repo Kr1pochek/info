@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  BarChart3, BookOpen, BookOpenCheck, Boxes, ChevronRight, ClipboardList, Eye, Flame, Languages,
-  LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, Settings, ShieldCheck, Tv, UserRoundCheck, Users,
+  BarChart3, BookOpen, BookOpenCheck, Boxes, CalendarDays, ChevronRight, ClipboardList, Eye, Flame, Languages,
+  LayoutDashboard, LogOut, MonitorSmartphone, Newspaper, PackageOpen, QrCode, Settings, ShieldCheck, Tv, UserRoundCheck, Users,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -20,6 +20,17 @@ const workspaces = [
     links: [
       { to: '/admin/ethics', label: 'Уполномоченный по этике', labelKz: 'Әдеп жөніндегі уәкіл', icon: UserRoundCheck, roles: contentRoles },
       { to: '/admin/fire-safety', label: 'Пожарная инструкция', labelKz: 'Өрт қауіпсіздігі нұсқаулығы', icon: Flame, roles: contentRoles },
+    ],
+  },
+  {
+    id: 'reception',
+    label: 'Приём граждан', labelKz: 'Азаматтарды қабылдау',
+    description: 'График и QR-коды', descriptionKz: 'Кесте және QR-кодтар',
+    icon: CalendarDays,
+    preview: '/information/reception-schedule', previewLabel: 'Открыть страницу инфокиоска', previewLabelKz: 'Инфокиоск бетін ашу',
+    links: [
+      { to: '/admin/reception/schedule', label: 'График приёма', labelKz: 'Қабылдау кестесі', icon: CalendarDays },
+      { to: '/admin/reception/qr', label: 'QR-коды', labelKz: 'QR-кодтар', icon: QrCode },
     ],
   },
   {

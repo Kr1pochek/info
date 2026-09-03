@@ -19,6 +19,7 @@ const ServicePage = lazy(() => import('./pages/kiosk/ServicePage.jsx'));
 const PackagesPage = lazy(() => import('./pages/kiosk/PackagesPage.jsx'));
 const PackagePage = lazy(() => import('./pages/kiosk/PackagePage.jsx'));
 const InformationPage = lazy(() => import('./pages/kiosk/InformationPage.jsx'));
+const CustomsQrPage = lazy(() => import('./pages/kiosk/CustomsQrPage.jsx'));
 const FaqPage = lazy(() => import('./pages/kiosk/FaqPage.jsx'));
 const NotFoundPage = lazy(() => import('./pages/kiosk/NotFoundPage.jsx'));
 const NewsListPage = lazy(() => import('./pages/news/NewsListPage.jsx'));
@@ -32,6 +33,7 @@ const AdminNewsPage = lazy(() => import('./pages/admin/NewsPage.jsx'));
 const BroadcastPage = lazy(() => import('./pages/admin/BroadcastPage.jsx'));
 const AnalyticsPage = lazy(() => import('./pages/admin/AnalyticsPage.jsx'));
 const UsersPage = lazy(() => import('./pages/admin/UsersPage.jsx'));
+const ReceptionPage = lazy(() => import('./pages/admin/ReceptionPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/admin/SettingsPage.jsx'));
 const SafetyPage = lazy(() => import('./pages/admin/SafetyPage.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage.jsx'));
@@ -40,7 +42,7 @@ const GuidePage = lazy(() => import('./pages/admin/GuidePage.jsx'));
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><ConnectivityBanner /><Suspense fallback={<LoadingState />}><Routes>
     <Route index element={<Navigate to="/kiosk" replace />} />
-    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="faq" element={<FaqPage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
+    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="faq" element={<FaqPage />} /><Route path="qr-tavojnya" element={<CustomsQrPage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
     <Route path="news" element={<NewsLayout />}><Route index element={<NewsListPage />} /><Route path=":newsSlug" element={<NewsDetailPage />} /></Route>
     <Route path="admin/login" element={<LoginPage />} />
     <Route path="admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -50,6 +52,9 @@ export default function App() {
       <Route path="broadcast" element={<BroadcastPage />} />
       <Route path="analytics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><AnalyticsPage /></RoleRoute>} />
       <Route path="users" element={<RoleRoute roles={['SUPER_ADMIN']}><UsersPage /></RoleRoute>} />
+      <Route path="reception" element={<Navigate to="/admin/reception/schedule" replace />} />
+      <Route path="reception/schedule" element={<ReceptionPage section="schedule" />} />
+      <Route path="reception/qr" element={<ReceptionPage section="qr" />} />
       <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SettingsPage /></RoleRoute>} />
       <Route path="ethics" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage section="ethics" /></RoleRoute>} />
       <Route path="fire-safety" element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']}><SafetyPage section="fire" /></RoleRoute>} />

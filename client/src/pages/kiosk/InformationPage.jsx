@@ -1,81 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, MapPin, QrCode, Scale } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { assetUrl } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import { defaultDistrictQrCodes, defaultReceptionSchedule } from '../../data/receptionContent.js';
 import NotFoundPage from './NotFoundPage.jsx';
 import EthicsFireSafetyPage from './EthicsFireSafetyPage.jsx';
 
 const RECEPTION_SLIDE_SECONDS = 15;
-
-const receptionSchedule = [
-  {
-    nameKz: 'Баеділов Қанат Ескендірұлы',
-    nameRu: 'Баедилов Канат Ескендирович',
-    positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаментінің басшысы',
-    positionRu: 'Руководитель Департамента государственных доходов по городу Алматы',
-    dayKz: 'Әр аптаның бейсенбісінде',
-    dayRu: 'Каждый четверг недели',
-    time: '10:00 – 12:00',
-    addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95',
-    addressRu: 'город Алматы, проспект Абылай хана 93/95',
-  },
-  {
-    nameKz: 'Мұхаметжанов Айдос Қасымбайұлы',
-    nameRu: 'Мухаметжанов Айдос Касымбаевич',
-    positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары',
-    positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы',
-    dayKz: 'Әр аптаның дүйсенбісінде',
-    dayRu: 'Каждый понедельник недели',
-    time: '10:00 – 12:00',
-    addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95',
-    addressRu: 'город Алматы, проспект Абылай хана 93/95',
-  },
-  {
-    nameKz: 'Сухамбеков Қанат Садуақасұлы',
-    nameRu: 'Сухамбеков Канат Садуакасович',
-    positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары',
-    positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы',
-    dayKz: 'Әр аптаның дүйсенбісінде',
-    dayRu: 'Каждый понедельник недели',
-    time: '10:00 – 12:00',
-    addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95',
-    addressRu: 'город Алматы, проспект Абылай хана 93/95',
-  },
-  {
-    nameKz: 'Омаров Азат Сапарғалиұлы',
-    nameRu: 'Омаров Азат Сапаргалиевич',
-    positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары',
-    positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы',
-    dayKz: 'Әр аптаның сәрсенбісінде',
-    dayRu: 'Каждую среду недели',
-    time: '10:00 – 12:00',
-    addressKz: 'Алматы қаласы, Абылай хан даңғылы 93/95',
-    addressRu: 'город Алматы, проспект Абылай хана 93/95',
-  },
-  {
-    nameKz: 'Мұстафин Дәурен Қамзаұлы',
-    nameRu: 'Мустафин Даурен Камзаевич',
-    positionKz: 'Алматы қаласы бойынша Мемлекеттік кірістер департаменті басшысының орынбасары',
-    positionRu: 'Заместитель руководителя Департамента государственных доходов по городу Алматы',
-    dayKz: 'Әр аптаның жұмасында',
-    dayRu: 'Каждую пятницу недели',
-    time: '10:00 – 12:00',
-    addressKz: 'Алматы қаласы, Достық даңғылы, 136',
-    addressRu: 'город Алматы, проспект Достык, 136',
-  },
-];
-
-const districtQrCodes = [
-  { id: 'auezov', image: '/qr/districts/almaty-auezov.png', titleKz: 'Әуезов ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Ауэзовскому району' },
-  { id: 'bostandyk', image: '/qr/districts/almaty-bostandyk.png', titleKz: 'Бостандық ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Бостандыкскому району' },
-  { id: 'zhetysu', image: '/qr/districts/almaty-zhetysu.png', titleKz: 'Жетісу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Жетысуйскому району' },
-  { id: 'almaly', image: '/qr/districts/almaty-almaly.png', titleKz: 'Алмалы ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Алмалинскому району' },
-  { id: 'turksib', image: '/qr/districts/almaty-turksib.png', titleKz: 'Түрксіб ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Турксибскому району' },
-  { id: 'medeu', image: '/qr/districts/almaty-medeu.png', titleKz: 'Медеу ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Медеускому району' },
-  { id: 'alatau', image: '/qr/districts/almaty-alatau.png', titleKz: 'Алатау ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Алатаускому району' },
-  { id: 'nauryzbay', image: '/qr/districts/almaty-nauryzbay.png', titleKz: 'Наурызбай ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Наурызбайскому району' },
-];
 
 export default function InformationPage() {
   const { informationSlug } = useParams();
@@ -93,6 +26,10 @@ export default function InformationPage() {
     const timer = setTimeout(() => setReceptionSlide((value) => (value + 1) % 2), RECEPTION_SLIDE_SECONDS * 1000);
     return () => clearTimeout(timer);
   }, [informationSlug, receptionSlide, rotationKey]);
+  const configuredReceptionSchedule = Array.isArray(settings?.receptionSchedule) ? settings.receptionSchedule : defaultReceptionSchedule;
+  const configuredDistrictQrCodes = Array.isArray(settings?.districtQrCodes) ? settings.districtQrCodes : defaultDistrictQrCodes;
+  const receptionSchedule = configuredReceptionSchedule.filter((item) => item && item.isActive !== false);
+  const districtQrCodes = configuredDistrictQrCodes.filter((item) => item && item.isActive !== false && item.image);
 
   if (informationSlug === 'ethics-fire-safety') return <EthicsFireSafetyPage />;
 
@@ -125,7 +62,7 @@ export default function InformationPage() {
               <th>{kazakh ? 'Қабылдау күні және уақыты' : 'Дата и время приёма'}</th>
               <th>{kazakh ? 'Мемлекеттік органның мекенжайы' : 'Местонахождение государственного органа'}</th>
             </tr></thead>
-            <tbody>{receptionSchedule.map((item) => <tr key={item.nameRu}>
+            <tbody>{receptionSchedule.map((item) => <tr key={item.id || item.nameRu}>
               <th scope="row">{item[kazakh ? 'nameKz' : 'nameRu']}</th>
               <td>{item[kazakh ? 'positionKz' : 'positionRu']}</td>
               <td><strong>{item[kazakh ? 'dayKz' : 'dayRu']}</strong><time>{item.time}</time></td>
@@ -136,7 +73,7 @@ export default function InformationPage() {
       </section> : <section className="district-qr-section" id="district-qr">
         <header><div><QrCode size={30} /><span>{kazakh ? 'Телефон камерасын QR-кодқа бағыттаңыз' : 'Наведите камеру телефона на QR-код'}</span></div><h2>{kazakh ? 'Алматы қаласы бойынша аудандық мемлекеттік кірістер басқармаларының мекенжайлары' : 'Адреса районных управлений государственных доходов по городу Алматы'}</h2></header>
         <div className="district-qr-grid">{districtQrCodes.map((item) => <figure className="district-qr-card" key={item.id}>
-          <img src={item.image} alt={`${item[kazakh ? 'titleKz' : 'titleRu']} — QR-код`} loading="lazy" />
+          <img src={assetUrl(item.image)} alt={`${item[kazakh ? 'titleKz' : 'titleRu']} — QR-код`} loading="lazy" />
           <figcaption>{item[kazakh ? 'titleKz' : 'titleRu']}</figcaption>
         </figure>)}</div>
       </section>}

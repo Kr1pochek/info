@@ -296,6 +296,11 @@ export const saveBroadcastMedia = asyncHandler(async (req, res) => {
   sendData(res, { path: `/uploads/broadcast/${req.file.filename}`, mediaKind: req.file.mimetype.startsWith('image/') ? 'IMAGE' : 'VIDEO' }, null, 201);
 });
 
+export const saveReceptionQrImage = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError(400, 'IMAGE_REQUIRED', 'Выберите изображение QR-кода');
+  sendData(res, { path: `/uploads/reception/${req.file.filename}` }, null, 201);
+});
+
 function broadcastData(body, authorId) {
   return {
     ...body,

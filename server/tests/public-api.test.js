@@ -58,6 +58,10 @@ test('public settings expose current kiosk content without retired queue fields'
   assert.match(body.data.fireSafetyWarningRu, /задымлении/i);
   assert.equal(body.data.workingHoursRu, 'Пн–Пт, 08:30–17:30');
   assert.equal(body.data.workingHoursKz, 'Дс–Жм, 08:30–17:30');
+  assert.ok(Array.isArray(body.data.receptionSchedule));
+  assert.ok(body.data.receptionSchedule.length >= 5);
+  assert.ok(Array.isArray(body.data.districtQrCodes));
+  assert.ok(body.data.districtQrCodes.length >= 8);
   assert.equal(body.data.panelQrCodes.find((item) => item.id === 'kgd-official')?.url, 'https://portal.kgd.gov.kz/');
 });
 
@@ -206,16 +210,42 @@ test('kiosk analytics stores the actual event once and excludes legacy data from
 test('editor can manage news but cannot access service administration', async () => {
   const login = `test-editor-${Date.now()}`;
   const editor = await prisma.adminUser.create({ data: { login, passwordHash: 'not-used-in-test', fullName: 'Test Editor', role: 'EDITOR' } });
+  let originalReception = null;
+  const startedAt = new Date();
   try {
     const token = jwt.sign({ sub: String(editor.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
     const headers = { Authorization: `Bearer ${token}` };
+    const jsonHeaders = { ...headers, 'Content-Type': 'application/json' };
     const news = await request('/api/admin/news?limit=1', { headers });
+    const reception = await request('/api/admin/reception', { headers });
     const services = await request('/api/admin/services?limit=1', { headers });
+    const settings = await request('/api/admin/settings', { headers });
     const dashboard = await request('/api/admin/dashboard', { headers });
     assert.equal(news.response.status, 200);
+    assert.equal(reception.response.status, 200);
+    assert.ok(Array.isArray(reception.body.data.receptionSchedule));
+    originalReception = {
+      receptionSchedule: reception.body.data.receptionSchedule,
+      districtQrCodes: reception.body.data.districtQrCodes,
+    };
+    const changedReception = {
+      ...originalReception,
+      receptionSchedule: originalReception.receptionSchedule.map((item, index) => index === 0 ? { ...item, time: '09:00 – 11:00' } : item),
+    };
+    const updatedReception = await request('/api/admin/reception', { method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(changedReception) });
+    assert.equal(updatedReception.response.status, 200);
+    assert.equal(updatedReception.body.data.receptionSchedule[0].time, '09:00 – 11:00');
+    const publicSettings = await request('/api/settings/public');
+    assert.equal(publicSettings.body.data.receptionSchedule[0].time, '09:00 – 11:00');
     assert.equal(services.response.status, 403);
+    assert.equal(settings.response.status, 403);
     assert.equal(dashboard.response.status, 403);
   } finally {
+    if (originalReception) {
+      const token = jwt.sign({ sub: String(editor.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+      await request('/api/admin/reception', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(originalReception) });
+      await prisma.auditLog.deleteMany({ where: { adminUserId: editor.id, action: 'UPDATE_SETTINGS', createdAt: { gte: startedAt } } });
+    }
     await prisma.adminUser.delete({ where: { id: editor.id } });
   }
 });

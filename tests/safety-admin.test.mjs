@@ -3,21 +3,40 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 
 test('ethics and fire safety are the first administrator group with two simple links', async () => {
-  const [app, layout, dashboard, page] = await Promise.all([
+  const [app, layout, dashboard, page, startPage, receptionPage, adminRoutes] = await Promise.all([
     readFile(new URL('../client/src/App.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/layouts/AdminLayout.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/pages/admin/DashboardPage.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/pages/admin/SafetyPage.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../client/src/pages/admin/AdminStartPage.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../client/src/pages/admin/ReceptionPage.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../server/src/routes/adminRoutes.js', import.meta.url), 'utf8'),
   ]);
   assert.match(app, /path="ethics"[^]*section="ethics"/);
   assert.match(app, /path="fire-safety"[^]*section="fire"/);
+  assert.match(app, /path="reception\/schedule"[^]*section="schedule"/);
+  assert.match(app, /path="reception\/qr"[^]*section="qr"/);
   assert.match(layout, /Этика и пожарная безопасность/);
+  assert.match(layout, /id: 'reception'/);
+  assert.match(layout, /to: '\/admin\/reception\/schedule'/);
+  assert.match(layout, /to: '\/admin\/reception\/qr'/);
   assert.ok(layout.indexOf("id: 'safety'") < layout.indexOf("id: 'kiosk'"));
+  assert.ok(layout.indexOf("id: 'safety'") < layout.indexOf("id: 'reception'"));
+  assert.ok(layout.indexOf("id: 'reception'") < layout.indexOf("id: 'kiosk'"));
   assert.match(layout, /to: '\/admin\/ethics'/);
   assert.match(layout, /to: '\/admin\/fire-safety'/);
   assert.doesNotMatch(layout, /to: '\/admin\/safety'/);
   assert.match(dashboard, /type="safety"/);
+  assert.match(dashboard, /type="reception"/);
   assert.ok(dashboard.indexOf('type="safety"') < dashboard.indexOf('type="kiosk"'));
+  assert.ok(dashboard.indexOf('type="reception"') < dashboard.indexOf('type="kiosk"'));
+  assert.match(startPage, /\/admin\/reception\/schedule/);
+  assert.match(receptionPage, /section = 'schedule'/);
+  assert.match(receptionPage, /\/admin\/reception\/qr-media/);
+  assert.match(receptionPage, /newQrCode/);
+  assert.match(receptionPage, /updateItem\('districtQrCodes', index, 'titleRu'/);
+  assert.match(adminRoutes, /uploadReceptionQrImage/);
+  assert.match(adminRoutes, /\/reception\/qr-media/);
   assert.match(page, /Уполномоченный по этике/);
   assert.match(page, /Правила пожарной безопасности/);
   assert.match(page, /Добавить правило/);

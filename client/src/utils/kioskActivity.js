@@ -7,5 +7,6 @@ export function isDeliberateKioskActivity(event) {
 }
 
 export function shouldUseKioskInactivityTimer(pathname) {
-  return !String(pathname || '').startsWith('/information');
+  const path = String(pathname || '');
+  return !path.startsWith('/information') && path !== '/qr-tavojnya';
 }

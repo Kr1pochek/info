@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ArrowRight, BarChart3, BookOpenCheck, Boxes, Eye, EyeOff, Flame, MonitorSmartphone,
-  Newspaper, PackageOpen, Search, Settings, ShieldCheck, Tv, UserRoundCheck,
+  ArrowRight, BarChart3, BookOpenCheck, Boxes, CalendarDays, Eye, EyeOff, Flame, MonitorSmartphone,
+  Newspaper, PackageOpen, QrCode, Search, Settings, ShieldCheck, Tv, UserRoundCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api, { apiMessage } from '../../api/client.js';
@@ -24,6 +24,11 @@ const kioskActions = [
 const safetyActions = [
   ['/admin/ethics', 'Уполномоченный по этике', 'Изменить имя, контакты и фотографию', 'Әдеп жөніндегі уәкіл', 'Аты-жөнін, байланыстарын және фотосуретін өзгерту', UserRoundCheck],
   ['/admin/fire-safety', 'Пожарная инструкция', 'Настроить памятку, предупреждение и видео', 'Өрт қауіпсіздігі нұсқаулығы', 'Жаднаманы, ескертуді және бейнені баптау', Flame],
+];
+
+const receptionActions = [
+  ['/admin/reception/schedule', 'График приёма', 'Изменить дни, время, адреса и должности', 'Қабылдау кестесі', 'Күндерін, уақытын, мекенжайларын және лауазымдарын өзгерту', CalendarDays],
+  ['/admin/reception/qr', 'QR-коды', 'Заменить изображение, название или добавить новый код', 'QR-кодтар', 'Суретті, атауды ауыстыру немесе жаңа код қосу', QrCode],
 ];
 
 const newsActions = [
@@ -55,8 +60,9 @@ export default function DashboardPage() {
     <AdminPageHeader eyebrow="Начало работы" eyebrowKz="Жұмыстың басталуы" title="Что вы хотите изменить?" titleKz="Нені өзгерткіңіз келеді?" description="Нужные настройки вынесены в отдельные понятные разделы" descriptionKz="Қажетті баптаулар бөлек түсінікті бөлімдерге шығарылды" />
     <section className="admin-workspace-cards" aria-label={tr('Разделы управления', 'Басқару бөлімдері')}>
       <WorkspaceCard type="safety" eyebrow="Сначала здесь" eyebrowKz="Алдымен осында" title="Этика и пожарная безопасность" titleKz="Әдеп және өрт қауіпсіздігі" description="Две отдельные кнопки для самых важных инструкций." descriptionKz="Ең маңызды нұсқаулықтарға арналған екі бөлек батырма." icon={ShieldCheck} metrics={[]} actions={safetyActions} preview="/information/ethics-fire-safety" previewLabel="Посмотреть страницу инфокиоска" previewLabelKz="Инфокиоск бетін көру" />
-      <WorkspaceCard type="kiosk" eyebrow="Раздел 2" eyebrowKz="2-бөлім" title="Инфокиоск" titleKz="Инфокиоск" description="Услуги и справочная информация, которую посетитель ищет самостоятельно." descriptionKz="Келуші өз бетінше іздейтін қызметтер мен анықтамалық ақпарат." icon={MonitorSmartphone} metrics={[[data.counts.services, 'услуг', 'қызмет'], [data.counts.categories, 'категорий', 'санат'], [data.counts.published, 'опубликовано', 'жарияланған']]} actions={kioskActions} preview="/kiosk" previewLabel="Посмотреть инфокиоск" previewLabelKz="Инфокиоскіні көру" />
-      <WorkspaceCard type="news" eyebrow="Раздел 3" eyebrowKz="3-бөлім" title="Новостная лента" titleKz="Жаңалықтар таспасы" description="Публикации для посетителей и полноэкранный информационный эфир." descriptionKz="Келушілерге арналған жарияланымдар және толық экранды ақпараттық эфир." icon={Newspaper} metrics={[[data.counts.news, 'новостей', 'жаңалық'], [data.counts.publishedNews, 'опубликовано', 'жарияланған'], [data.counts.broadcastMaterials, 'материалов в эфире', 'эфирдегі материал']]} actions={newsActions} preview="/news" previewLabel="Посмотреть новостную ленту" previewLabelKz="Жаңалықтар таспасын көру" />
+      <WorkspaceCard type="reception" eyebrow="Раздел 2" eyebrowKz="2-бөлім" title="Приём граждан" titleKz="Азаматтарды қабылдау" description="График руководства и QR-коды районных управлений." descriptionKz="Басшылық кестесі және аудандық басқармалардың QR-кодтары." icon={CalendarDays} metrics={[]} actions={receptionActions} preview="/information/reception-schedule" previewLabel="Посмотреть страницу инфокиоска" previewLabelKz="Инфокиоск бетін көру" />
+      <WorkspaceCard type="kiosk" eyebrow="Раздел 3" eyebrowKz="3-бөлім" title="Инфокиоск" titleKz="Инфокиоск" description="Услуги и справочная информация, которую посетитель ищет самостоятельно." descriptionKz="Келуші өз бетінше іздейтін қызметтер мен анықтамалық ақпарат." icon={MonitorSmartphone} metrics={[[data.counts.services, 'услуг', 'қызмет'], [data.counts.categories, 'категорий', 'санат'], [data.counts.published, 'опубликовано', 'жарияланған']]} actions={kioskActions} preview="/kiosk" previewLabel="Посмотреть инфокиоск" previewLabelKz="Инфокиоскіні көру" />
+      <WorkspaceCard type="news" eyebrow="Раздел 4" eyebrowKz="4-бөлім" title="Новостная лента" titleKz="Жаңалықтар таспасы" description="Публикации для посетителей и полноэкранный информационный эфир." descriptionKz="Келушілерге арналған жарияланымдар және толық экранды ақпараттық эфир." icon={Newspaper} metrics={[[data.counts.news, 'новостей', 'жаңалық'], [data.counts.publishedNews, 'опубликовано', 'жарияланған'], [data.counts.broadcastMaterials, 'материалов в эфире', 'эфирдегі материал']]} actions={newsActions} preview="/news" previewLabel="Посмотреть новостную ленту" previewLabelKz="Жаңалықтар таспасын көру" />
     </section>
 
     <div className="admin-section-title"><span>{tr('Общая сводка', 'Жалпы жиынтық')}</span><h2>{tr('Как используется инфокиоск', 'Инфокиоск қалай пайдаланылады')}</h2></div>

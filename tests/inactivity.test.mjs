@@ -20,6 +20,7 @@ test('kiosk return timer is disabled on standalone information pages', () => {
   assert.equal(shouldUseKioskInactivityTimer('/service/example'), true);
   assert.equal(shouldUseKioskInactivityTimer('/information/reception-schedule'), false);
   assert.equal(shouldUseKioskInactivityTimer('/information/ethics-fire-safety'), false);
+  assert.equal(shouldUseKioskInactivityTimer('/qr-tavojnya'), false);
 });
 
 test('interactive news warns before returning to the broadcast', async () => {
