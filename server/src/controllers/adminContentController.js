@@ -167,7 +167,7 @@ export const listAdminNews = asyncHandler(async (req, res) => {
         : req.query.publication === 'draft' ? { published: false }
           : req.query.published === 'true' ? { published: true }
             : req.query.published === 'false' ? { published: false } : {}),
-    ...(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
+    ...(['GENERAL', 'IMPORTANT', 'VERY_IMPORTANT', 'ANNOUNCEMENT', 'EVENT'].includes(req.query.category) ? { category: req.query.category } : {}),
     ...(req.query.priority === 'true' ? { isPriority: true } : req.query.priority === 'false' ? { isPriority: false } : {}),
     ...(search ? { AND: [{ OR: ['titleRu', 'titleKz', 'descriptionRu', 'descriptionKz', 'slug'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) }] } : {}),
   };
@@ -201,14 +201,17 @@ export const saveNewsImage = asyncHandler(async (req, res) => {
 export const createNews = asyncHandler(async (req, res) => {
   const { publishedAt, expiresAt, ...input } = req.body;
   if (!input.slug) input.slug = await createUniqueSlug(prisma.news, input.titleRu || input.titleKz, 180);
-  if (input.isPriority) {
+  const isVeryImportant = input.category === 'VERY_IMPORTANT' || input.isPriority;
+  input.isPriority = isVeryImportant;
+  if (isVeryImportant) {
+    input.category = 'VERY_IMPORTANT';
     input.showInBroadcast = false;
     input.sortOrder = 0;
   }
   const publicationDate = req.body.published ? publishedAt ? new Date(publishedAt) : new Date() : null;
   const expirationDate = expiresAt ? new Date(expiresAt) : null;
-  if (input.isPriority && req.body.published && !expirationDate) {
-    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для приоритетной новости укажите время окончания показа');
+  if (isVeryImportant && req.body.published && !expirationDate) {
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для очень важной новости укажите время окончания показа');
   }
   if (publicationDate && expirationDate && expirationDate <= publicationDate) {
     throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
@@ -239,13 +242,19 @@ export const updateNews = asyncHandler(async (req, res) => {
   const resultingPublishedAt = changes.publishedAt === undefined ? oldData.publishedAt : changes.publishedAt;
   const resultingExpiresAt = changes.expiresAt === undefined ? oldData.expiresAt : changes.expiresAt;
   const resultingPublished = changes.published === undefined ? oldData.published : changes.published;
-  const resultingPriority = changes.isPriority === undefined ? oldData.isPriority : changes.isPriority;
+  const resultingPriority = changes.category === 'VERY_IMPORTANT'
+    || changes.isPriority === true
+    || (changes.category === undefined && changes.isPriority === undefined && oldData.isPriority);
+  changes.isPriority = resultingPriority;
   if (resultingPriority) {
+    changes.category = 'VERY_IMPORTANT';
     changes.showInBroadcast = false;
     changes.sortOrder = 0;
+  } else if (oldData.category === 'VERY_IMPORTANT' && changes.category === undefined) {
+    changes.category = 'IMPORTANT';
   }
   if (resultingPriority && resultingPublished && !resultingExpiresAt) {
-    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для приоритетной новости укажите время окончания показа');
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Для очень важной новости укажите время окончания показа');
   }
   if (resultingPublishedAt && resultingExpiresAt && resultingExpiresAt <= resultingPublishedAt) {
     throw new AppError(400, 'INVALID_NEWS_PERIOD', 'Дата окончания должна быть позже даты публикации');
@@ -260,7 +269,7 @@ export const updateNewsPublication = asyncHandler(async (req, res) => {
   const oldData = await prisma.news.findUnique({ where: { id } });
   if (!oldData) throw new AppError(404, 'NEWS_NOT_FOUND', 'Новость не найдена');
   if (req.body.published && oldData.isPriority && (!oldData.expiresAt || oldData.expiresAt <= new Date())) {
-    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Сначала укажите новый период показа приоритетной новости');
+    throw new AppError(400, 'PRIORITY_NEWS_PERIOD_REQUIRED', 'Сначала укажите новый период показа очень важной новости');
   }
   const data = await prisma.news.update({
     where: { id },
@@ -306,8 +315,8 @@ function broadcastData(body, authorId) {
     ...body,
     authorId,
     eventDate: body.type === 'BIRTHDAY' && body.eventDate ? new Date(`${body.eventDate}T00:00:00.000Z`) : null,
-    mediaUrl: body.type === 'VIDEO' ? body.mediaUrl : null,
-    mediaKind: body.type === 'VIDEO' ? body.mediaKind || 'VIDEO' : null,
+    mediaUrl: body.mediaUrl || null,
+    mediaKind: body.mediaUrl ? body.mediaKind || 'IMAGE' : null,
   };
 }
 

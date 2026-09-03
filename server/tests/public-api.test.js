@@ -260,7 +260,7 @@ test('editor can manage news but cannot access service administration', async ()
   }
 });
 
-test('priority news requires an end time and is exposed for modal display', async () => {
+test('very important news category requires an end time and is exposed for modal display', async () => {
   const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
   assert.ok(admin);
   const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
@@ -272,11 +272,11 @@ test('priority news requires an end time and is exposed for modal display', asyn
     titleRu: 'Проверка приоритетной новости', titleKz: 'Басым жаңалықты тексеру',
     descriptionRu: 'Описание тестовой новости', descriptionKz: 'Сынақ жаңалығының сипаттамасы',
     contentRu: 'Полный текст тестовой новости', contentKz: 'Сынақ жаңалығының толық мәтіні',
-    image: '', category: 'IMPORTANT', published: true,
+    image: '', category: 'VERY_IMPORTANT', published: true,
     publishedAt: publicationDate, sortOrder: 9999,
   };
 
-  const invalid = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: `priority-missing-period-${suffix}`, isPriority: true }) });
+  const invalid = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: `priority-missing-period-${suffix}` }) });
   assert.equal(invalid.response.status, 400);
   assert.equal(invalid.body.error.code, 'PRIORITY_NEWS_PERIOD_REQUIRED');
 
@@ -284,10 +284,12 @@ test('priority news requires an end time and is exposed for modal display', asyn
   const createdIds = [];
   try {
     const ordinary = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[0], category: 'GENERAL', isPriority: false }) });
-    const priority = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[1], isPriority: true, expiresAt: expirationDate }) });
+    const priority = await request('/api/admin/news', { method: 'POST', headers, body: JSON.stringify({ ...common, slug: slugs[1], expiresAt: expirationDate }) });
     createdIds.push(String(ordinary.body.data?.id), String(priority.body.data?.id));
     assert.equal(ordinary.response.status, 201);
     assert.equal(priority.response.status, 201);
+    assert.equal(priority.body.data.category, 'VERY_IMPORTANT');
+    assert.equal(priority.body.data.isPriority, true);
     assert.equal(priority.body.data.image, '');
     assert.equal(priority.body.data.showInBroadcast, false);
     assert.equal(priority.body.data.sortOrder, 0);
@@ -329,6 +331,37 @@ test('published news can stay in the feed without becoming a broadcast slide', a
   } finally {
     if (createdId) await prisma.auditLog.deleteMany({ where: { entityType: 'News', entityId: createdId } });
     await prisma.news.deleteMany({ where: { slug } });
+  }
+});
+
+test('birthday broadcast keeps a bundled background image', async () => {
+  const admin = await prisma.adminUser.findFirst({ where: { role: 'SUPER_ADMIN', isActive: true } });
+  assert.ok(admin);
+  const token = jwt.sign({ sub: String(admin.id) }, env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const now = new Date();
+  const eventDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  let createdId = null;
+  try {
+    const created = await request('/api/admin/broadcast/items', { method: 'POST', headers, body: JSON.stringify({
+      type: 'BIRTHDAY',
+      titleRu: 'Тестовый сотрудник', titleKz: 'Сынақ қызметкері',
+      descriptionRu: 'Поздравление для проверки фона.', descriptionKz: 'Фонды тексеруге арналған құттықтау.',
+      mediaUrl: '/media-library/birthday-cake.png', mediaKind: 'IMAGE', eventDate,
+      isActive: true, sortOrder: 9999,
+    }) });
+    createdId = created.body.data?.id;
+    assert.equal(created.response.status, 201);
+    assert.equal(created.body.data.mediaUrl, '/media-library/birthday-cake.png');
+    assert.equal(created.body.data.mediaKind, 'IMAGE');
+
+    const broadcast = await request('/api/broadcast');
+    const birthday = broadcast.body.data.slides.find((item) => item.id === `birthday-${createdId}`);
+    assert.equal(birthday?.mediaUrl, '/media-library/birthday-cake.png');
+    assert.equal(birthday?.kind, 'BIRTHDAY');
+  } finally {
+    if (createdId) await prisma.broadcastItem.deleteMany({ where: { id: createdId } });
+    if (createdId) await prisma.auditLog.deleteMany({ where: { entityType: 'BroadcastItem', entityId: String(createdId) } });
   }
 });
 

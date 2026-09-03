@@ -26,6 +26,8 @@ import { ConfirmDialog, Modal } from '../../components/admin/Modal.jsx';
 import { ErrorState, LoadingState } from '../../components/common/States.jsx';
 import { useAdminI18n } from '../../utils/adminLocalization.js';
 import DgdLogo from '../../components/common/DgdLogo.jsx';
+import { defaultBirthdayMedia } from '../../data/broadcastMediaLibrary.js';
+import MediaLibraryPicker from '../../components/admin/MediaLibraryPicker.jsx';
 
 const blank = {
   type: 'VIDEO',
@@ -54,10 +56,17 @@ const eventDateLabel = (eventDate, locale, missingLabel) => (
 );
 
 function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy, error }) {
-  const { tr } = useAdminI18n();
+  const { language, tr } = useAdminI18n();
   const birthday = form.type === 'BIRTHDAY';
-  const image = !birthday && form.mediaKind === 'IMAGE';
-  const setType = (type) => setForm({ ...form, type, mediaUrl: '', mediaKind: type === 'VIDEO' ? 'IMAGE' : null, eventDate: '' });
+  const image = form.mediaKind === 'IMAGE';
+  const setType = (type) => setForm({
+    ...form,
+    type,
+    mediaUrl: type === 'BIRTHDAY' ? defaultBirthdayMedia : '',
+    mediaKind: 'IMAGE',
+    eventDate: '',
+  });
+  const chooseLibraryMedia = (mediaUrl) => setForm({ ...form, mediaUrl, mediaKind: 'IMAGE' });
 
   return (
     <form className="admin-form broadcast-item-form" onSubmit={onSubmit}>
@@ -83,14 +92,19 @@ function ItemForm({ form, setForm, onSubmit, onCancel, onUpload, uploading, busy
         <label><span>{birthday ? tr('Имя сотрудника (казахский)', 'Қызметкердің аты-жөні (қазақша)') : tr('Название материала (казахский)', 'Материал атауы (қазақша)')}</span><input required maxLength="240" value={form.titleKz} onChange={(event) => setForm({ ...form, titleKz: event.target.value })} /></label>
         <label><span>{birthday ? tr('Должность и поздравление (русский)', 'Лауазымы және құттықтау (орысша)') : tr('Описание (русский)', 'Сипаттамасы (орысша)')}</span><textarea required maxLength="1200" value={form.descriptionRu} onChange={(event) => setForm({ ...form, descriptionRu: event.target.value })} /></label>
         <label><span>{birthday ? tr('Должность и поздравление (казахский)', 'Лауазымы және құттықтау (қазақша)') : tr('Описание (казахский)', 'Сипаттамасы (қазақша)')}</span><textarea required maxLength="1200" value={form.descriptionKz} onChange={(event) => setForm({ ...form, descriptionKz: event.target.value })} /></label>
-        {!birthday && (
-          <label className="form-grid__wide">
-            <span>{tr('Фото или видео', 'Фото немесе бейне')}</span>
-            <span className="image-upload-control"><Upload size={20} />{uploading ? tr('Загрузка…') : form.mediaUrl ? tr('Заменить файл', 'Файлды ауыстыру') : tr('Загрузить файл', 'Файлды жүктеу')}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={onUpload} disabled={uploading} /></span>
-            <small>{tr('JPG, PNG, WebP, GIF, MP4 или WebM. Видео воспроизводится автоматически без звука.', 'JPG, PNG, WebP, GIF, MP4 немесе WebM. Бейне дыбыссыз автоматты түрде ойнатылады.')}</small>
-            {form.mediaUrl && (image ? <img className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} alt={tr('Предпросмотр материала', 'Материалды алдын ала қарау')} /> : <video className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} controls muted />)}
-          </label>
-        )}
+        <fieldset className="broadcast-library-field form-grid__wide">
+          <legend>{birthday ? tr('Фон поздравления', 'Құттықтау фоны') : tr('Готовые фотографии', 'Дайын фотосуреттер')}</legend>
+          <p>{tr('Выберите изображение из локальной библиотеки — оно доступно без интернета.', 'Жергілікті кітапханадан суретті таңдаңыз — ол интернетсіз қолжетімді.')}</p>
+          <MediaLibraryPicker key={birthday ? 'birthday' : 'media'} value={form.mediaUrl} onChange={chooseLibraryMedia} language={language} onlyGroup={birthday ? 'BIRTHDAY' : ''} />
+        </fieldset>
+        <label className="form-grid__wide">
+          <span>{birthday ? tr('Свой фон', 'Өз фоныңыз') : tr('Свой файл', 'Өз файлыңыз')}</span>
+          <span className="image-upload-control"><Upload size={20} />{uploading ? tr('Загрузка…') : form.mediaUrl ? tr('Заменить файл', 'Файлды ауыстыру') : tr('Загрузить файл', 'Файлды жүктеу')}<input type="file" accept={birthday ? 'image/jpeg,image/png,image/webp,image/gif' : 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'} onChange={onUpload} disabled={uploading} /></span>
+          <small>{birthday
+            ? tr('Можно загрузить собственный JPG, PNG, WebP или GIF.', 'Өз JPG, PNG, WebP немесе GIF файлыңызды жүктеуге болады.')
+            : tr('JPG, PNG, WebP, GIF, MP4 или WebM. Видео воспроизводится автоматически без звука.', 'JPG, PNG, WebP, GIF, MP4 немесе WebM. Бейне дыбыссыз автоматты түрде ойнатылады.')}</small>
+          {form.mediaUrl && (image ? <img className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} alt={tr('Предпросмотр материала', 'Материалды алдын ала қарау')} /> : <video className="broadcast-media-preview" src={assetUrl(form.mediaUrl)} controls muted />)}
+        </label>
         <label className="toggle-label broadcast-active-toggle form-grid__wide"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} /><span>{tr('Показывать материал в эфире', 'Материалды эфирде көрсету')}</span></label>
       </div>
 
@@ -176,8 +190,8 @@ export default function BroadcastPage() {
       titleKz: editing.titleKz,
       descriptionRu: editing.descriptionRu,
       descriptionKz: editing.descriptionKz,
-      mediaUrl: editing.type === 'VIDEO' ? editing.mediaUrl : null,
-      mediaKind: editing.type === 'VIDEO' ? editing.mediaKind : null,
+      mediaUrl: editing.mediaUrl || null,
+      mediaKind: editing.mediaUrl ? editing.mediaKind || 'IMAGE' : null,
       eventDate: editing.type === 'BIRTHDAY' ? editing.eventDate : null,
       isActive: editing.isActive,
       sortOrder: editing.sortOrder,
@@ -282,12 +296,12 @@ export default function BroadcastPage() {
           <div className="broadcast-material-grid">
             {items.map((item, index) => {
               const birthday = item.type === 'BIRTHDAY';
-              const image = !birthday && item.mediaKind === 'IMAGE';
+              const image = item.mediaKind === 'IMAGE';
               return (
                 <article className={`broadcast-material-card ${item.isActive ? '' : 'is-inactive'}`} key={item.id}>
-                  <div className={`broadcast-material-card__visual broadcast-material-card__visual--${birthday ? 'birthday' : 'video'}`}>
+                  <div className={`broadcast-material-card__visual broadcast-material-card__visual--${birthday ? 'birthday' : 'video'} ${item.mediaUrl && image ? 'has-image' : ''}`}>
                     <span className="broadcast-material-card__order">{String(index + 1).padStart(2, '0')}</span>
-                    {birthday ? <Cake size={34} /> : image ? <ImageIcon size={38} /> : <MonitorPlay size={38} />}
+                    {item.mediaUrl && image ? <img src={assetUrl(item.mediaUrl)} alt="" /> : birthday ? <Cake size={34} /> : <MonitorPlay size={38} />}
                     <small>{birthday ? eventDateLabel(item.eventDate, locale, tr('Дата не указана', 'Күні көрсетілмеген')) : image ? tr('Фотоматериал', 'Фотоматериал') : tr('Видеоматериал', 'Бейнематериал')}</small>
                   </div>
                   <div className="broadcast-material-card__body">

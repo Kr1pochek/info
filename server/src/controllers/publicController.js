@@ -7,7 +7,7 @@ const categorySelect = {
   icon: true, sortOrder: true, _count: { select: { services: { where: { isPublished: true } } } },
 };
 const serviceInclude = { category: { select: { id: true, slug: true, titleRu: true, titleKz: true } } };
-const newsCategories = new Set(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']);
+const newsCategories = new Set(['GENERAL', 'IMPORTANT', 'VERY_IMPORTANT', 'ANNOUNCEMENT', 'EVENT']);
 
 export const listCategories = asyncHandler(async (_req, res) => {
   const data = await prisma.category.findMany({ where: { isPublished: true }, select: categorySelect, orderBy: [{ sortOrder: 'asc' }, { titleRu: 'asc' }] });

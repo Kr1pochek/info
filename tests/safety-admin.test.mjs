@@ -67,8 +67,11 @@ test('fire safety video alternates with the guide instead of shrinking above it'
   assert.match(page, /setTimeout\(\(\) => setFireView\('video'\)/);
 });
 
-test('priority news is always an overlay without placement and slide order controls', async () => {
+test('very important news category is always an overlay without placement and slide order controls', async () => {
   const page = await readFile(new URL('../client/src/pages/admin/NewsPage.jsx', import.meta.url), 'utf8');
+  const categories = await readFile(new URL('../client/src/utils/news.js', import.meta.url), 'utf8');
+  assert.match(categories, /value: 'VERY_IMPORTANT', label: 'Очень важная новость'/);
+  assert.match(page, /category === 'VERY_IMPORTANT'/);
   assert.match(page, /!form\.isPriority && <fieldset className="news-placement-selector/);
   assert.match(page, /!form\.isPriority && form\.showInBroadcast && <label><span>\{tr\('Порядок слайда в эфире'/);
   assert.match(page, /if \(payload\.isPriority\) \{ payload\.showInBroadcast = false; payload\.sortOrder = 0; \}/);

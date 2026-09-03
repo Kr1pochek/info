@@ -245,6 +245,21 @@ try {
     throw new Error(`Broadcast admin did not load at ${adminPage.url()}: ${pageState}`, { cause: error });
   }
   assert.equal(await adminPage.getByText(/^\d+ слайд ротацияда$/).count(), 1, 'Broadcast statistics were not localized');
+  await adminPage.locator('.broadcast-header-actions .admin-button--primary').click();
+  await adminPage.locator('.broadcast-media-library').waitFor({ timeout: 10000 });
+  assert.equal(await adminPage.locator('.broadcast-media-library button').count(), 14, 'Default broadcast image group is incomplete');
+  await adminPage.locator('.broadcast-type-switch button').first().click();
+  assert.equal(await adminPage.locator('.broadcast-media-library button').count(), 12, 'Birthday image group is incomplete');
+  assert.equal(await adminPage.locator('.broadcast-media-library button.is-selected').count(), 1, 'Birthday background is not selected by default');
+  assert.match(await adminPage.locator('.broadcast-media-library button.is-selected img').getAttribute('src'), /birthday-cake\.png$/);
+  await adminPage.goto(`${baseUrl}/admin/news`, { waitUntil: 'domcontentloaded' });
+  await adminPage.locator('.admin-page-header .admin-button--primary').click();
+  await adminPage.locator('.media-library-picker').waitFor({ timeout: 10000 });
+  assert.equal(await adminPage.locator('.media-library-filters button').count(), 11, 'News image category filters are incomplete');
+  await adminPage.locator('.media-library-filters button').first().click();
+  assert.equal(await adminPage.locator('.broadcast-media-library button').count(), 100, 'Bundled news image library is incomplete');
+  await adminPage.locator('.broadcast-media-library button').nth(1).click();
+  assert.match(await adminPage.locator('.news-editor__image img').getAttribute('src'), /birthday-flowers\.png$/);
   assert.equal(adminErrors.length, 0, `Authenticated admin: ${adminErrors.join('; ')}`);
   await adminContext.close();
   console.log(`Responsive QA: ${viewports.length} kiosk viewports × ${routes.length} routes passed`);

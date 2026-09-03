@@ -15,6 +15,6 @@ export default function NewsCard({ news }) {
     <Link to={`/news/${item.slug}`} className="news-card__image" tabIndex="-1">
       {item.image ? <img src={assetUrl(item.image)} alt="" loading="lazy" /> : <span><Image size={34} /></span>}
     </Link>
-    <div className="news-card__body">{item.isPriority && <div className="news-card__priority"><ShieldAlert size={13} />{language === 'kz' ? 'Маңызды жаңалық' : 'Важная новость'}</div>}<div className="news-card__meta"><span className={newsCategoryClass(item.category)}>{newsCategoryLabel(item.category, language)}</span><time dateTime={item.publishedAt || item.createdAt}><CalendarDays size={15} />{newsDate(item, language)}</time></div><h2><Link to={`/news/${item.slug}`}>{item.title}</Link></h2><p>{item.description}</p><Link to={`/news/${item.slug}`} className="news-card__link">{copy.readFull} <ArrowRight size={18} /></Link></div>
+    <div className="news-card__body">{item.isPriority && <div className="news-card__priority"><ShieldAlert size={13} />{language === 'kz' ? 'Өте маңызды жаңалық' : 'Очень важная новость'}</div>}<div className="news-card__meta"><span className={newsCategoryClass(item.category)}>{newsCategoryLabel(item.category, language)}</span><time dateTime={item.publishedAt || item.createdAt}><CalendarDays size={15} />{newsDate(item, language)}</time></div><h2><Link to={`/news/${item.slug}`}>{item.title}</Link></h2><p>{item.description}</p><Link to={`/news/${item.slug}`} className="news-card__link">{copy.readFull} <ArrowRight size={18} /></Link></div>
   </article>;
 }

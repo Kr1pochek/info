@@ -55,6 +55,7 @@ enum AuditAction {
 enum NewsCategory {
   GENERAL
   IMPORTANT
+  VERY_IMPORTANT
   ANNOUNCEMENT
   EVENT
 }

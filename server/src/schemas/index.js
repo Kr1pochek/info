@@ -39,7 +39,7 @@ export const servicePatchSchema = serviceSchema.partial().refine((value) => Obje
 export const newsSchema = z.object({
   slug: slug.max(180).optional(), titleRu: text(240), titleKz: text(240),
   descriptionRu: text(800), descriptionKz: text(800), contentRu: text(30000), contentKz: text(30000),
-  image: z.string().trim().max(500).default(''), category: z.enum(['GENERAL', 'IMPORTANT', 'ANNOUNCEMENT', 'EVENT']).default('GENERAL'),
+  image: z.string().trim().max(500).default(''), category: z.enum(['GENERAL', 'IMPORTANT', 'VERY_IMPORTANT', 'ANNOUNCEMENT', 'EVENT']).default('GENERAL'),
   isPriority: z.boolean().default(false), showInBroadcast: z.boolean().default(true),
   published: z.boolean().default(false), publishedAt: z.string().datetime().optional().nullable(),
   expiresAt: z.string().datetime().optional().nullable(), sortOrder: z.coerce.number().int().min(0).max(10000).default(0),

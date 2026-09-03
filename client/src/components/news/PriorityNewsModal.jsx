@@ -23,13 +23,13 @@ export default function PriorityNewsModal({ news, language, onClose, onNext, cur
       <button type="button" className="priority-modal__close" onClick={onClose} aria-label={language === 'kz' ? 'Жабу' : 'Закрыть'}><X /></button>
       <div className="priority-modal__image">{item.image ? <img src={assetUrl(item.image)} alt="" /> : <ShieldAlert size={82} />}</div>
       <div className="priority-modal__content">
-        <div className="priority-modal__eyebrow"><ShieldAlert size={22} /><span>{language === 'kz' ? 'МАҢЫЗДЫ ХАБАРЛАМА' : 'ВАЖНОЕ СООБЩЕНИЕ'}</span>{total > 1 && <small>{current} / {total}</small>}</div>
+        <div className="priority-modal__eyebrow"><ShieldAlert size={22} /><span>{language === 'kz' ? 'ӨТЕ МАҢЫЗДЫ ЖАҢАЛЫҚ' : 'ОЧЕНЬ ВАЖНАЯ НОВОСТЬ'}</span>{total > 1 && <small>{current} / {total}</small>}</div>
         <h2 id="priority-news-title">{item.title}</h2>
         <p>{item.description}</p>
         {expires && <time dateTime={item.expiresAt}><CalendarX2 size={17} />{language === 'kz' ? 'Көрсету мерзімі:' : 'Показывается до:'} <strong>{expires}</strong></time>}
         <div className="priority-modal__actions">
           {!broadcast && <Link to={`/news/${item.slug}`}>{language === 'kz' ? 'Толығырақ оқу' : 'Открыть полностью'}<ArrowRight size={18} /></Link>}
-          {onNext && <button type="button" onClick={onNext}>{language === 'kz' ? 'Келесі маңызды жаңалық' : 'Следующая важная новость'}<ArrowRight size={18} /></button>}
+          {onNext && <button type="button" onClick={onNext}>{language === 'kz' ? 'Келесі өте маңызды жаңалық' : 'Следующая очень важная новость'}<ArrowRight size={18} /></button>}
           <button type="button" className="priority-modal__continue" onClick={onClose}>{broadcast ? language === 'kz' ? 'Эфирді жалғастыру' : 'Продолжить эфир' : language === 'kz' ? 'Жабу' : 'Закрыть'}</button>
         </div>
       </div>

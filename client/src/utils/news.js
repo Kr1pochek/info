@@ -1,5 +1,6 @@
 export const newsCategories = [
   { value: '', label: 'Все новости', labelKz: 'Барлық жаңалықтар' },
+  { value: 'VERY_IMPORTANT', label: 'Очень важная новость', labelKz: 'Өте маңызды жаңалық' },
   { value: 'IMPORTANT', label: 'Важное', labelKz: 'Маңызды' },
   { value: 'ANNOUNCEMENT', label: 'Объявления', labelKz: 'Хабарландырулар' },
   { value: 'EVENT', label: 'События', labelKz: 'Іс-шаралар' },
