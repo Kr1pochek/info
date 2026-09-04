@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { propertyTaxFaq } from '../client/src/data/propertyTaxFaq.js';
-import { customsPostQrCodes } from '../client/src/data/customsQrCodes.js';
+import { defaultCustomsQrCodes } from '../client/src/data/receptionContent.js';
 
 test('property tax FAQ contains all document questions in both languages', () => {
   assert.equal(propertyTaxFaq.length, 9);
@@ -27,19 +27,25 @@ test('FAQ is available from the kiosk home page and has its own route', async ()
   assert.match(home, /to="\/faq"/);
 });
 
-test('customs QR page contains the requested Almaty customs posts', async () => {
+test('reception page contains editable customs QR defaults', async () => {
   const [app, home, page] = await Promise.all([
     readFile(new URL('../client/src/App.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../client/src/pages/kiosk/HomePage.jsx', import.meta.url), 'utf8'),
-    readFile(new URL('../client/src/pages/kiosk/CustomsQrPage.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../client/src/pages/kiosk/InformationPage.jsx', import.meta.url), 'utf8'),
   ]);
-  assert.equal(customsPostQrCodes.length, 3);
-  assert.deepEqual(customsPostQrCodes.map((item) => item.id), ['almaty-cto', 'almaly-cto', 'zhetysu']);
-  for (const item of customsPostQrCodes) {
+  assert.equal(defaultCustomsQrCodes.length, 3);
+  assert.deepEqual(defaultCustomsQrCodes.map((item) => item.id), ['almaty-cto', 'almaly-cto', 'zhetysu-customs']);
+  const almaty = defaultCustomsQrCodes.find((item) => item.id === 'almaty-cto');
+  const almaly = defaultCustomsQrCodes.find((item) => item.id === 'almaly-cto');
+  assert.equal(almaly.targetUrl, almaty.targetUrl);
+  assert.equal(almaly.image, almaty.image);
+  assert.equal(almaly.addressRu, almaty.addressRu);
+  for (const item of defaultCustomsQrCodes) {
     assert.match(item.targetUrl, /^https:\/\/2gis\.kz\/almaty\//);
-    assert.match(item.qrImage, /^\/qr\/customs\/.+\.png$/);
+    assert.match(item.image, /^\/qr\/customs\/.+\.png$/);
   }
-  assert.match(app, /path="qr-tavojnya" element={<CustomsQrPage \/>}/);
-  assert.match(home, /to="\/qr-tavojnya"/);
-  assert.match(page, /customsPostQrCodes/);
+  assert.match(app, /path="qr-tavojnya" element={<Navigate to="\/information\/reception-schedule" replace \/>}/);
+  assert.match(home, /to="\/information\/reception-schedule"/);
+  assert.match(page, /settings\?\.customsQrCodes/);
+  assert.match(page, /customsQrCodes\.map/);
 });

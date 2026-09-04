@@ -37,6 +37,12 @@ const defaultDistrictQrCodes = [
   { id: 'nauryzbay', image: '/qr/districts/almaty-nauryzbay.png', titleKz: 'Наурызбай ауданы бойынша Мемлекеттік кірістер басқармасы', titleRu: 'Управление государственных доходов по Наурызбайскому району', isActive: true },
 ];
 
+const defaultCustomsQrCodes = [
+  { id: 'almaty-cto', code: '39855302', image: '/qr/customs/almaty-cto-2gis.png', titleKz: '«Алматы-ЦТО» кеден бекеті', titleRu: 'Т/П «Алматы-ЦТО»', addressKz: 'Сүйінбай даңғылы, 2 к7, «Мерей» СК, 1-қабат', addressRu: 'проспект Суюнбая, 2 к7, ТК «Мерей», 1 этаж', targetUrl: 'https://2gis.kz/almaty/firm/9429940001288203', targetTypeKz: '2GIS мекенжайы', targetTypeRu: 'Адрес в 2GIS', isActive: true },
+  { id: 'almaly-cto', code: '39855307', image: '/qr/customs/almaty-cto-2gis.png', titleKz: '«Алмалы-ЦТО» кеден бекеті', titleRu: 'Т/П «Алмалы-ЦТО»', addressKz: 'Сүйінбай даңғылы, 2 к7, «Мерей» СК, 1-қабат', addressRu: 'проспект Суюнбая, 2 к7, ТК «Мерей», 1 этаж', targetUrl: 'https://2gis.kz/almaty/firm/9429940001288203', targetTypeKz: '2GIS мекенжайы', targetTypeRu: 'Адрес в 2GIS', isActive: true },
+  { id: 'zhetysu-customs', code: '39855301', image: '/qr/customs/zhetysu-2gis.png', titleKz: '«Жетісу» кеден бекеті', titleRu: 'Т/П «Жетысу»', addressKz: 'Ахметов / Закарпатская көшесі, 51Б, 2-қабат', addressRu: 'улица Ахметова / Закарпатская, 51Б, 2 этаж', targetUrl: 'https://2gis.kz/almaty/firm/70000001023602643', targetTypeKz: '2GIS мекенжайы', targetTypeRu: 'Адрес в 2GIS', isActive: true },
+];
+
 const officialInformationDefaults = {
   taxpayerRightsRu: `Краткая памятка по статье 36 Налогового кодекса Республики Казахстан от 18 июля 2025 года № 214-VIII ЗРК.
 
@@ -434,15 +440,16 @@ async function main() {
 
   const currentSettings = await prisma.setting.findUnique({
     where: { id: 1 },
-    select: { panelQrCodes: true, receptionSchedule: true, districtQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true, fireSafetyRules: true, fireSafetyWarningRu: true, fireSafetyWarningKz: true },
+    select: { panelQrCodes: true, receptionSchedule: true, districtQrCodes: true, customsQrCodes: true, taxpayerRightsRu: true, taxpayerRightsKz: true, ethicsOfficerNameRu: true, ethicsOfficerNameKz: true, ethicsOfficerContactsRu: true, ethicsOfficerContactsKz: true, fireSafetyRules: true, fireSafetyWarningRu: true, fireSafetyWarningKz: true },
   });
   const shouldAddOfficialQrCodes = !currentSettings || !Array.isArray(currentSettings.panelQrCodes) || currentSettings.panelQrCodes.length === 0;
   const shouldAddReceptionSchedule = !currentSettings || !Array.isArray(currentSettings.receptionSchedule) || currentSettings.receptionSchedule.length === 0;
   const shouldAddDistrictQrCodes = !currentSettings || !Array.isArray(currentSettings.districtQrCodes) || currentSettings.districtQrCodes.length === 0;
+  const shouldAddCustomsQrCodes = !currentSettings || !Array.isArray(currentSettings.customsQrCodes) || currentSettings.customsQrCodes.length === 0;
   const shouldAddFireSafetyRules = !currentSettings || !Array.isArray(currentSettings.fireSafetyRules) || currentSettings.fireSafetyRules.length === 0;
   const missingOfficialInformation = Object.fromEntries(Object.entries(officialInformationDefaults).filter(([key]) => !currentSettings?.[key]?.trim()));
   await prisma.setting.upsert({
-    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}), ...(shouldAddReceptionSchedule ? { receptionSchedule: defaultReceptionSchedule } : {}), ...(shouldAddDistrictQrCodes ? { districtQrCodes: defaultDistrictQrCodes } : {}), ...(shouldAddFireSafetyRules ? { fireSafetyRules: defaultFireSafetyRules } : {}) },
+    where: { id: 1 }, update: { defaultLanguage: 'kz', ...missingOfficialInformation, ...(shouldAddOfficialQrCodes ? { panelQrCodes: officialPanelQrCodes } : {}), ...(shouldAddReceptionSchedule ? { receptionSchedule: defaultReceptionSchedule } : {}), ...(shouldAddDistrictQrCodes ? { districtQrCodes: defaultDistrictQrCodes } : {}), ...(shouldAddCustomsQrCodes ? { customsQrCodes: defaultCustomsQrCodes } : {}), ...(shouldAddFireSafetyRules ? { fireSafetyRules: defaultFireSafetyRules } : {}) },
     create: {
       id: 1,
       organizationNameRu: 'Департамент государственных доходов по городу Алматы',
@@ -453,7 +460,7 @@ async function main() {
       maintenanceMessageRu: 'Сервис временно недоступен. Обратитесь к сотруднику ДГД.',
       maintenanceMessageKz: 'Қызмет уақытша қолжетімсіз. МКД қызметкеріне хабарласыңыз.', popularServicesCount: 6,
       ...officialInformationDefaults, ethicsOfficerPhoto: '', fireSafetyRules: defaultFireSafetyRules,
-      receptionSchedule: defaultReceptionSchedule, districtQrCodes: defaultDistrictQrCodes,
+      receptionSchedule: defaultReceptionSchedule, districtQrCodes: defaultDistrictQrCodes, customsQrCodes: defaultCustomsQrCodes,
       reportingDeadlines: [], panelQrCodes: officialPanelQrCodes, onlineSpecialists: [],
     },
   });

@@ -33,8 +33,10 @@ test('ethics and fire safety are the first administrator group with two simple l
   assert.match(startPage, /\/admin\/reception\/schedule/);
   assert.match(receptionPage, /section = 'schedule'/);
   assert.match(receptionPage, /\/admin\/reception\/qr-media/);
-  assert.match(receptionPage, /newQrCode/);
-  assert.match(receptionPage, /updateItem\('districtQrCodes', index, 'titleRu'/);
+  assert.match(receptionPage, /newDistrictQrCode/);
+  assert.match(receptionPage, /newCustomsQrCode/);
+  assert.match(receptionPage, /customsQrCodes/);
+  assert.match(receptionPage, /targetUrl/);
   assert.match(adminRoutes, /uploadReceptionQrImage/);
   assert.match(adminRoutes, /\/reception\/qr-media/);
   assert.match(page, /Уполномоченный по этике/);

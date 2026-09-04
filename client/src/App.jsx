@@ -19,7 +19,6 @@ const ServicePage = lazy(() => import('./pages/kiosk/ServicePage.jsx'));
 const PackagesPage = lazy(() => import('./pages/kiosk/PackagesPage.jsx'));
 const PackagePage = lazy(() => import('./pages/kiosk/PackagePage.jsx'));
 const InformationPage = lazy(() => import('./pages/kiosk/InformationPage.jsx'));
-const CustomsQrPage = lazy(() => import('./pages/kiosk/CustomsQrPage.jsx'));
 const FaqPage = lazy(() => import('./pages/kiosk/FaqPage.jsx'));
 const NotFoundPage = lazy(() => import('./pages/kiosk/NotFoundPage.jsx'));
 const NewsListPage = lazy(() => import('./pages/news/NewsListPage.jsx'));
@@ -42,7 +41,7 @@ const GuidePage = lazy(() => import('./pages/admin/GuidePage.jsx'));
 export default function App() {
   return <BrowserRouter><AuthProvider><LanguageProvider><FontSizeProvider><SettingsProvider><ConnectivityBanner /><Suspense fallback={<LoadingState />}><Routes>
     <Route index element={<Navigate to="/kiosk" replace />} />
-    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="faq" element={<FaqPage />} /><Route path="qr-tavojnya" element={<CustomsQrPage />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
+    <Route element={<KioskLayout />}><Route path="kiosk" element={<HomePage />} /><Route path="services" element={<ServicesPage />} /><Route path="packages" element={<PackagesPage />} /><Route path="package/:packageSlug" element={<PackagePage />} /><Route path="category/:categorySlug" element={<CategoryPage />} /><Route path="service/:serviceSlug" element={<ServicePage />} /><Route path="faq" element={<FaqPage />} /><Route path="qr-tavojnya" element={<Navigate to="/information/reception-schedule" replace />} /><Route path="information/:informationSlug" element={<InformationPage />} /></Route>
     <Route path="news" element={<NewsLayout />}><Route index element={<NewsListPage />} /><Route path=":newsSlug" element={<NewsDetailPage />} /></Route>
     <Route path="admin/login" element={<LoginPage />} />
     <Route path="admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

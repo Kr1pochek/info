@@ -118,7 +118,7 @@ const safetySettingsSelect = {
   fireSafetyWarningRu: true, fireSafetyWarningKz: true, updatedAt: true,
 };
 const receptionSettingsSelect = {
-  receptionSchedule: true, districtQrCodes: true, updatedAt: true,
+  receptionSchedule: true, districtQrCodes: true, customsQrCodes: true, updatedAt: true,
 };
 
 export const getSafetySettings = asyncHandler(async (_req, res) => {

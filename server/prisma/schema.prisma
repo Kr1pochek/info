@@ -290,6 +290,7 @@ model Setting {
   fireSafetyWarningKz       String   @default("") @db.VarChar(1000)
   receptionSchedule         Json     @default("[]")
   districtQrCodes           Json     @default("[]")
+  customsQrCodes            Json     @default("[]")
   reportingDeadlines        Json     @default("[]")
   panelQrCodes              Json     @default("[]")
   onlineSpecialists         Json     @default("[]")

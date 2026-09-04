@@ -180,6 +180,14 @@ try {
     assert.ok(state.text.length > 20, `Public journey ${route}: empty page`);
     assert.ok(state.bodyWidth <= state.viewportWidth + 2, `Public journey ${route}: horizontal overflow ${state.bodyWidth}/${state.viewportWidth}`);
     assert.equal(errors.length, 0, `Public journey ${route}: ${errors.join('; ')}`);
+    if (route === '/information/reception-schedule') {
+      const tabs = page.locator('.reception-slides-nav button');
+      assert.equal(await tabs.count(), 3, 'Reception page should have schedule, district QR and customs QR tabs');
+      await tabs.nth(2).click();
+      await page.locator('#customs-qr .district-qr-card--customs').first().waitFor({ timeout: 5000 });
+      assert.equal(await page.locator('#customs-qr .district-qr-card--customs img').count(), 3, 'Customs QR cards are missing');
+      await page.waitForFunction(() => [...document.querySelectorAll('#customs-qr img')].every((image) => image.complete && image.naturalWidth > 0), null, { timeout: 5000 });
+    }
     await page.close();
   }
   await publicContext.close();

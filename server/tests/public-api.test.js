@@ -62,6 +62,13 @@ test('public settings expose current kiosk content without retired queue fields'
   assert.ok(body.data.receptionSchedule.length >= 5);
   assert.ok(Array.isArray(body.data.districtQrCodes));
   assert.ok(body.data.districtQrCodes.length >= 8);
+  assert.ok(Array.isArray(body.data.customsQrCodes));
+  assert.ok(body.data.customsQrCodes.length >= 3);
+  const almatyCustomsQr = body.data.customsQrCodes.find((item) => item.id === 'almaty-cto');
+  const almalyCustomsQr = body.data.customsQrCodes.find((item) => item.id === 'almaly-cto');
+  assert.equal(almalyCustomsQr?.targetUrl, almatyCustomsQr?.targetUrl);
+  assert.equal(almalyCustomsQr?.image, almatyCustomsQr?.image);
+  assert.equal(almalyCustomsQr?.addressRu, almatyCustomsQr?.addressRu);
   assert.equal(body.data.panelQrCodes.find((item) => item.id === 'kgd-official')?.url, 'https://portal.kgd.gov.kz/');
 });
 
@@ -227,6 +234,7 @@ test('editor can manage news but cannot access service administration', async ()
     originalReception = {
       receptionSchedule: reception.body.data.receptionSchedule,
       districtQrCodes: reception.body.data.districtQrCodes,
+      customsQrCodes: reception.body.data.customsQrCodes,
     };
     const changedReception = {
       ...originalReception,
@@ -235,8 +243,10 @@ test('editor can manage news but cannot access service administration', async ()
     const updatedReception = await request('/api/admin/reception', { method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(changedReception) });
     assert.equal(updatedReception.response.status, 200);
     assert.equal(updatedReception.body.data.receptionSchedule[0].time, '09:00 – 11:00');
+    assert.ok(Array.isArray(updatedReception.body.data.customsQrCodes));
     const publicSettings = await request('/api/settings/public');
     assert.equal(publicSettings.body.data.receptionSchedule[0].time, '09:00 – 11:00');
+    assert.ok(Array.isArray(publicSettings.body.data.customsQrCodes));
     assert.equal(services.response.status, 403);
     assert.equal(settings.response.status, 403);
     assert.equal(dashboard.response.status, 403);

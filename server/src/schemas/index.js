@@ -87,6 +87,14 @@ const districtQrCodeSchema = z.object({
   id: text(80), titleRu: text(240), titleKz: text(240),
   image: z.string().trim().max(500), isActive: z.boolean(),
 });
+const customsQrCodeSchema = districtQrCodeSchema.extend({
+  code: z.string().trim().max(80),
+  addressRu: z.string().trim().max(500),
+  addressKz: z.string().trim().max(500),
+  targetTypeRu: z.string().trim().max(160),
+  targetTypeKz: z.string().trim().max(160),
+  targetUrl: z.string().trim().url().max(500).or(z.literal('')),
+});
 
 export const userSchema = z.object({
   login: text(80), password: z.string().min(10).max(128), fullName: text(160),
@@ -114,6 +122,7 @@ export const safetySettingsSchema = z.object({
 export const receptionSettingsSchema = z.object({
   receptionSchedule: z.array(receptionScheduleItemSchema).max(30),
   districtQrCodes: z.array(districtQrCodeSchema).max(30),
+  customsQrCodes: z.array(customsQrCodeSchema).max(30),
 });
 
 export const settingsSchema = z.object({
@@ -129,12 +138,12 @@ export const settingsSchema = z.object({
   ethicsOfficerContactsRu: z.string().trim().max(1000), ethicsOfficerContactsKz: z.string().trim().max(1000),
   ethicsOfficerPhoto: z.string().trim().max(500), fireSafetyVideo: z.string().trim().max(500),
   fireSafetyRules: z.array(fireSafetyRuleSchema).min(1).max(12), fireSafetyWarningRu: text(1000), fireSafetyWarningKz: text(1000),
-  receptionSchedule: z.array(receptionScheduleItemSchema).max(30), districtQrCodes: z.array(districtQrCodeSchema).max(30),
+  receptionSchedule: z.array(receptionScheduleItemSchema).max(30), districtQrCodes: z.array(districtQrCodeSchema).max(30), customsQrCodes: z.array(customsQrCodeSchema).max(30),
   reportingDeadlines: z.array(deadlineSchema).max(30),
   panelQrCodes: z.array(qrCodeSchema).max(6), onlineSpecialists: z.array(specialistSchema).max(30),
 }).refine((value) => value.warningSeconds < value.inactivitySeconds, { path: ['warningSeconds'], message: 'Предупреждение должно быть раньше завершения' });
 
-const kioskPath = /^\/(?:kiosk|services|packages|package\/[^/]+|category\/[^/]+|service\/[^/]+|faq|information\/[^/]+)$/;
+const kioskPath = /^\/(?:kiosk|services|packages|package\/[^/]+|category\/[^/]+|service\/[^/]+|faq|qr-tavojnya|information\/[^/]+)$/;
 
 export const analyticsSchema = z.object({
   eventId: z.string().min(8).max(80).regex(/^[a-zA-Z0-9._:-]+$/),
