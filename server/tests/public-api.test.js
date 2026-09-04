@@ -31,6 +31,7 @@ test('health endpoint confirms database connection', async () => {
   assert.equal(response.status, 200);
   assert.equal(body.data.database, 'connected');
   assert.match(response.headers.get('x-request-id'), /^[a-f0-9-]{36}$/);
+  assert.ok(!response.headers.get('content-security-policy').includes('upgrade-insecure-requests'));
 });
 
 test('live and ready health probes expose separate process and database status', async () => {

@@ -56,7 +56,16 @@ function allowFrontendOrigin(origin, requestHost, callback) {
 }
 
 app.disable('x-powered-by');
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
+const secureDeployment = new URL(env.CLIENT_URL).protocol === 'https:';
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'same-site' },
+  contentSecurityPolicy: {
+    directives: { 'upgrade-insecure-requests': secureDeployment ? [] : null },
+  },
+  crossOriginOpenerPolicy: secureDeployment ? undefined : false,
+  originAgentCluster: secureDeployment ? undefined : false,
+  strictTransportSecurity: secureDeployment ? undefined : false,
+}));
 app.use(cors((req, callback) => {
   allowFrontendOrigin(req.get('origin'), req.get('host'), (error, allowed) => callback(error, {
     origin: allowed,
