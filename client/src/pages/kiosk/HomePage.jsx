@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, Building2, CalendarClock, ChevronRight, CircleHelp, ClipboardList, Headphones, MapPin, Phone, QrCode, RotateCcw, Scale, UserRoundCheck, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Building2, CalendarClock, ChevronRight, CircleHelp, ClipboardList, Headphones, MapPin, Phone, RotateCcw, Scale, UserRoundCheck, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api, { apiMessage, assetUrl } from '../../api/client.js';
 import { endSession } from '../../api/analytics.js';
@@ -87,7 +87,6 @@ export default function HomePage() {
       <section className="content-section information-section" data-home-scroll-section><div className="section-heading"><div><span>04</span><h2>{t.usefulInformation}</h2></div></div><div className="information-grid">
         <Link className="information-card" to="/information/taxpayer-rights"><span><Scale size={34} /></span><h3>{t.taxpayerRights}</h3><ChevronRight /></Link>
         <Link className="information-card information-card--faq" to="/faq"><span><CircleHelp size={36} /></span><div><small>{language === 'kz' ? '9 сұрақ пен жауап' : '9 вопросов и ответов'}</small><h3>{language === 'kz' ? 'Жиі қойылатын сұрақтар' : 'Частые вопросы'}</h3></div><ChevronRight /></Link>
-        <Link className="information-card information-card--customs-qr" to="/information/reception-schedule"><span><QrCode size={36} /></span><div><small>{language === 'kz' ? 'Кесте және QR-кодтар' : 'График и QR-коды'}</small><h3>{language === 'kz' ? 'Қабылдау және кеден бекеттері' : 'Приём и таможенные посты'}</h3></div><ChevronRight /></Link>
       </div></section>
       {deadlines.length > 0 && <section className="content-section content-section--tinted deadline-section" data-home-scroll-section><div className="section-heading"><div><span>05</span><h2>{t.deadlines}</h2></div><CalendarClock size={36} /></div><div className="deadline-grid">{deadlines.map((item) => <article className="deadline-card" key={item.id}><time dateTime={item.date.toISOString()}>{item.date.toLocaleDateString(language === 'kz' ? 'kk-KZ' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</time><h3>{item[language === 'kz' ? 'titleKz' : 'titleRu']}</h3><strong>{item.days === 0 ? t.deadlineToday : `${item.days} ${t.daysLeft}`}</strong></article>)}</div></section>}
     </>}

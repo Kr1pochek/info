@@ -45,7 +45,7 @@ test('reception page contains editable customs QR defaults', async () => {
     assert.match(item.image, /^\/qr\/customs\/.+\.png$/);
   }
   assert.match(app, /path="qr-tavojnya" element={<Navigate to="\/information\/reception-schedule" replace \/>}/);
-  assert.match(home, /to="\/information\/reception-schedule"/);
+  assert.doesNotMatch(home, /to="\/information\/reception-schedule"/);
   assert.match(page, /settings\?\.customsQrCodes/);
   assert.match(page, /customsQrCodes\.map/);
 });
